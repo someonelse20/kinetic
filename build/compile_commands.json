@@ -1,0 +1,26 @@
+[
+{
+  "directory": "/home/william/Documents/kinetic/build",
+  "command": "/usr/bin/cc  -I/home/william/Documents/kinetic/inc -g -fPIC -o CMakeFiles/kinetic.dir/src/kin_ekf.c.o -c /home/william/Documents/kinetic/src/kin_ekf.c",
+  "file": "/home/william/Documents/kinetic/src/kin_ekf.c",
+  "output": "CMakeFiles/kinetic.dir/src/kin_ekf.c.o"
+},
+{
+  "directory": "/home/william/Documents/kinetic/build",
+  "command": "/usr/bin/cc  -I/home/william/Documents/kinetic/inc -g -fPIC -o CMakeFiles/kinetic.dir/src/kinetic.c.o -c /home/william/Documents/kinetic/src/kinetic.c",
+  "file": "/home/william/Documents/kinetic/src/kinetic.c",
+  "output": "CMakeFiles/kinetic.dir/src/kinetic.c.o"
+},
+{
+  "directory": "/home/william/Documents/kinetic/build",
+  "command": "/usr/bin/cc  -I/home/william/Documents/kinetic/inc -g -fPIC -o CMakeFiles/kinetic.dir/src/kin_math.c.o -c /home/william/Documents/kinetic/src/kin_math.c",
+  "file": "/home/william/Documents/kinetic/src/kin_math.c",
+  "output": "CMakeFiles/kinetic.dir/src/kin_math.c.o"
+},
+{
+  "directory": "/home/william/Documents/kinetic/build",
+  "command": "/usr/bin/c++  -I/home/william/Documents/kinetic/inc -g -std=gnu++17 -o CMakeFiles/tests.dir/tests/main.cpp.o -c /home/william/Documents/kinetic/tests/main.cpp",
+  "file": "/home/william/Documents/kinetic/tests/main.cpp",
+  "output": "CMakeFiles/tests.dir/tests/main.cpp.o"
+}
+]

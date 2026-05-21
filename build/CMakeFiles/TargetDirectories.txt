@@ -1,0 +1,4 @@
+/home/william/Documents/kinetic/build/CMakeFiles/kinetic.dir
+/home/william/Documents/kinetic/build/CMakeFiles/tests.dir
+/home/william/Documents/kinetic/build/CMakeFiles/edit_cache.dir
+/home/william/Documents/kinetic/build/CMakeFiles/rebuild_cache.dir
