@@ -29,9 +29,9 @@ typedef struct {
 	bool initialized;
 } kinetic_t;
 
-void init_state(kinetic_t *kinetic, double accel[3], double mag[3]);
+void init_state(kinetic_t *kinetic, double *accel, double *mag);
 
-void update_imu(kinetic_t *kinetic, double gyro[3], double accel[3], double mag[3], double dt);
+void update_imu(kinetic_t *kinetic, double *gyro, double *accel, double *mag, double dt);
 
 void update_barometer(kinetic_t *kinetic, double altitude, double dt);
 

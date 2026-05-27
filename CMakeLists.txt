@@ -12,12 +12,14 @@ set(KINETIC_SOURCES
     ${CMAKE_SOURCE_DIR}/src/kin_ekf.c
     ${CMAKE_SOURCE_DIR}/src/kinetic.c
     ${CMAKE_SOURCE_DIR}/src/kin_math.c
+
+    ${CMAKE_SOURCE_DIR}/tests/src/sim.cpp
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/inc)
 
 add_library(kinetic STATIC ${KINETIC_SOURCES})
-target_include_directories(kinetic PUBLIC ${CMAKE_SOURCE_DIR}/inc)
+target_include_directories(kinetic PUBLIC ${CMAKE_SOURCE_DIR}/inc ${CMAKE_SOURCE_DIR}/tests/inc)
 target_link_libraries(kinetic PUBLIC m)
 
 set_target_properties(kinetic PROPERTIES
