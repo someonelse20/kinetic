@@ -1,2 +1,2 @@
-/usr/bin/ar qc libkinetic.a CMakeFiles/kinetic.dir/src/kin_ekf.c.o CMakeFiles/kinetic.dir/src/kinetic.c.o CMakeFiles/kinetic.dir/src/kin_math.c.o
+/usr/bin/ar qc libkinetic.a CMakeFiles/kinetic.dir/src/kin_ekf.c.o CMakeFiles/kinetic.dir/src/kinetic.c.o CMakeFiles/kinetic.dir/src/kin_math.c.o CMakeFiles/kinetic.dir/tests/src/sim.cpp.o
 /usr/bin/ranlib libkinetic.a

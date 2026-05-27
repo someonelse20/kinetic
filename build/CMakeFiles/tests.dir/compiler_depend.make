@@ -4,6 +4,7 @@
 CMakeFiles/tests.dir/tests/main.cpp.o: /home/william/Documents/kinetic/tests/main.cpp \
   /home/william/Documents/kinetic/inc/kin_math.h \
   /home/william/Documents/kinetic/inc/kinetic.h \
+  /home/william/Documents/kinetic/tests/inc/sim.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
@@ -18,15 +19,20 @@ CMakeFiles/tests.dir/tests/main.cpp.o: /home/william/Documents/kinetic/tests/mai
   /usr/include/asm/types.h \
   /usr/include/bits/atomic_wide_counter.h \
   /usr/include/bits/byteswap.h \
+  /usr/include/bits/confname.h \
   /usr/include/bits/cpu-set.h \
   /usr/include/bits/endian.h \
   /usr/include/bits/endianness.h \
+  /usr/include/bits/environments.h \
   /usr/include/bits/errno.h \
   /usr/include/bits/floatn-common.h \
   /usr/include/bits/floatn.h \
+  /usr/include/bits/getopt_core.h \
+  /usr/include/bits/getopt_posix.h \
   /usr/include/bits/libc-header-start.h \
   /usr/include/bits/locale.h \
   /usr/include/bits/long-double.h \
+  /usr/include/bits/posix_opt.h \
   /usr/include/bits/pthread_stack_min-dynamic.h \
   /usr/include/bits/pthreadtypes-arch.h \
   /usr/include/bits/pthreadtypes.h \
@@ -70,6 +76,7 @@ CMakeFiles/tests.dir/tests/main.cpp.o: /home/william/Documents/kinetic/tests/mai
   /usr/include/bits/types/wint_t.h \
   /usr/include/bits/typesizes.h \
   /usr/include/bits/uintn-identity.h \
+  /usr/include/bits/unistd_ext.h \
   /usr/include/bits/waitflags.h \
   /usr/include/bits/waitstatus.h \
   /usr/include/bits/wchar.h \
@@ -190,6 +197,7 @@ CMakeFiles/tests.dir/tests/main.cpp.o: /home/william/Documents/kinetic/tests/mai
   /usr/include/features.h \
   /usr/include/gnu/stubs-64.h \
   /usr/include/gnu/stubs.h \
+  /usr/include/linux/close_range.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/posix_types.h \
   /usr/include/linux/sched/types.h \
@@ -206,6 +214,7 @@ CMakeFiles/tests.dir/tests/main.cpp.o: /home/william/Documents/kinetic/tests/mai
   /usr/include/sys/single_threaded.h \
   /usr/include/sys/types.h \
   /usr/include/time.h \
+  /usr/include/unistd.h \
   /usr/include/wchar.h \
   /usr/include/wctype.h \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/include/stdarg.h \
@@ -244,8 +253,6 @@ tests: /usr/lib/Scrt1.o \
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o:
 
 /usr/lib/libm.so:
-
-/usr/lib/libgcc_s.so.1:
 
 /usr/lib/libgcc_s.so:
 
@@ -321,6 +328,8 @@ CMakeFiles/tests.dir/tests/main.cpp.o:
 
 /usr/include/c++/16.1.1/string_view:
 
+/usr/include/unistd.h:
+
 /usr/include/c++/16.1.1/streambuf:
 
 /usr/include/pthread.h:
@@ -351,8 +360,6 @@ CMakeFiles/tests.dir/tests/main.cpp.o:
 
 /usr/include/c++/16.1.1/cstdio:
 
-/usr/include/c++/16.1.1/clocale:
-
 /usr/include/c++/16.1.1/cerrno:
 
 /usr/include/c++/16.1.1/cctype:
@@ -373,11 +380,23 @@ CMakeFiles/tests.dir/tests/main.cpp.o:
 
 /usr/include/c++/16.1.1/bits/stl_iterator_base_funcs.h:
 
-/usr/include/bits/types/struct_FILE.h:
+/usr/include/c++/16.1.1/bits/stl_iterator.h:
 
-/usr/include/asm/types.h:
+/usr/include/c++/16.1.1/bits/stl_function.h:
 
-/usr/include/bits/atomic_wide_counter.h:
+/usr/include/c++/16.1.1/bits/version.h:
+
+/usr/include/c++/16.1.1/bits/stl_construct.h:
+
+/usr/include/sys/select.h:
+
+/usr/include/c++/16.1.1/bits/stl_algobase.h:
+
+/usr/include/c++/16.1.1/bits/string_view.tcc:
+
+/usr/include/c++/16.1.1/bits/stdexcept_throwfwd.h:
+
+/usr/include/c++/16.1.1/bits/stdexcept_except.h:
 
 /usr/include/bits/types/clockid_t.h:
 
@@ -389,7 +408,7 @@ CMakeFiles/tests.dir/tests/main.cpp.o:
 
 /usr/include/bits/types.h:
 
-/usr/include/bits/thread-shared-types.h:
+/usr/include/bits/getopt_core.h:
 
 /home/william/Documents/kinetic/inc/kinetic.h:
 
@@ -398,8 +417,6 @@ CMakeFiles/tests.dir/tests/main.cpp.o:
 /usr/lib/libc_nonshared.a:
 
 /usr/include/c++/16.1.1/bits/char_traits.h:
-
-/usr/include/bits/types/sigset_t.h:
 
 /usr/include/bits/types/struct_timeval.h:
 
@@ -419,6 +436,8 @@ CMakeFiles/tests.dir/tests/main.cpp.o:
 
 /usr/include/bits/types/__fpos64_t.h:
 
+/usr/include/linux/close_range.h:
+
 /usr/include/bits/stdint-intn.h:
 
 /usr/include/c++/16.1.1/bits/cxxabi_forced.h:
@@ -431,13 +450,37 @@ CMakeFiles/tests.dir/tests/main.cpp.o:
 
 /usr/include/bits/types/cookie_io_functions_t.h:
 
+/usr/include/bits/pthreadtypes.h:
+
+/usr/include/gnu/stubs.h:
+
+/usr/include/c++/16.1.1/bits/functexcept.h:
+
+/usr/include/bits/pthreadtypes-arch.h:
+
+/usr/include/c++/16.1.1/bits/exception_defines.h:
+
+/usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/gthr.h:
+
+/usr/include/c++/16.1.1/string:
+
+/usr/include/c++/16.1.1/bits/uses_allocator_args.h:
+
+/usr/include/bits/pthread_stack_min-dynamic.h:
+
+/usr/include/c++/16.1.1/ext/numeric_traits.h:
+
+/usr/include/bits/long-double.h:
+
 /usr/include/asm/bitsperlong.h:
 
 /usr/include/c++/16.1.1/bits/exception_ptr.h:
 
-/usr/include/bits/pthreadtypes.h:
-
 /usr/include/asm/errno.h:
+
+/usr/include/c++/16.1.1/bits/stdexcept_throw.h:
+
+/usr/include/bits/endian.h:
 
 /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/cpu_defines.h:
 
@@ -455,9 +498,39 @@ CMakeFiles/tests.dir/tests/main.cpp.o:
 
 /usr/include/c++/16.1.1/bits/invoke.h:
 
+/usr/include/c++/16.1.1/bits/alloc_traits.h:
+
+/usr/include/alloca.h:
+
+/usr/include/c++/16.1.1/bits/functional_hash.h:
+
+/usr/include/asm/types.h:
+
+/usr/include/bits/types/struct_FILE.h:
+
+/usr/include/stdc-predef.h:
+
+/usr/include/asm-generic/posix_types.h:
+
+/usr/include/bits/atomic_wide_counter.h:
+
+/usr/include/bits/posix_opt.h:
+
+/home/william/Documents/kinetic/tests/main.cpp:
+
 /usr/include/bits/types/FILE.h:
 
 /home/william/Documents/kinetic/inc/kin_math.h:
+
+/home/william/Documents/kinetic/tests/inc/sim.h:
+
+/usr/include/bits/environments.h:
+
+/usr/include/c++/16.1.1/type_traits:
+
+/usr/include/c++/16.1.1/bits/ios_base.h:
+
+/usr/include/c++/16.1.1/bits/ostream.h:
 
 /usr/include/asm/posix_types.h:
 
@@ -469,37 +542,17 @@ CMakeFiles/tests.dir/tests/main.cpp.o:
 
 /usr/include/bits/time.h:
 
-/usr/include/bits/types/locale_t.h:
-
-/usr/include/c++/16.1.1/bits/ostream_insert.h:
-
 /usr/include/asm-generic/int-ll64.h:
-
-/usr/include/c++/16.1.1/bits/alloc_traits.h:
-
-/usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/gthr.h:
-
-/usr/include/c++/16.1.1/string:
-
-/usr/include/c++/16.1.1/bits/uses_allocator_args.h:
-
-/usr/include/bits/pthread_stack_min-dynamic.h:
-
-/usr/include/alloca.h:
-
-/usr/include/c++/16.1.1/bits/functional_hash.h:
-
-/usr/include/stdc-predef.h:
-
-/usr/include/asm-generic/posix_types.h:
-
-/home/william/Documents/kinetic/tests/main.cpp:
 
 /usr/include/bits/stdlib-float.h:
 
 /usr/include/bits/time64.h:
 
 /usr/include/bits/byteswap.h:
+
+/usr/lib/libgcc_s.so.1:
+
+/usr/include/bits/confname.h:
 
 /usr/include/bits/cpu-set.h:
 
@@ -508,10 +561,6 @@ CMakeFiles/tests.dir/tests/main.cpp.o:
 /usr/include/bits/typesizes.h:
 
 /usr/include/bits/uintn-identity.h:
-
-/usr/include/c++/16.1.1/ext/numeric_traits.h:
-
-/usr/include/bits/long-double.h:
 
 /usr/lib/libatomic.so:
 
@@ -535,21 +584,25 @@ CMakeFiles/tests.dir/tests/main.cpp.o:
 
 /usr/include/bits/errno.h:
 
-/usr/include/bits/types/mbstate_t.h:
-
-/usr/include/c++/16.1.1/bits/stl_function.h:
-
 /usr/include/bits/floatn-common.h:
+
+/usr/include/bits/thread-shared-types.h:
+
+/usr/include/c++/16.1.1/clocale:
+
+/usr/include/bits/getopt_posix.h:
+
+/usr/include/c++/16.1.1/bits/hash_bytes.h:
 
 /usr/include/bits/libc-header-start.h:
 
-/usr/include/gnu/stubs.h:
+/usr/include/bits/types/locale_t.h:
 
-/usr/include/c++/16.1.1/bits/functexcept.h:
+/usr/include/c++/16.1.1/bits/ostream_insert.h:
 
-/usr/include/bits/pthreadtypes-arch.h:
+/usr/include/bits/types/mbstate_t.h:
 
-/usr/include/c++/16.1.1/bits/exception_defines.h:
+/usr/include/bits/types/sigset_t.h:
 
 /usr/include/bits/types/struct_sched_param.h:
 
@@ -587,21 +640,13 @@ CMakeFiles/tests.dir/tests/main.cpp.o:
 
 /usr/include/c++/16.1.1/bits/charconv.h:
 
-/usr/include/c++/16.1.1/bits/stdexcept_except.h:
-
 /usr/include/bits/wordsize.h:
-
-/usr/include/c++/16.1.1/bits/stl_iterator.h:
 
 /usr/include/c++/16.1.1/backward/binders.h:
 
 /usr/include/c++/16.1.1/new:
 
 /usr/include/c++/16.1.1/bits/new_throw.h:
-
-/usr/include/c++/16.1.1/bits/version.h:
-
-/usr/include/c++/16.1.1/bits/stl_construct.h:
 
 /usr/include/c++/16.1.1/bits/allocator.h:
 
@@ -624,14 +669,6 @@ libkinetic.a:
 /usr/include/c++/16.1.1/bits/concept_check.h:
 
 /usr/include/c++/16.1.1/bits/exception.h:
-
-/usr/include/c++/16.1.1/bits/hash_bytes.h:
-
-/usr/include/c++/16.1.1/type_traits:
-
-/usr/include/c++/16.1.1/bits/ios_base.h:
-
-/usr/include/c++/16.1.1/bits/ostream.h:
 
 /usr/include/bits/struct_mutex.h:
 
@@ -661,6 +698,8 @@ libkinetic.a:
 
 /usr/include/c++/16.1.1/bits/memory_resource.h:
 
+/usr/include/bits/unistd_ext.h:
+
 /usr/include/c++/16.1.1/bits/move.h:
 
 /usr/include/bits/types/__sigset_t.h:
@@ -673,10 +712,6 @@ libkinetic.a:
 
 /usr/include/c++/16.1.1/bits/ostream_print.h:
 
-/usr/include/c++/16.1.1/bits/string_view.tcc:
-
-/usr/include/c++/16.1.1/bits/stdexcept_throwfwd.h:
-
 /usr/include/c++/16.1.1/bits/postypes.h:
 
 /usr/include/c++/16.1.1/bits/predefined_ops.h:
@@ -688,11 +723,3 @@ libkinetic.a:
 /usr/include/bits/types/struct_timespec.h:
 
 /usr/include/c++/16.1.1/bits/requires_hosted.h:
-
-/usr/include/bits/endian.h:
-
-/usr/include/c++/16.1.1/bits/stdexcept_throw.h:
-
-/usr/include/sys/select.h:
-
-/usr/include/c++/16.1.1/bits/stl_algobase.h:

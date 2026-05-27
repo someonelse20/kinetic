@@ -114,11 +114,26 @@ CMakeFiles/kinetic.dir/src/kin_math.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/kinetic.dir/src/kin_math.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/william/Documents/kinetic/src/kin_math.c -o CMakeFiles/kinetic.dir/src/kin_math.c.s
 
+CMakeFiles/kinetic.dir/tests/src/sim.cpp.o: CMakeFiles/kinetic.dir/flags.make
+CMakeFiles/kinetic.dir/tests/src/sim.cpp.o: /home/william/Documents/kinetic/tests/src/sim.cpp
+CMakeFiles/kinetic.dir/tests/src/sim.cpp.o: CMakeFiles/kinetic.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/william/Documents/kinetic/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/kinetic.dir/tests/src/sim.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/kinetic.dir/tests/src/sim.cpp.o -MF CMakeFiles/kinetic.dir/tests/src/sim.cpp.o.d -o CMakeFiles/kinetic.dir/tests/src/sim.cpp.o -c /home/william/Documents/kinetic/tests/src/sim.cpp
+
+CMakeFiles/kinetic.dir/tests/src/sim.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/kinetic.dir/tests/src/sim.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/william/Documents/kinetic/tests/src/sim.cpp > CMakeFiles/kinetic.dir/tests/src/sim.cpp.i
+
+CMakeFiles/kinetic.dir/tests/src/sim.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/kinetic.dir/tests/src/sim.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/william/Documents/kinetic/tests/src/sim.cpp -o CMakeFiles/kinetic.dir/tests/src/sim.cpp.s
+
 # Object files for target kinetic
 kinetic_OBJECTS = \
 "CMakeFiles/kinetic.dir/src/kin_ekf.c.o" \
 "CMakeFiles/kinetic.dir/src/kinetic.c.o" \
-"CMakeFiles/kinetic.dir/src/kin_math.c.o"
+"CMakeFiles/kinetic.dir/src/kin_math.c.o" \
+"CMakeFiles/kinetic.dir/tests/src/sim.cpp.o"
 
 # External object files for target kinetic
 kinetic_EXTERNAL_OBJECTS =
@@ -126,9 +141,10 @@ kinetic_EXTERNAL_OBJECTS =
 libkinetic.a: CMakeFiles/kinetic.dir/src/kin_ekf.c.o
 libkinetic.a: CMakeFiles/kinetic.dir/src/kinetic.c.o
 libkinetic.a: CMakeFiles/kinetic.dir/src/kin_math.c.o
+libkinetic.a: CMakeFiles/kinetic.dir/tests/src/sim.cpp.o
 libkinetic.a: CMakeFiles/kinetic.dir/build.make
 libkinetic.a: CMakeFiles/kinetic.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/william/Documents/kinetic/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking C static library libkinetic.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/william/Documents/kinetic/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX static library libkinetic.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/kinetic.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/kinetic.dir/link.txt --verbose=$(VERBOSE)
 

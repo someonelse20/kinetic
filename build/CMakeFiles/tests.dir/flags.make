@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/william/Documents/kinetic/inc
+CXX_INCLUDES = -I/home/william/Documents/kinetic/inc -I/home/william/Documents/kinetic/tests/inc
 
 CXX_FLAGS = -g -std=gnu++17
 

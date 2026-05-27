@@ -238,6 +238,30 @@ tests/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/tests.dir/build.make CMakeFiles/tests.dir/tests/main.cpp.s
 .PHONY : tests/main.cpp.s
 
+tests/src/sim.o: tests/src/sim.cpp.o
+.PHONY : tests/src/sim.o
+
+# target to build an object file
+tests/src/sim.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kinetic.dir/build.make CMakeFiles/kinetic.dir/tests/src/sim.cpp.o
+.PHONY : tests/src/sim.cpp.o
+
+tests/src/sim.i: tests/src/sim.cpp.i
+.PHONY : tests/src/sim.i
+
+# target to preprocess a source file
+tests/src/sim.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kinetic.dir/build.make CMakeFiles/kinetic.dir/tests/src/sim.cpp.i
+.PHONY : tests/src/sim.cpp.i
+
+tests/src/sim.s: tests/src/sim.cpp.s
+.PHONY : tests/src/sim.s
+
+# target to generate assembly for a file
+tests/src/sim.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kinetic.dir/build.make CMakeFiles/kinetic.dir/tests/src/sim.cpp.s
+.PHONY : tests/src/sim.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -260,6 +284,9 @@ help:
 	@echo "... tests/main.o"
 	@echo "... tests/main.i"
 	@echo "... tests/main.s"
+	@echo "... tests/src/sim.o"
+	@echo "... tests/src/sim.i"
+	@echo "... tests/src/sim.s"
 .PHONY : help
 
 
