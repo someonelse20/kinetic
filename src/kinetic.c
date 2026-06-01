@@ -25,11 +25,27 @@ void update_imu(kinetic_t *kinetic, double *gyro, double *accel, double *mag, do
 	corect_state(kinetic, accel, mag, dt);
 }
 
-void init_state(kinetic_t *kinetic, double accel[3], double mag[3]) { // TODO: there's a better way to do this
+void init_state(kinetic_t *kinetic, double accel[3], double mag[3]) {
+	// Originally the algorithm was to calculate orientation as a rotation matrix and then convert to a quaternion
+	// but since it only needs to be computed once at startup it's ok to use euler values because gimble lock 
+	// isn't a problem.
+	matrix_t *orientation_euler = init_matrix(3, 1);
+	orientation_euler->data[X] = atan2(-accel[Y], accel[Z]);
+	orientation_euler->data[Y] = atan2(-accel[X], accel[Z]);
 
 	matrix_t *accel_m = arr_to_matrix(accel, 3, true);
 	matrix_t *mag_m = arr_to_matrix(mag, 3, true);
 
+	double dot_prod = vector_dot(mag_m, accel_m);
+	matrix_t *mag_comp = sub_matrix(mag_comp, scale_matrix(accel_m, dot_prod));
+
+	orientation_euler->data[Z] = atan2(mag_comp->data[Y], mag_comp->data[X]);
+	kinetic->state_q = euler_to_quat(orientation_euler);
+
+	print_matrix(orientation_euler);
+
+	kinetic->estm_covariance = ident_matrix(4);
+	/*
 	matrix_t *accel_x_mag = mul_vector(accel_m, mag_m);
 	matrix_t *row_1 = normalize_matrix(mul_vector(accel_x_mag, accel_m));
 
@@ -39,22 +55,25 @@ void init_state(kinetic_t *kinetic, double accel[3], double mag[3]) { // TODO: t
 
 	matrix_t *rot_matrix = init_matrix(3, 3);
 	for (size_t i = 0; i < 3; i++) {
-		rot_matrix->data[i] = row_1->data[i];
+		rot_matrix->data[3 * i] = row_1->data[i];
 	}
 	for (size_t i = 0; i < 3; i++) {
-		rot_matrix->data[3 + i] = row_2->data[i];
+		rot_matrix->data[3 * i + 1] = row_2->data[i];
 	}
 	for (size_t i = 0; i < 3; i++) {
-		rot_matrix->data[6 + i] = row_3->data[i];
+		rot_matrix->data[3 * i + 2] = row_3->data[i];
 	}
+
+	print_matrix(rot_matrix);
+	printf("\n");
+	print_matrix(rot_matrix_to_quat(rot_matrix));
 
 	kinetic->state_q = init_matrix(4, 1); // NOTE: some of these indexes might be wrong
-	kinetic->state_q->data[X] = 0.5 * sqrt(rot_matrix->data[0] + rot_matrix->data[4] + rot_matrix->data[8] + 1);
-	kinetic->state_q->data[Y] = 0.5 * sgn(rot_matrix->data[7] - rot_matrix->data[5]) * sqrt(rot_matrix->data[0] - rot_matrix->data[4] - rot_matrix->data[8] + 1);
-	kinetic->state_q->data[Z] = 0.5 * sgn(rot_matrix->data[2] - rot_matrix->data[6]) * sqrt(rot_matrix->data[4] - rot_matrix->data[8] - rot_matrix->data[0] + 1);
-	kinetic->state_q->data[W] = 0.5 * sgn(rot_matrix->data[3] - rot_matrix->data[1]) * sqrt(rot_matrix->data[8] - rot_matrix->data[0] - rot_matrix->data[4] + 1);
-
-	kinetic->estm_covariance = ident_matrix(4);
+	kinetic->state_q->data[W] = 0.5 * sqrt(rot_matrix->data[0] + rot_matrix->data[4] + rot_matrix->data[8] + 1);
+	kinetic->state_q->data[X] = 0.5 * sgn(rot_matrix->data[7] - rot_matrix->data[5]) * sqrt(rot_matrix->data[0] - rot_matrix->data[4] - rot_matrix->data[8] + 1);
+	kinetic->state_q->data[Y] = 0.5 * sgn(rot_matrix->data[2] - rot_matrix->data[6]) * sqrt(rot_matrix->data[4] - rot_matrix->data[8] - rot_matrix->data[0] + 1);
+	kinetic->state_q->data[Z] = 0.5 * sgn(rot_matrix->data[3] - rot_matrix->data[1]) * sqrt(rot_matrix->data[8] - rot_matrix->data[0] - rot_matrix->data[4] + 1);
+	*/
 }
 
 void update_barometer(kinetic_t *kinetic, double altitude, double dt);

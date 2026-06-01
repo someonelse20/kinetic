@@ -29,6 +29,11 @@ typedef struct {
 	double *data;
 } matrix_t;
 
+typedef struct {
+	matrix_t *vector;
+	double value;
+} eigen_t;
+
 void free_matrix(matrix_t *matrix);
 matrix_t *arr_to_matrix(double *arr, size_t size, bool vert);
 matrix_t *init_matrix(size_t rows, size_t cols);
@@ -46,6 +51,8 @@ matrix_t *inv_matrix(matrix_t *matrix);
 double matrix_norm(const matrix_t *matrix);
 matrix_t *normalize_matrix(matrix_t *matrix);
 
+eigen_t *eigen_matrix(const matrix_t *matrix_t);
+
 matrix_t *euler_to_quat(matrix_t *matrix);
 matrix_t *quat_to_euler(matrix_t *matrix);
 matrix_t *quat_to_rot_matrix(matrix_t *matrix);
@@ -53,6 +60,7 @@ matrix_t *rot_matrix_to_quat(matrix_t *matrix);
 
 matrix_t *mul_quat(const matrix_t *a, const matrix_t *b);
 matrix_t *mul_vector(const matrix_t *a, const matrix_t *b);
+double vector_dot(const matrix_t *a, const matrix_t *b);
 
 int sgn(double x);
 double rad_to_deg(double rad);

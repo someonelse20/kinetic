@@ -131,17 +131,42 @@ matrix_t *normalize_matrix(matrix_t *matrix) {
 	return scale_matrix(matrix, 1 / matrix_norm(matrix));
 }
 
+eigen_t *matrix_eigen(const matrix_t *matrix_t) {
+
+}
+
+matrix_t *euler_to_quat(matrix_t *matrix) {
+	matrix_t *ret = init_matrix(4, 1);
+
+	double u = matrix->data[X] / 2;
+	double v = matrix->data[Y] / 2;
+	double w = matrix->data[Z] / 2;
+
+	ret->data[W] = cos(u) * cos(v) * cos(w) + sin(u) * sin(v) * sin(w);
+	ret->data[X] = sin(u) * cos(v) * cos(w) - cos(u) * sin(v) * sin(w);
+	ret->data[Y] = cos(u) * sin(v) * cos(w) + sin(u) * cos(v) * sin(w);
+	ret->data[Z] = cos(u) * cos(v) * sin(w) - sin(u) * sin(v) * cos(w);
+
+	return ret;
+}
+
 matrix_t *quat_to_euler(matrix_t *matrix) {
 	matrix_t *ret = init_matrix(3, 1);
+	matrix_t *normed = normalize_matrix(matrix);
 
-	ret->data[0] = atan2(
-		2 * (matrix->data[Y] * matrix->data[Z] - matrix->data[W] * matrix->data[X]), 
-		2 * pow(matrix->data[W], 2) - 1 + pow(matrix->data[Z], 2)
+	double w2 = pow(normed->data[W], 2);
+	double x2 = pow(normed->data[X], 2);
+	double y2 = pow(normed->data[Y], 2);
+	double z2 = pow(normed->data[Z], 2);
+
+	ret->data[X] = atan2(
+		2 * (normed->data[W] * normed->data[X] + normed->data[Y] * normed->data[Z]), 
+		1 - 2 * (x2 + y2)
 	);
-	ret->data[1] = -asin(2 * (matrix->data[X] * matrix->data[Z] - matrix->data[W] * matrix->data[Y]));
-	ret->data[2] = atan2(
-		2 * (matrix->data[X] * matrix->data[Y] - matrix->data[W] * matrix->data[Z]), 
-		2 * pow(matrix->data[W], 2) - 1 + pow(matrix->data[X], 2)
+	ret->data[Y] = asin(2 * (normed->data[W] * normed->data[Y] - normed->data[X] * normed->data[Z]));
+	ret->data[Z] = atan2(
+		2 * (normed->data[W] * normed->data[Z] - normed->data[X] * normed->data[Y]), 
+		1 - 2 * (y2 + z2)
 	);
 
 	for (int i = 0; i < 3; i++) {
@@ -175,9 +200,30 @@ matrix_t *quat_to_rot_matrix(matrix_t *matrix) { // NOTE: There seems to be mult
 matrix_t *rot_matrix_to_quat(matrix_t *matrix) {
 	if (matrix->rows != 3 || matrix->cols != 3) return 0;
 	matrix_t *K = init_matrix(4, 4);
-	double K_data[] = { // 4x4 matrix
-		//matrix->data[0] - matrix->data[5] - matrix->data;
-	};
+
+	K->data[0]  = matrix->data[0] - matrix->data[4] - matrix->data[8];
+	K->data[1]  = matrix->data[3] - matrix->data[1];
+	K->data[2]  = matrix->data[6] + matrix->data[2];
+	K->data[3]  = matrix->data[5] + matrix->data[7];
+
+	K->data[4]  = matrix->data[3] + matrix->data[1];
+	K->data[5]  = matrix->data[4] + matrix->data[0] + matrix->data[8];
+	K->data[6]  = matrix->data[7] + matrix->data[5];
+	K->data[7]  = matrix->data[6] + matrix->data[2];
+
+	K->data[8]  = matrix->data[6] + matrix->data[2];
+	K->data[9]  = matrix->data[7] + matrix->data[5];
+	K->data[10] = matrix->data[8] + matrix->data[0] + matrix->data[4];
+	K->data[11] = matrix->data[1] + matrix->data[3];
+
+	K->data[12] = matrix->data[5] + matrix->data[7];
+	K->data[13] = matrix->data[6] + matrix->data[2];
+	K->data[14] = matrix->data[1] + matrix->data[3];
+	K->data[15] = matrix->data[0] + matrix->data[4] + matrix->data[8];
+
+	K = scale_matrix(K, 0.333333);
+
+	return K;
 }
 
 matrix_t *mul_quat(const matrix_t *a, const matrix_t *b) {
@@ -198,6 +244,14 @@ matrix_t *mul_vector(const matrix_t *a, const matrix_t *b) {
 	ret->data[Y] = a->data[Z] * b->data[X] - a->data[X] * b->data[Z];
 	ret->data[Z] = a->data[X] * b->data[Y] - a->data[Y] * b->data[X];
 
+	return ret;
+}
+
+double vector_dot(const matrix_t *a, const matrix_t *b) {
+	double ret = 0;
+	for (int i = 0; i < 3; i++) {
+		ret += a->data[i] * b->data[i];
+	}
 	return ret;
 }
 

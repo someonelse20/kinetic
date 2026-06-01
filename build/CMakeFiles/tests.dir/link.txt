@@ -1,1 +1,0 @@
-/usr/bin/c++ -g -Wl,--dependency-file=CMakeFiles/tests.dir/link.d CMakeFiles/tests.dir/tests/main.cpp.o -o tests  libkinetic.a -lm -lgcc_s_asneeded -lgcc_s_asneeded
