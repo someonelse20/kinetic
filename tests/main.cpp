@@ -31,6 +31,8 @@ int main() {
 	printf("\n");
 	print_matrix(sim.orientation);
 	cout << endl;
+	print_matrix(kinetic.state_q);
+	cout << endl;
 	print_matrix(quat_to_euler(kinetic.state_q));
 
 	/*

@@ -152,7 +152,8 @@ matrix_t *euler_to_quat(matrix_t *matrix) {
 
 matrix_t *quat_to_euler(matrix_t *matrix) {
 	matrix_t *ret = init_matrix(3, 1);
-	matrix_t *normed = normalize_matrix(matrix);
+	// matrix_t *normed = normalize_matrix(matrix);
+	matrix_t *normed = matrix;
 
 	double w2 = pow(normed->data[W], 2);
 	double x2 = pow(normed->data[X], 2);
@@ -161,12 +162,12 @@ matrix_t *quat_to_euler(matrix_t *matrix) {
 
 	ret->data[X] = atan2(
 		2 * (normed->data[W] * normed->data[X] + normed->data[Y] * normed->data[Z]), 
-		1 - 2 * (x2 + y2)
+		1 - 2 * (normed->data[X] * normed->data[X] + normed->data[Y] * normed->data[Y])
 	);
-	ret->data[Y] = asin(2 * (normed->data[W] * normed->data[Y] - normed->data[X] * normed->data[Z]));
+	ret->data[Y] = asin(2 * (normed->data[W] * normed->data[Y] - normed->data[Z] * normed->data[X]));
 	ret->data[Z] = atan2(
-		2 * (normed->data[W] * normed->data[Z] - normed->data[X] * normed->data[Y]), 
-		1 - 2 * (y2 + z2)
+		2 * (normed->data[W] * normed->data[Z] + normed->data[X] * normed->data[Y]), 
+		1 - 2 * (normed->data[Y] * normed->data[Y] + normed->data[Z] * normed->data[Z])
 	);
 
 	for (int i = 0; i < 3; i++) {
