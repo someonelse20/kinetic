@@ -13,7 +13,7 @@ int main() {
 	// cout << "hello world!" << endl;
 
 	matrix_t *m = init_matrix(3, 3);
-	double arr[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+	float arr[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
 	m->data = arr;
 
 	// print_matrix(m);

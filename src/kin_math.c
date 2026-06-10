@@ -19,7 +19,7 @@ matrix_t *init_matrix(size_t rows, size_t cols) {
 	matrix_t *matrix = (matrix_t *)malloc(sizeof(matrix_t));
 	matrix->rows = rows;
 	matrix->cols = cols;
-	matrix->data = (double *)malloc(rows * cols * sizeof(double));
+	matrix->data = (float *)malloc(rows * cols * sizeof(float));
 	return matrix;
 }
 
@@ -28,7 +28,7 @@ void free_matrix(matrix_t *matrix) {
 	free(matrix);
 }
 
-matrix_t *arr_to_matrix(double *arr, size_t rows, size_t cols) {
+matrix_t *arr_to_matrix(float *arr, size_t rows, size_t cols) {
 	matrix_t *matrix = init_matrix(rows, cols);
 
 	for (size_t i = 0; i < rows * cols; i++) {
@@ -47,7 +47,7 @@ void print_matrix(const matrix_t *matrix) {
 	}
 }
 
-void print_arr(const double *arr, size_t size) {
+void print_arr(const float *arr, size_t size) {
 	for (size_t i = 0; i < size; i++) {
 		printf("%f\n", arr[i]);
 	}
@@ -85,7 +85,7 @@ matrix_t *mul_matrix(const matrix_t *a, const matrix_t *b) {
 	return result;
 }
 
-matrix_t *scale_matrix(matrix_t *matrix, double scalar) {
+matrix_t *scale_matrix(matrix_t *matrix, float scalar) {
 	matrix_t *result = init_matrix(matrix->rows, matrix->cols);
 	for (size_t i = 0; i < matrix->rows * matrix->cols; i++) {
 		result->data[i] = scalar * matrix->data[i];
@@ -103,7 +103,7 @@ matrix_t *trans_matrix(const matrix_t *matrix) {
 	return result;
 }
 
-double matrix_determinant(const matrix_t *matrix) {
+float matrix_determinant(const matrix_t *matrix) {
 	if (matrix->rows != matrix->cols) return 0;
 	return 0;
 }
@@ -126,8 +126,8 @@ matrix_t *inv_matrix(matrix_t *matrix) {
 	return ret;
 }
 
-double matrix_norm(const matrix_t *matrix) {
-	double norm = 0;
+float matrix_norm(const matrix_t *matrix) {
+	float norm = 0;
 	for (size_t i = 0; i < matrix->rows * matrix->cols; i++) {
 		norm += matrix->data[i] * matrix->data[i];
 	}
@@ -145,9 +145,9 @@ eigen_t *matrix_eigen(const matrix_t *matrix_t) {
 matrix_t *euler_to_quat(matrix_t *matrix) {
 	matrix_t *ret = init_matrix(4, 1);
 
-	double u = matrix->data[X] / 2;
-	double v = matrix->data[Y] / 2;
-	double w = matrix->data[Z] / 2;
+	float u = matrix->data[X] / 2;
+	float v = matrix->data[Y] / 2;
+	float w = matrix->data[Z] / 2;
 
 	ret->data[W] = cos(u) * cos(v) * cos(w) + sin(u) * sin(v) * sin(w);
 	ret->data[X] = sin(u) * cos(v) * cos(w) - cos(u) * sin(v) * sin(w);
@@ -162,10 +162,10 @@ matrix_t *quat_to_euler(matrix_t *matrix) {
 	// matrix_t *normed = normalize_matrix(matrix);
 	matrix_t *normed = matrix;
 
-	double w2 = pow(normed->data[W], 2);
-	double x2 = pow(normed->data[X], 2);
-	double y2 = pow(normed->data[Y], 2);
-	double z2 = pow(normed->data[Z], 2);
+	float w2 = pow(normed->data[W], 2);
+	float x2 = pow(normed->data[X], 2);
+	float y2 = pow(normed->data[Y], 2);
+	float z2 = pow(normed->data[Z], 2);
 
 	ret->data[X] = atan2(
 		2 * (normed->data[W] * normed->data[X] + normed->data[Y] * normed->data[Z]), 
@@ -187,7 +187,7 @@ matrix_t *quat_to_euler(matrix_t *matrix) {
 matrix_t *quat_to_rot_matrix(matrix_t *matrix) { // NOTE: There seems to be multiple ways to do this
 	if (matrix->rows != 4 || matrix->cols != 1) return 0;
 	matrix_t *result = init_matrix(3, 3);
-	double *data = matrix->data;
+	float *data = matrix->data;
 
 	result->data[0] = pow(data[W], 2) + pow(data[X], 2) - pow(data[Y], 2) - pow(data[Z], 2);
 	result->data[1] = 2 * (data[X] * data[Y] - data[W] * data[Z]);
@@ -208,28 +208,28 @@ matrix_t *rot_matrix_to_quat(matrix_t *matrix) { // this function is from https:
 	if (matrix->rows != 3 || matrix->cols != 3) return 0;
 	matrix_t *ret = init_matrix(4, 1);
 
-	double tr = matrix->data[0] + matrix->data[4] + matrix->data[8];
+	float tr = matrix->data[0] + matrix->data[4] + matrix->data[8];
 
 	if (tr > 0) {
-		double S = sqrt(1 + tr) * 2;
+		float S = sqrt(1 + tr) * 2;
 		ret->data[W] = 0.25 * S;
 		ret->data[X] = (matrix->data[7] - matrix->data[5]) / S;
 		ret->data[Y] = (matrix->data[2] - matrix->data[6]) / S;
 		ret->data[Z] = (matrix->data[3] - matrix->data[1]) / S;
 	} else if ((matrix->data[0] > matrix->data[4])&(matrix->data[0] > matrix->data[8])) { // if the first diagonal is the largest
-		double S = sqrt(1 + matrix->data[0] - matrix->data[4] - matrix->data[8]) * 2;
+		float S = sqrt(1 + matrix->data[0] - matrix->data[4] - matrix->data[8]) * 2;
 		ret->data[W] = (matrix->data[7] - matrix->data[5]) / S;
 		ret->data[X] = 0.25 * S;
 		ret->data[Y] = (matrix->data[1] + matrix->data[3]) / S;
 		ret->data[Z] = (matrix->data[2] + matrix->data[6]) / S;
 	} else if (matrix->data[4] > matrix->data[8]) {
-		double S = sqrt(1 + matrix->data[4] - matrix->data[0] - matrix->data[8]) * 2;
+		float S = sqrt(1 + matrix->data[4] - matrix->data[0] - matrix->data[8]) * 2;
 		ret->data[W] = (matrix->data[2] - matrix->data[6]) / S;
 		ret->data[X] = (matrix->data[1] + matrix->data[3]) / S;
 		ret->data[Y] = 0.25 * S;
 		ret->data[Z] = (matrix->data[5] + matrix->data[7]) / S;
 	} else {
-		double S = sqrt(1 + matrix->data[8] - matrix->data[0] - matrix->data[4]) * 2;
+		float S = sqrt(1 + matrix->data[8] - matrix->data[0] - matrix->data[4]) * 2;
 		ret->data[W] = (matrix->data[3] - matrix->data[1]) / S;
 		ret->data[X] = (matrix->data[2] + matrix->data[6]) / S;
 		ret->data[Y] = (matrix->data[5] + matrix->data[7]) / S;
@@ -260,15 +260,15 @@ matrix_t *mul_vector(const matrix_t *a, const matrix_t *b) {
 	return ret;
 }
 
-double vector_dot(const matrix_t *a, const matrix_t *b) {
-	double ret = 0;
+float vector_dot(const matrix_t *a, const matrix_t *b) {
+	float ret = 0;
 	for (int i = 0; i < 3; i++) {
 		ret += a->data[i] * b->data[i];
 	}
 	return ret;
 }
 
-int sgn(double x) {
+int sgn(float x) {
 	if (x == 0) {
 		return 0;
 	} else if (x > 0) {
@@ -278,11 +278,11 @@ int sgn(double x) {
 	}
 }
 
-double rad_to_deg(double rad) {
+float rad_to_deg(float rad) {
 	return rad * 180 / M_PI;
 }
 
-double deg_to_rad(double deg) {
+float deg_to_rad(float deg) {
 	return deg * M_PI / 180;
 }
 

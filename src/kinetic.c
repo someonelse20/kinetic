@@ -12,20 +12,20 @@
 // seperate accel/mag error
 
 // Private function declaration
-void predict_state(kinetic_t *kinetic, double *gyro, double dt);
-void corect_state(kinetic_t *kinetic, double *accel, double *mag, double dt);
+void predict_state(kinetic_t *kinetic, float *gyro, float dt);
+void corect_state(kinetic_t *kinetic, float *accel, float *mag, float dt);
 // No idea what this does
 // but it seems to have something to do with the derivative
 // of the measurement model
-double *jacobian(double *arr, double *quat);
+float *jacobian(float *arr, float *quat);
 
-void update_imu(kinetic_t *kinetic, double *gyro, double *accel, double *mag, double dt) {
+void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float dt) {
 	predict_state(kinetic, gyro, dt);
 
 	corect_state(kinetic, accel, mag, dt);
 }
 
-void init_state(kinetic_t *kinetic, double accel[3], double mag[3]) {
+void init_state(kinetic_t *kinetic, float accel[3], float mag[3]) {
 	/*
 	// Originally the algorithm was to calculate orientation as a rotation matrix and then convert to a quaternion
 	// but since it only needs to be computed once at startup it's ok to use euler values because gimble lock 
@@ -41,13 +41,13 @@ void init_state(kinetic_t *kinetic, double accel[3], double mag[3]) {
 	matrix_t *accel_m = arr_to_matrix(accel, 3, 1);
 	matrix_t *mag_m = arr_to_matrix(mag, 3, 1);
 
-	double dot_prod = vector_dot(mag_m, accel_m);
+	float dot_prod = vector_dot(mag_m, accel_m);
 	matrix_t *mag_comp = sub_matrix(mag_comp, scale_matrix(accel_m, dot_prod));
 
 	orientation_euler->data[Z] = atan2(mag_comp->data[Y], mag_comp->data[X]);
 
-	double mag_comp_x = mag[X] * cos(orientation_euler->data[Y]) + mag[Y] * sin(orientation_euler->data[X]) * sin(orientation_euler->data[Y]) - mag[Z] * cos(orientation_euler->data[X]) * sin(orientation_euler->data[Y]);
-	double mag_comp_y = mag[Y] * cos(orientation_euler->data[X]) + mag[Z] * sin(orientation_euler->data[X]);
+	float mag_comp_x = mag[X] * cos(orientation_euler->data[Y]) + mag[Y] * sin(orientation_euler->data[X]) * sin(orientation_euler->data[Y]) - mag[Z] * cos(orientation_euler->data[X]) * sin(orientation_euler->data[Y]);
+	float mag_comp_y = mag[Y] * cos(orientation_euler->data[X]) + mag[Z] * sin(orientation_euler->data[X]);
 
 	// NOTE: This negative sign might be incorrect
 
@@ -94,14 +94,14 @@ void init_state(kinetic_t *kinetic, double accel[3], double mag[3]) {
 	kinetic->state_q->data[Z] = 0.5 * sgn(rot_matrix->data[3] - rot_matrix->data[1]) * sqrt(rot_matrix->data[8] - rot_matrix->data[0] - rot_matrix->data[4] + 1);
 }
 
-void update_barometer(kinetic_t *kinetic, double altitude, double dt);
+void update_barometer(kinetic_t *kinetic, float altitude, float dt);
 
-void update_gps(kinetic_t *kinetic, double cords[2], double altitude, double dt);
+void update_gps(kinetic_t *kinetic, float cords[2], float altitude, float dt);
 
-void predict_state(kinetic_t *kinetic, double gyro[3], double dt) {
+void predict_state(kinetic_t *kinetic, float gyro[3], float dt) {
 	// Calculate state prediction
-	double *state_q = kinetic->state_q->data;
-	double estm_state_q[] = {
+	float *state_q = kinetic->state_q->data;
+	float estm_state_q[] = {
 		state_q[X] + (dt/2) * gyro[X] * state_q[W] - (dt/2) * gyro[Y] * state_q[Z] + (dt/2) * gyro[Z] * state_q[Y],
 		state_q[Y] + (dt/2) * gyro[X] * state_q[Z] + (dt/2) * gyro[Y] * state_q[W] - (dt/2) * gyro[Z] * state_q[X],
 		state_q[Z] - (dt/2) * gyro[X] * state_q[Y] + (dt/2) * gyro[Y] * state_q[X] + (dt/2) * gyro[Z] * state_q[W],
@@ -110,7 +110,7 @@ void predict_state(kinetic_t *kinetic, double gyro[3], double dt) {
 	kinetic->state_q = arr_to_matrix(estm_state_q, 4, 1);
 
 	// Calculate state transition matrix
-	double state_trans_data[] = {
+	float state_trans_data[] = {
 		1,                -(dt/2) * gyro[X], -(dt/2) * gyro[Y], -(dt/2) * gyro[Z],
 		(dt/2) * gyro[X],                 1,  (dt/2) * gyro[Z], -(dt/2) * gyro[Y],
 		(dt/2) * gyro[Y], -(dt/2) * gyro[Z],                 1,  (dt/2) * gyro[X],
@@ -119,7 +119,7 @@ void predict_state(kinetic_t *kinetic, double gyro[3], double dt) {
 	matrix_t *state_trans_m = arr_to_matrix(state_trans_data, 4, 4);
 
 	// Calculate process noise covariance matrix
-	double noise_data[] = { // If this doesn't work, put the last row in front
+	float noise_data[] = { // If this doesn't work, put the last row in front
 		-state_q[Y],  state_q[X],  state_q[W],
 		-state_q[X], -state_q[Y], -state_q[Z],
 		 state_q[W], -state_q[Z],  state_q[Y],
@@ -140,15 +140,15 @@ void predict_state(kinetic_t *kinetic, double gyro[3], double dt) {
 	return;
 }
 
-void corect_state(kinetic_t *kinetic, double accel[3], double mag[3], double dt) {
+void corect_state(kinetic_t *kinetic, float accel[3], float mag[3], float dt) {
 	// NOTE: Maybe try previous orientation or something else instead of estimated orientation
 	matrix_t *rot_matrix = quat_to_rot_matrix(kinetic->state_q);
 
 	// TODO: make this run at init, don't need to recalculate every loop
 	// NED refrence frame
 	// Factor in magnetic dip for m_ref
-	double g_ref_a[] = {0, 0, 1};
-	double m_ref_a[] = {cos(kinetic->mag_dip), 0, sin(kinetic->mag_dip)};
+	float g_ref_a[] = {0, 0, 1};
+	float m_ref_a[] = {cos(kinetic->mag_dip), 0, sin(kinetic->mag_dip)};
 	matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, 1);
 	// TODO: find prettier way to do this
 	matrix_t *m_ref_m = scale_matrix(arr_to_matrix(m_ref_a, 3, 1), 1 / (sqrt(pow(cos(kinetic->mag_dip), 2) + pow(sin(kinetic->mag_dip), 2))));
@@ -157,7 +157,7 @@ void corect_state(kinetic_t *kinetic, double accel[3], double mag[3], double dt)
 	matrix_t *expect_g_ref = mul_matrix(trans_matrix(rot_matrix), g_ref_m);
 	matrix_t *expect_m_ref = mul_matrix(trans_matrix(rot_matrix), m_ref_m);
 
-	double mes_model_data[6];
+	float mes_model_data[6];
 	for (int i; i < 6; i++) {
 		if (i < 3) {
 			mes_model_data[i] = expect_g_ref->data[i];
@@ -167,10 +167,10 @@ void corect_state(kinetic_t *kinetic, double accel[3], double mag[3], double dt)
 	}
 	matrix_t *mes_model = arr_to_matrix(mes_model_data, 3, 1);
 
-	double *g_ref_jacob = jacobian(g_ref_a, kinetic->state_q->data);
-	double *m_ref_jacob = jacobian(m_ref_a, kinetic->state_q->data);
+	float *g_ref_jacob = jacobian(g_ref_a, kinetic->state_q->data);
+	float *m_ref_jacob = jacobian(m_ref_a, kinetic->state_q->data);
 
-	double mes_model_jacob_data[24]; // 6x4 array
+	float mes_model_jacob_data[24]; // 6x4 array
 	for (size_t i = 0; i < 6; i++) {
 		for (size_t j = 0; j < 4; j++) {
 			if (i < 3) {
@@ -182,7 +182,7 @@ void corect_state(kinetic_t *kinetic, double accel[3], double mag[3], double dt)
 	}
 	matrix_t *mes_model_jacob = arr_to_matrix(mes_model_jacob_data, 6, 4);
 
-	double noise_covariance_data[36];
+	float noise_covariance_data[36];
 	for (size_t i = 0; i < 6; i++) {
 		for (size_t j = 0; j < 6; j++) {
 			if (i != j) {
@@ -201,7 +201,7 @@ void corect_state(kinetic_t *kinetic, double accel[3], double mag[3], double dt)
 	matrix_t *norm_accel_m = normalize_matrix(arr_to_matrix(accel, 3, 1));
 	matrix_t *norm_mag_m = normalize_matrix(arr_to_matrix(mag, 3, 1));
 
-	double mes_m_data[6];
+	float mes_m_data[6];
 	for (int i; i < 6; i++) {
 		if (i < 3) {
 			mes_m_data[i] = norm_accel_m->data[i];
@@ -228,8 +228,8 @@ void corect_state(kinetic_t *kinetic, double accel[3], double mag[3], double dt)
 	kinetic->estm_covariance = mul_matrix(estm_covariance, kinetic->estm_covariance);
 }
 
-double *jacobian(double *arr, double *quat) {
-	double *ret = malloc(sizeof(double) * 12); // 3x4 matrix array
+float *jacobian(float *arr, float *quat) {
+	float *ret = malloc(sizeof(float) * 12); // 3x4 matrix array
 
 	ret[0]  =  arr[X] * quat[W] + arr[Y] * quat[Z] - arr[Z] * quat[Y];
 	ret[1]  =  arr[X] * quat[X] + arr[Y] * quat[Y] + arr[Z] * quat[Z];

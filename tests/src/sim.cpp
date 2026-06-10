@@ -9,9 +9,9 @@
 
 using namespace std;
 
-double *rand_rot(int range);
+float *rand_rot(int range);
 
-matrix_t *get_gyro(double *gyro_out);
+matrix_t *get_gyro(float *gyro_out);
 matrix_t *get_accel(matrix_t *);
 matrix_t *get_mag(matrix_t *);
 
@@ -28,7 +28,7 @@ sim_t::sim_t(kinetic_t *kinetic) {
 }
 
 void sim_t::tick() {
-	double *gyro_out = rand_rot(10);
+	float *gyro_out = rand_rot(10);
 
 	matrix_t *gyro_q = init_matrix(4, 1);
 	gyro_q->data[W] = 0;
@@ -49,7 +49,7 @@ void sim_t::tick() {
 	mag = mag_m->data;
 }
 
-void sim_t::loop(void (*update_imu)(kinetic_t*, double*, double*, double*, double)) {
+void sim_t::loop(void (*update_imu)(kinetic_t*, float*, float*, float*, float)) {
 	while (true) {
 		tick();
 		update_imu(kinetic, gyro, accel, mag, sample_rate_hertz);
@@ -57,8 +57,8 @@ void sim_t::loop(void (*update_imu)(kinetic_t*, double*, double*, double*, doubl
 	}
 }
 
-double *rand_rot(int range) {
-	double* ret = (double *) malloc(3 * sizeof(double));
+float *rand_rot(int range) {
+	float* ret = (float *) malloc(3 * sizeof(float));
 
 	for (int i = 0; i < 3; i++) {
 		ret[i] = deg_to_rad(((rand() % (range * 200)) - range * 100) / 100.0);
@@ -67,12 +67,12 @@ double *rand_rot(int range) {
 	return ret;
 }
 
-matrix_t *get_gyro(double *gyro_out) {
+matrix_t *get_gyro(float *gyro_out) {
 	return arr_to_matrix(gyro_out, 3, true);
 }
 
 matrix_t *get_accel(matrix_t *orientation) {
-	double g_ref_a[] = {0, 0, 1};
+	float g_ref_a[] = {0, 0, 1};
 	matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, true);
 	matrix_t *m = quat_to_rot_matrix(orientation);
 
@@ -80,9 +80,9 @@ matrix_t *get_accel(matrix_t *orientation) {
 }
 
 matrix_t *get_mag(matrix_t *orientation) {
-	double mag_dip = 0;
+	float mag_dip = 0;
 
-	double m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
+	float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
 	matrix_t *m_ref_m = scale_matrix(arr_to_matrix(m_ref_a, 3, true), 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
 
 	return mul_matrix(trans_matrix(quat_to_rot_matrix(orientation)), m_ref_m);

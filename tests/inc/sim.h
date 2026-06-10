@@ -12,17 +12,17 @@ class sim_t {
 
 		matrix_t *orientation;
 
-		double *gyro;
-		double *accel;
-		double *mag;
+		float *gyro;
+		float *accel;
+		float *mag;
 
-		double sample_rate_hertz = 1;
+		float sample_rate_hertz = 1;
 
 		sim_t(kinetic_t *kinetic);
 
 		void tick();
 
-		void loop(void (*update_imu)(kinetic_t*, double*, double*, double*, double));
+		void loop(void (*update_imu)(kinetic_t*, float*, float*, float*, float));
 };
 
 #endif

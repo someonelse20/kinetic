@@ -9,19 +9,19 @@ extern "C" {
 #include <stdbool.h>
 
 typedef struct {
-	double attitude_q[4];
-	double attitude_e[3];
+	float attitude_q[4];
+	float attitude_e[3];
 
-	double velocity[3];
-	double velocity_total;
+	float velocity[3];
+	float velocity_total;
 
-	double cords[2];
-	double altitude;
+	float cords[2];
+	float altitude;
 
-	double gyro_noise[3];
-	double accel_noise[3];
-	double mag_noise[3];
-	double mag_dip;
+	float gyro_noise[3];
+	float accel_noise[3];
+	float mag_noise[3];
+	float mag_dip;
 
 	matrix_t *state_q;
 	matrix_t *estm_covariance;
@@ -29,13 +29,13 @@ typedef struct {
 	bool initialized;
 } kinetic_t;
 
-void init_state(kinetic_t *kinetic, double *accel, double *mag);
+void init_state(kinetic_t *kinetic, float *accel, float *mag);
 
-void update_imu(kinetic_t *kinetic, double *gyro, double *accel, double *mag, double dt);
+void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float dt);
 
-void update_barometer(kinetic_t *kinetic, double altitude, double dt);
+void update_barometer(kinetic_t *kinetic, float altitude, float dt);
 
-void update_gps(kinetic_t *kinetic, double cords[2], double altitude, double dt);
+void update_gps(kinetic_t *kinetic, float cords[2], float altitude, float dt);
 
 #ifdef __cplusplus
 }
