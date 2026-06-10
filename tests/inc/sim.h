@@ -6,9 +6,10 @@
 
 class sim_t {
 	private:
-		kinetic_t *kinetic;
 
 	public:
+		kinetic_t *kinetic;
+
 		matrix_t *orientation;
 
 		double *gyro;
@@ -19,7 +20,7 @@ class sim_t {
 
 		sim_t(kinetic_t *kinetic);
 
-		void tick(void (*update_imu)(kinetic_t*, double*, double*, double*, double));
+		void tick();
 
 		void loop(void (*update_imu)(kinetic_t*, double*, double*, double*, double));
 };

@@ -6,6 +6,8 @@
  * the matrix library from rubikproxy.
  */
 
+// TODO: update arr to matrix to include matrexes of any size
+
 #include "kin_math.h"
 #include <stdbool.h>
 #include <stddef.h>
@@ -26,14 +28,13 @@ void free_matrix(matrix_t *matrix) {
 	free(matrix);
 }
 
-matrix_t *arr_to_matrix(double *arr, size_t size, bool vert) {
-	matrix_t *matrix;
-	if (vert) {
-		matrix = init_matrix(size, 1);
-	} else {
-		matrix = init_matrix(1, size);
+matrix_t *arr_to_matrix(double *arr, size_t rows, size_t cols) {
+	matrix_t *matrix = init_matrix(rows, cols);
+
+	for (size_t i = 0; i < rows * cols; i++) {
+		matrix->data[i] = arr[i];
 	}
-	matrix->data = arr;
+
 	return matrix;
 }
 
@@ -43,6 +44,12 @@ void print_matrix(const matrix_t *matrix) {
 			printf("%f ", matrix->data[i * matrix->cols + j]);
 		}
 		printf("\n");
+	}
+}
+
+void print_arr(const double *arr, size_t size) {
+	for (size_t i = 0; i < size; i++) {
+		printf("%f\n", arr[i]);
 	}
 }
 
@@ -181,50 +188,55 @@ matrix_t *quat_to_rot_matrix(matrix_t *matrix) { // NOTE: There seems to be mult
 	if (matrix->rows != 4 || matrix->cols != 1) return 0;
 	matrix_t *result = init_matrix(3, 3);
 	double *data = matrix->data;
-	double result_d[] = { // 3x3 matrix
-		pow(data[W], 2) + pow(data[X], 2) - pow(data[Y], 2) - pow(data[Z], 2),
-		2 * (data[X] * data[Y] - data[W] * data[Z]),
-		2 * (data[X] * data[Z] + data[W] * data[Y]),
 
-		2 * (data[X] * data[Y] + data[W] * data[Z]),
-		pow(data[W], 2) - pow(data[X], 2) + pow(data[Y], 2) - pow(data[Z], 2),
-		2 * (data[Y] * data[Z] - data[W] * data[X]),
+	result->data[0] = pow(data[W], 2) + pow(data[X], 2) - pow(data[Y], 2) - pow(data[Z], 2);
+	result->data[1] = 2 * (data[X] * data[Y] - data[W] * data[Z]);
+	result->data[2] = 2 * (data[X] * data[Z] + data[W] * data[Y]);
 
-		2 * (data[X] * data[Z] - data[W] * data[Y]),
-		2 * (data[W] * data[X] + data[Y] * data[Z]),
-		pow(data[W], 2) - pow(data[X], 2) - pow(data[Y], 2) + pow(data[Z], 2),
-	};
-	result->data = result_d;
-	return  result;
+	result->data[3] = 2 * (data[X] * data[Y] + data[W] * data[Z]);
+	result->data[4] = pow(data[W], 2) - pow(data[X], 2) + pow(data[Y], 2) - pow(data[Z], 2);
+	result->data[5] = 2 * (data[Y] * data[Z] - data[W] * data[X]);
+
+	result->data[6] = 2 * (data[X] * data[Z] - data[W] * data[Y]);
+	result->data[7] = 2 * (data[W] * data[X] + data[Y] * data[Z]);
+	result->data[8] = pow(data[W], 2) - pow(data[X], 2) - pow(data[Y], 2) + pow(data[Z], 2);
+
+	return result;
 }
 
-matrix_t *rot_matrix_to_quat(matrix_t *matrix) {
+matrix_t *rot_matrix_to_quat(matrix_t *matrix) { // this function is from https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
 	if (matrix->rows != 3 || matrix->cols != 3) return 0;
-	matrix_t *K = init_matrix(4, 4);
+	matrix_t *ret = init_matrix(4, 1);
 
-	K->data[0]  = matrix->data[0] - matrix->data[4] - matrix->data[8];
-	K->data[1]  = matrix->data[3] - matrix->data[1];
-	K->data[2]  = matrix->data[6] + matrix->data[2];
-	K->data[3]  = matrix->data[5] + matrix->data[7];
+	double tr = matrix->data[0] + matrix->data[4] + matrix->data[8];
 
-	K->data[4]  = matrix->data[3] + matrix->data[1];
-	K->data[5]  = matrix->data[4] + matrix->data[0] + matrix->data[8];
-	K->data[6]  = matrix->data[7] + matrix->data[5];
-	K->data[7]  = matrix->data[6] + matrix->data[2];
+	if (tr > 0) {
+		double S = sqrt(1 + tr) * 2;
+		ret->data[W] = 0.25 * S;
+		ret->data[X] = (matrix->data[7] - matrix->data[5]) / S;
+		ret->data[Y] = (matrix->data[2] - matrix->data[6]) / S;
+		ret->data[Z] = (matrix->data[3] - matrix->data[1]) / S;
+	} else if ((matrix->data[0] > matrix->data[4])&(matrix->data[0] > matrix->data[8])) { // if the first diagonal is the largest
+		double S = sqrt(1 + matrix->data[0] - matrix->data[4] - matrix->data[8]) * 2;
+		ret->data[W] = (matrix->data[7] - matrix->data[5]) / S;
+		ret->data[X] = 0.25 * S;
+		ret->data[Y] = (matrix->data[1] + matrix->data[3]) / S;
+		ret->data[Z] = (matrix->data[2] + matrix->data[6]) / S;
+	} else if (matrix->data[4] > matrix->data[8]) {
+		double S = sqrt(1 + matrix->data[4] - matrix->data[0] - matrix->data[8]) * 2;
+		ret->data[W] = (matrix->data[2] - matrix->data[6]) / S;
+		ret->data[X] = (matrix->data[1] + matrix->data[3]) / S;
+		ret->data[Y] = 0.25 * S;
+		ret->data[Z] = (matrix->data[5] + matrix->data[7]) / S;
+	} else {
+		double S = sqrt(1 + matrix->data[8] - matrix->data[0] - matrix->data[4]) * 2;
+		ret->data[W] = (matrix->data[3] - matrix->data[1]) / S;
+		ret->data[X] = (matrix->data[2] + matrix->data[6]) / S;
+		ret->data[Y] = (matrix->data[5] + matrix->data[7]) / S;
+		ret->data[Z] = 0.25 * S;
+	}
 
-	K->data[8]  = matrix->data[6] + matrix->data[2];
-	K->data[9]  = matrix->data[7] + matrix->data[5];
-	K->data[10] = matrix->data[8] + matrix->data[0] + matrix->data[4];
-	K->data[11] = matrix->data[1] + matrix->data[3];
-
-	K->data[12] = matrix->data[5] + matrix->data[7];
-	K->data[13] = matrix->data[6] + matrix->data[2];
-	K->data[14] = matrix->data[1] + matrix->data[3];
-	K->data[15] = matrix->data[0] + matrix->data[4] + matrix->data[8];
-
-	K = scale_matrix(K, 0.333333);
-
-	return K;
+	return ret;
 }
 
 matrix_t *mul_quat(const matrix_t *a, const matrix_t *b) {

@@ -35,9 +35,10 @@ typedef struct {
 } eigen_t;
 
 void free_matrix(matrix_t *matrix);
-matrix_t *arr_to_matrix(double *arr, size_t size, bool vert);
 matrix_t *init_matrix(size_t rows, size_t cols);
+matrix_t *arr_to_matrix(double *arr, size_t rows, size_t cols);
 void print_matrix(const matrix_t *matrix);
+void print_arr(const double *arr, size_t size);
 
 matrix_t *add_matrix(const matrix_t *a, const matrix_t *b);
 matrix_t *sub_matrix(const matrix_t *a, const matrix_t *b);

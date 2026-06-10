@@ -26,6 +26,9 @@ set_target_properties(kinetic PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
-# Test executable
+# Test executables
 add_executable(tests ${CMAKE_SOURCE_DIR}/tests/main.cpp)
 target_link_libraries(tests PRIVATE kinetic)
+
+add_executable(matrix_test ${CMAKE_SOURCE_DIR}/tests/matrix.cpp)
+target_link_libraries(matrix_test PRIVATE kinetic)

@@ -27,7 +27,7 @@ sim_t::sim_t(kinetic_t *kinetic) {
 	orientation->data[3] = 1;
 }
 
-void sim_t::tick(void (*update_imu)(kinetic_t*, double*, double*, double*, double)) {
+void sim_t::tick() {
 	double *gyro_out = rand_rot(10);
 
 	matrix_t *gyro_q = init_matrix(4, 1);
@@ -47,13 +47,12 @@ void sim_t::tick(void (*update_imu)(kinetic_t*, double*, double*, double*, doubl
 	gyro = gyro_m->data;
 	accel = accel_m->data;
 	mag = mag_m->data;
-
-	// update_imu(kinetic, gyro_m->data, accel_m->data, mag_m->data, 1);
 }
 
 void sim_t::loop(void (*update_imu)(kinetic_t*, double*, double*, double*, double)) {
 	while (true) {
-		tick(update_imu);
+		tick();
+		update_imu(kinetic, gyro, accel, mag, sample_rate_hertz);
 		sleep(1 / sample_rate_hertz);
 	}
 }
