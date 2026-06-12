@@ -18,15 +18,16 @@ typedef struct {
 	float cords[2];
 	float altitude;
 
-	float gyro_noise[3];
-	float accel_noise[3];
-	float mag_noise[3];
+	float gyro_noise;
+	float accel_noise;
+	float mag_noise;
 	float mag_dip;
 
 	matrix_t *state_q;
-	matrix_t *estm_covariance;
 
-	bool initialized;
+	matrix_t *g_ref;
+	matrix_t *m_ref;
+	matrix_t *estm_covariance;
 } kinetic_t;
 
 void init_state(kinetic_t *kinetic, float *accel, float *mag);

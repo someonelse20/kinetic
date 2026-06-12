@@ -1,5 +1,4 @@
 #include <iostream>
-#include <stdio.h>
 #include <unistd.h>
 #include <math.h>
 
@@ -30,10 +29,13 @@ int main() {
 
 	while (1) {
 		sim.tick();
+		update_imu(&kinetic, sim.gyro, sim.accel, sim.mag, 1.0);
 
 		print_matrix(quat_to_euler(sim.orientation));
 		cout << endl;
 		print_matrix(quat_to_euler(sim.kinetic->state_q));
+		cout << endl;
+		print_matrix(sim.kinetic->state_q);
 		cout << endl;
 		sleep(1);
 	}
