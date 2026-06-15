@@ -75,6 +75,7 @@ void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float
 	kalman_gain = mul_matrix(kalman_gain, inv_matrix(mes_pred_covariance));
 
 	kinetic->state_q = add_matrix(kinetic->state_q, mul_matrix(kalman_gain, meas_residual));
+	kinetic->state_q = normalize_matrix(kinetic->state_q);
 
 	matrix_t *estm_covariance = mul_matrix(kalman_gain, meas_model_jacob);
 	estm_covariance = sub_matrix(ident_matrix(4), estm_covariance);

@@ -28,7 +28,7 @@ sim_t::sim_t(kinetic_t *kinetic) {
 }
 
 void sim_t::tick() {
-	float *gyro_out = rand_rot(10);
+	float *gyro_out = rand_rot(1);
 
 	matrix_t *gyro_q = init_matrix(4, 1);
 	gyro_q->data[W] = 0;

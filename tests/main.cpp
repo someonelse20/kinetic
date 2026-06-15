@@ -19,6 +19,9 @@ int main() {
 
 	kinetic_t kinetic;
 	kinetic.mag_dip = 67 * (180 / M_PI);
+	kinetic.gyro_noise = 0.0001;
+	kinetic.accel_noise = 0.0001;
+	kinetic.mag_noise = 0.0001;
 
 	sim_t sim(&kinetic);
 
@@ -35,8 +38,11 @@ int main() {
 		cout << endl;
 		print_matrix(quat_to_euler(sim.kinetic->state_q));
 		cout << endl;
+		/*
 		print_matrix(sim.kinetic->state_q);
 		cout << endl;
+		*/
+
 		sleep(1);
 	}
 }
