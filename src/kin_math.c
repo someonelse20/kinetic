@@ -9,13 +9,16 @@
 // TODO: update arr to matrix to include matrexes of any size
 
 #include "kin_math.h"
+#include <pthread.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <sys/types.h>
 
-matrix_t *init_matrix(size_t rows, size_t cols) {
+matrix_t *init_matrix(uint8_t rows, uint8_t cols) {
 	matrix_t *matrix = (matrix_t *)malloc(sizeof(matrix_t));
 	matrix->rows = rows;
 	matrix->cols = cols;
@@ -28,10 +31,10 @@ void free_matrix(matrix_t *matrix) {
 	free(matrix);
 }
 
-matrix_t *arr_to_matrix(float *arr, size_t rows, size_t cols) {
+matrix_t *arr_to_matrix(float *arr, uint8_t rows, uint8_t cols) {
 	matrix_t *matrix = init_matrix(rows, cols);
 
-	for (size_t i = 0; i < rows * cols; i++) {
+	for (uint8_t i = 0; i < rows * cols; i++) {
 		matrix->data[i] = arr[i];
 	}
 
@@ -39,16 +42,16 @@ matrix_t *arr_to_matrix(float *arr, size_t rows, size_t cols) {
 }
 
 void print_matrix(const matrix_t *matrix) {
-	for (size_t i = 0; i < matrix->rows; i++) {
-		for (size_t j = 0; j < matrix->cols; j++) {
+	for (uint8_t i = 0; i < matrix->rows; i++) {
+		for (uint8_t j = 0; j < matrix->cols; j++) {
 			printf("%f ", matrix->data[i * matrix->cols + j]);
 		}
 		printf("\n");
 	}
 }
 
-void print_arr(const float *arr, size_t size) {
-	for (size_t i = 0; i < size; i++) {
+void print_arr(const float *arr, uint8_t size) {
+	for (uint8_t i = 0; i < size; i++) {
 		printf("%f\n", arr[i]);
 	}
 }
@@ -56,7 +59,7 @@ void print_arr(const float *arr, size_t size) {
 matrix_t *add_matrix(const matrix_t *a, const matrix_t *b) {
 	if (a->rows != b->rows || a->cols != b->cols) return NULL;
 	matrix_t *result = init_matrix(a->rows, a->cols);
-	for (size_t i = 0; i < a->rows * a->cols; i++) {
+	for (uint8_t i = 0; i < a->rows * a->cols; i++) {
 		result->data[i] = a->data[i] + b->data[i];
 	}
 	return result;
@@ -65,7 +68,7 @@ matrix_t *add_matrix(const matrix_t *a, const matrix_t *b) {
 matrix_t *sub_matrix(const matrix_t *a, const matrix_t *b) {
 	if (a->rows != b->rows || a->cols != b->cols) return NULL;
 	matrix_t *result = init_matrix(a->rows, a->cols);
-	for (size_t i = 0; i < a->rows * a->cols; i++) {
+	for (uint8_t i = 0; i < a->rows * a->cols; i++) {
 		result->data[i] = a->data[i] - b->data[i];
 	}
 	return result;
@@ -74,10 +77,10 @@ matrix_t *sub_matrix(const matrix_t *a, const matrix_t *b) {
 matrix_t *mul_matrix(const matrix_t *a, const matrix_t *b) {
 	if (a->cols != b->rows) return NULL;
 	matrix_t *result = init_matrix(a->rows, b->cols);
-	for (size_t i = 0; i < a->rows; i++) {
-		for (size_t j = 0; j < b->cols; j++) {
+	for (uint8_t i = 0; i < a->rows; i++) {
+		for (uint8_t j = 0; j < b->cols; j++) {
 			result->data[i * b->cols + j] = 0;
-			for (size_t k = 0; k < a->cols; k++) {
+			for (uint8_t k = 0; k < a->cols; k++) {
 				result->data[i * b->cols + j] += a->data[i * a->cols + k] * b->data[k * b->cols + j];
 			}
 		}
@@ -87,7 +90,7 @@ matrix_t *mul_matrix(const matrix_t *a, const matrix_t *b) {
 
 matrix_t *scale_matrix(matrix_t *matrix, float scalar) {
 	matrix_t *result = init_matrix(matrix->rows, matrix->cols);
-	for (size_t i = 0; i < matrix->rows * matrix->cols; i++) {
+	for (uint8_t i = 0; i < matrix->rows * matrix->cols; i++) {
 		result->data[i] = scalar * matrix->data[i];
 	}
 	return result;
@@ -95,43 +98,107 @@ matrix_t *scale_matrix(matrix_t *matrix, float scalar) {
 
 matrix_t *trans_matrix(const matrix_t *matrix) {
 	matrix_t *result = init_matrix(matrix->cols, matrix->rows);
-	for (size_t i = 0; i < matrix->rows; i++) {
-		for (size_t j = 0; j < matrix->cols; j++) {
+	for (uint8_t i = 0; i < matrix->rows; i++) {
+		for (uint8_t j = 0; j < matrix->cols; j++) {
 			result->data[j * matrix->rows + i] = matrix->data[i * matrix->cols + j];
 		}
 	}
 	return result;
 }
 
-float matrix_determinant(const matrix_t *matrix) {
-	if (matrix->rows != matrix->cols) return 0;
-	return 0;
-}
-
-matrix_t *ident_matrix(size_t size) {
+matrix_t *ident_matrix(uint8_t size) {
 	matrix_t *matrix = init_matrix(size, size);
-	for (size_t i = 0; i < size; i++) {
-		for (size_t j = 0; j < size; j++) {
+	for (uint8_t i = 0; i < size; i++) {
+		for (uint8_t j = 0; j < size; j++) {
 			matrix->data[i * size + j] = (i == j) ? 1.0 : 0.0;
 		}
 	}
 	return matrix;
 }
 
-matrix_t *inv_matrix(matrix_t *matrix) {
-	matrix_t *ret = init_matrix(matrix->rows, matrix->cols);
-	for (size_t i = 0; i < matrix->rows * matrix->cols; i++) {
-		ret->data[i] = 1 / matrix->data[i];
+float matrix_det(const matrix_t *matrix) { // This function is ai generated with some modification.
+	if (matrix->rows != matrix->cols) return -1; // TODO: find better error code
+
+	uint8_t size = matrix->rows;
+
+	if (size == 1) 
+		return matrix->data[0];
+
+	if (size == 2)
+		return matrix->data[0] * matrix->data[3] - matrix->data[1] * matrix->data[2];
+
+	float ret = 0;
+	for (uint8_t j = 0; j < size; j++) {
+		matrix_t *minor = init_matrix(size - 1, size - 1);
+		uint8_t mi = 0;
+		for (uint8_t i = 1; i < size; i++) {
+			uint8_t mj = 0;
+			for (uint8_t k = 0; k < size; k++) {
+				if (k == j) continue;
+				minor->data[mi * (size - 1) + mj] = matrix->data[i * size + k];
+				mj++;
+			}
+			mi++;
+		}
+
+		float sign = (j % 2) ? -1 : 1;
+		ret += sign * matrix->data[j] * matrix_det(minor);
+		free_matrix(minor);
 	}
+
 	return ret;
 }
 
 float matrix_norm(const matrix_t *matrix) {
 	float norm = 0;
-	for (size_t i = 0; i < matrix->rows * matrix->cols; i++) {
+	for (uint8_t i = 0; i < matrix->rows * matrix->cols; i++) {
 		norm += matrix->data[i] * matrix->data[i];
 	}
 	return sqrt(norm);
+}
+
+float matrix_minor(const matrix_t *matrix, uint8_t row, uint8_t col) {
+	if (matrix->cols != matrix->rows) return -1;
+	if (matrix->cols < 2) return -1;
+	uint8_t size = matrix->rows;
+
+	uint8_t index = 0;
+	matrix_t *minor_m = init_matrix(size - 1, size - 1);
+	for (uint8_t i = 0; i < size; i++) {
+		for (uint8_t j = 0; j < size; j++) {
+			if (i == row || j == col)
+				continue;
+
+			minor_m->data[index] = matrix->data[i * size + j];
+			index++;
+		}
+	}
+	
+	return matrix_det(minor_m);
+}
+
+matrix_t *inv_matrix(matrix_t *matrix) {
+	if (matrix->cols != matrix->rows) return NULL;
+	if (matrix->cols < 2) return NULL;
+
+	return scale_matrix(ajt_matrix(matrix), 1.0 / matrix_det(matrix));
+}
+
+matrix_t *ajt_matrix(matrix_t *matrix) {
+	if (matrix->cols != matrix->rows) return NULL;
+	if (matrix->cols < 2) return NULL;
+
+	matrix_t *ret = init_matrix(matrix->rows, matrix->cols);
+	uint8_t size = matrix->rows;
+
+	for (uint8_t i = 0; i < size; i++) {
+		for (uint8_t j = 0; j < size; j++) {
+			ret->data[i * size + j] = pow(-1, i + j) * matrix_minor(matrix, i, j);
+			// ret->data[i * size + j] = matrix_minor(matrix, i, j);
+		}
+	}
+	
+	return trans_matrix(ret);
 }
 
 matrix_t *normalize_matrix(matrix_t *matrix) {

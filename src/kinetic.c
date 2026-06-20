@@ -18,7 +18,7 @@
 static matrix_t *state_prediction(matrix_t *prev_state, float *gyro, float dt);
 static matrix_t *state_transition(float *gyro, float dt);
 static matrix_t *process_noise_covariance(matrix_t *prev_state, float gyro_noise, float dt);
-static matrix_t *estm_covariance(matrix_t *prev_cov, matrix_t *state_trans_m, matrix_t *proc_noise_cov_m);
+static matrix_t *pred_covariance(matrix_t *prev_cov, matrix_t *state_trans_m, matrix_t *proc_noise_cov_m);
 
 // Correction step
 static matrix_t *measurement_model(matrix_t *state, matrix_t *g_ref, matrix_t *m_ref);
@@ -35,10 +35,21 @@ void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float
 
 	// Precition step
 
-	matrix_t *state_pred = state_prediction(kinetic->state_q, gyro, dt);
-	matrix_t *state_trans = state_transition(gyro, dt);
+	// Convert gyro from deg/s to rad/s
+	float *gyro_rad = malloc(3 * sizeof(float));
+	for (int i = 0; i < 3; i++) {
+		gyro_rad[i] = deg_to_rad(gyro[i]);
+	}
+
+	matrix_t *state_pred = state_prediction(kinetic->state_q, gyro_rad, dt);
+	matrix_t *state_trans = state_transition(gyro_rad, dt);
 	matrix_t *proc_noise_cov = process_noise_covariance(kinetic->state_q, kinetic->gyro_noise, dt);
-	matrix_t *estm_cov = estm_covariance(kinetic->estm_covariance, state_trans, proc_noise_cov);
+	matrix_t *pred_cov = pred_covariance(kinetic->estm_covariance, state_trans, proc_noise_cov);
+
+	/*
+	print_matrix(state_pred);
+	printf("\n");
+	*/
 
 	// Correction step
 
@@ -53,6 +64,11 @@ void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float
 	matrix_t *meas_model_jacob = measurement_model_jacob(kinetic->state_q, expect_g_ref, expect_m_ref);
 	matrix_t *meas_noise_cov = measurement_noise_cov(kinetic->accel_noise, kinetic->mag_noise);
 
+	/*
+	print_matrix(meas_model_jacob);
+	printf("\n");
+	*/
+
 	// Build measurment (not model) matrix
 	float meas_m_data[6];
 	for (int i; i < 6; i++) {
@@ -66,23 +82,26 @@ void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float
 
 	matrix_t *meas_residual = sub_matrix(meas_m, meas_model);
 
-	matrix_t *mes_model_jacob_trans = trans_matrix(meas_model_jacob);
-	matrix_t *mes_pred_covariance = mul_matrix(meas_model_jacob, kinetic->estm_covariance);
-	mes_pred_covariance = mul_matrix(mes_pred_covariance, mes_model_jacob_trans);
-	mes_pred_covariance = add_matrix(mes_pred_covariance, meas_noise_cov);
+	matrix_t *meas_model_jacob_trans = trans_matrix(meas_model_jacob);
+	matrix_t *meas_pred_covariance = mul_matrix(meas_model_jacob, pred_cov);
+	meas_pred_covariance = mul_matrix(meas_pred_covariance, meas_model_jacob_trans);
+	meas_pred_covariance = add_matrix(meas_pred_covariance, meas_noise_cov);
 
-	matrix_t *kalman_gain = mul_matrix(kinetic->estm_covariance, mes_model_jacob_trans);
-	kalman_gain = mul_matrix(kalman_gain, inv_matrix(mes_pred_covariance));
+	matrix_t *kalman_gain = mul_matrix(pred_cov, meas_model_jacob_trans);
+	kalman_gain = mul_matrix(kalman_gain, inv_matrix(meas_pred_covariance));
 
-	kinetic->state_q = add_matrix(kinetic->state_q, mul_matrix(kalman_gain, meas_residual));
+	kinetic->state_q = add_matrix(state_pred, mul_matrix(kalman_gain, meas_residual));
 	kinetic->state_q = normalize_matrix(kinetic->state_q);
 
 	matrix_t *estm_covariance = mul_matrix(kalman_gain, meas_model_jacob);
 	estm_covariance = sub_matrix(ident_matrix(4), estm_covariance);
 
-	kinetic->estm_covariance = mul_matrix(estm_covariance, kinetic->estm_covariance);
+	print_matrix(inv_matrix(meas_pred_covariance));
+	printf("\n");
 	/*
 	*/
+
+	kinetic->estm_covariance = mul_matrix(estm_covariance, pred_cov);
 }
 
 void init_state(kinetic_t *kinetic, float accel[3], float mag[3]) {
@@ -135,6 +154,11 @@ static matrix_t *state_prediction(matrix_t *prev_state, float *gyro, float dt) {
 		state_q[W] - (dt/2) * gyro[X] * state_q[X] - (dt/2) * gyro[Y] * state_q[Y] - (dt/2) * gyro[Z] * state_q[Z],
 	};
 
+	/*
+	print_matrix(prev_state);
+	printf("\n");
+	*/
+
 	return arr_to_matrix(estm_state_q, 4, 1);
 }
 
@@ -163,68 +187,72 @@ static matrix_t *process_noise_covariance(matrix_t *prev_state, float gyro_noise
 	noise_m = arr_to_matrix(noise_data, 4, 3);
 	noise_m = scale_matrix(noise_m, dt/2);
 
-	matrix_t *procs_noise_cov_m = scale_matrix(noise_m, gyro_noise);
+	/*
+	print_matrix(noise_m);
+	printf("\n");
+	*/
+
+	matrix_t *procs_noise_cov_m = scale_matrix(noise_m, gyro_noise * gyro_noise);
 
 	return mul_matrix(procs_noise_cov_m, trans_matrix(noise_m));
 }
 
-static matrix_t *estm_covariance(matrix_t *prev_cov, matrix_t *state_trans_m, matrix_t *proc_noise_cov_m) {
+static matrix_t *pred_covariance(matrix_t *prev_cov, matrix_t *state_trans_m, matrix_t *proc_noise_cov_m) {
 	matrix_t *ret;
 
 	ret = mul_matrix(state_trans_m, prev_cov);
 	ret = mul_matrix(ret, trans_matrix(state_trans_m));
+	ret = add_matrix(ret, proc_noise_cov_m);
 
 	/*
 	print_matrix(ret);
 	printf("\n");
-	print_matrix(proc_noise_cov_m);
-	printf("\n");
-
-	return add_matrix(ret, proc_noise_cov_m);
 	*/
 
-	return init_matrix(4, 4);
+	return ret;
 }
 
 static matrix_t *measurement_model(matrix_t *state, matrix_t *g_ref, matrix_t *m_ref) {
-	float mes_model_data[6];
+	float *meas_model_data = malloc(6 * sizeof(float));
 
 	for (int i; i < 6; i++) {
 		if (i < 3) {
-			mes_model_data[i] = g_ref->data[i];
+			meas_model_data[i] = g_ref->data[i];
 		} else {
-			mes_model_data[i] = m_ref->data[i - 3];
+			meas_model_data[i] = m_ref->data[i - 3];
 		}
 	}
 
-	return arr_to_matrix(mes_model_data, 6, 1);
+	return arr_to_matrix(meas_model_data, 6, 1);
 }
 
 static matrix_t *measurement_model_jacob(matrix_t *state, matrix_t *g_ref, matrix_t *m_ref) {
 	float *g_ref_jacob = jacobian(g_ref->data, state->data);
 	float *m_ref_jacob = jacobian(m_ref->data, state->data);
-	float mes_model_jacob_data[24]; // 6x4 array
+	float meas_model_jacob_data[24]; // 6x4 array
 
-	for (size_t i = 0; i < 6; i++) {
-		for (size_t j = 0; j < 4; j++) {
+	for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < 4; j++) {
+			int index = i * 4 + j;
 			if (i < 3) {
-				mes_model_jacob_data[j * 6 + i] = g_ref_jacob[j * 3 + i];
+				meas_model_jacob_data[index] = g_ref_jacob[index];
 			} else {
-				mes_model_jacob_data[j * 6 + i] = g_ref_jacob[j * 3 + i - 6];
+				meas_model_jacob_data[index] = m_ref_jacob[index - 12];
 			}
 		}
 	}
 
-	return arr_to_matrix(mes_model_jacob_data, 6, 4);
+	return arr_to_matrix(meas_model_jacob_data, 6, 4);
 }
 
 static matrix_t *measurement_noise_cov(float accel_noise, float mag_noise) {
 	float noise_covariance_data[36]; // 6x6 array
 
-	for (size_t i = 0; i < 6; i++) {
-		for (size_t j = 0; j < 6; j++) {
+	for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < 6; j++) {
 			if (i != j) {
 				noise_covariance_data[i * 6 + j] = 0;
+				continue;
 			}
 
 			if (i < 3) {

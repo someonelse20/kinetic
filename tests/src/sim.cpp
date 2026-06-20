@@ -68,12 +68,12 @@ float *rand_rot(int range) {
 }
 
 matrix_t *get_gyro(float *gyro_out) {
-	return arr_to_matrix(gyro_out, 3, true);
+	return arr_to_matrix(gyro_out, 3, 1);
 }
 
 matrix_t *get_accel(matrix_t *orientation) {
 	float g_ref_a[] = {0, 0, 1};
-	matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, true);
+	matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, 1);
 	matrix_t *m = quat_to_rot_matrix(orientation);
 
 	return mul_matrix(trans_matrix(quat_to_rot_matrix(orientation)), g_ref_m);

@@ -19,7 +19,7 @@ int main() {
 
 	kinetic_t kinetic;
 	kinetic.mag_dip = 67 * (180 / M_PI);
-	kinetic.gyro_noise = 0.0001;
+	kinetic.gyro_noise = 0.01;
 	kinetic.accel_noise = 0.0001;
 	kinetic.mag_noise = 0.0001;
 
@@ -34,14 +34,18 @@ int main() {
 		sim.tick();
 		update_imu(&kinetic, sim.gyro, sim.accel, sim.mag, 1.0);
 
+		/*
 		print_matrix(quat_to_euler(sim.orientation));
 		cout << endl;
 		print_matrix(quat_to_euler(sim.kinetic->state_q));
 		cout << endl;
-		/*
 		print_matrix(sim.kinetic->state_q);
 		cout << endl;
 		*/
+		/*
+		*/
+
+		break;
 
 		sleep(1);
 	}

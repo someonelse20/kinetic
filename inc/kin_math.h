@@ -13,8 +13,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
 #include <stddef.h>
-#include <stdbool.h>
 
 // Defines for vector/quaternion indexes
 // quaternions are in the format x y z w
@@ -24,8 +24,8 @@ extern "C" {
 #define W 3
 
 typedef struct {
-	size_t rows;
-	size_t cols;
+	uint8_t rows;
+	uint8_t cols;
 	float *data;
 } matrix_t;
 
@@ -35,10 +35,10 @@ typedef struct {
 } eigen_t;
 
 void free_matrix(matrix_t *matrix);
-matrix_t *init_matrix(size_t rows, size_t cols);
-matrix_t *arr_to_matrix(float *arr, size_t rows, size_t cols);
+matrix_t *init_matrix(uint8_t rows, uint8_t cols);
+matrix_t *arr_to_matrix(float *arr, uint8_t rows, uint8_t cols);
 void print_matrix(const matrix_t *matrix);
-void print_arr(const float *arr, size_t size);
+void print_arr(const float *arr, uint8_t size);
 
 matrix_t *add_matrix(const matrix_t *a, const matrix_t *b);
 matrix_t *sub_matrix(const matrix_t *a, const matrix_t *b);
@@ -46,10 +46,13 @@ matrix_t *mul_matrix(const matrix_t *a, const matrix_t *b);
 matrix_t *scale_matrix(matrix_t *matrix, float scalar);
 
 matrix_t *trans_matrix(const matrix_t *matrix);
-matrix_t *ident_matrix(size_t size);
+matrix_t *ident_matrix(uint8_t size);
 
-matrix_t *inv_matrix(matrix_t *matrix);
+float matrix_det(const matrix_t *matrix);
 float matrix_norm(const matrix_t *matrix);
+float matrix_minor(const matrix_t *matrix, uint8_t row, uint8_t col);
+matrix_t *inv_matrix(matrix_t *matrix);
+matrix_t *ajt_matrix(matrix_t *matrix);
 matrix_t *normalize_matrix(matrix_t *matrix);
 
 eigen_t *eigen_matrix(const matrix_t *matrix_t);
