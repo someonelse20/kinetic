@@ -181,7 +181,10 @@ matrix_t *inv_matrix(matrix_t *matrix) {
 	if (matrix->cols != matrix->rows) return NULL;
 	if (matrix->cols < 2) return NULL;
 
-	return scale_matrix(ajt_matrix(matrix), 1.0 / matrix_det(matrix));
+	float det = matrix_det(matrix);
+	if (det == 0) return NULL; // TODO also error out if very very close to zero
+
+	return scale_matrix(ajt_matrix(matrix), 1.0 / det);
 }
 
 matrix_t *ajt_matrix(matrix_t *matrix) {
@@ -193,7 +196,7 @@ matrix_t *ajt_matrix(matrix_t *matrix) {
 
 	for (uint8_t i = 0; i < size; i++) {
 		for (uint8_t j = 0; j < size; j++) {
-			ret->data[i * size + j] = pow(-1, i + j) * matrix_minor(matrix, i, j);
+			ret->data[i * size + j] = pow(-1.0, i + j + 2) * matrix_minor(matrix, i, j);
 			// ret->data[i * size + j] = matrix_minor(matrix, i, j);
 		}
 	}
