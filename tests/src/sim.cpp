@@ -1,4 +1,3 @@
-#include <iostream>
 #include <unistd.h>
 #include <cstdlib>
 #include <math.h>
@@ -11,7 +10,7 @@ using namespace std;
 
 float *rand_rot(int range);
 
-matrix_t *get_gyro(float *gyro_out);
+matrix_t *get_gyro(matrix_t *, matrix_t *, float);
 matrix_t *get_accel(matrix_t *);
 matrix_t *get_mag(matrix_t *);
 
@@ -40,13 +39,32 @@ void sim_t::tick() {
 	orientation = add_matrix(orientation, rate_of_change_q);
 	orientation = normalize_matrix(orientation);
 
-	matrix_t *gyro_m = get_gyro(gyro_out);
 	matrix_t *accel_m = get_accel(orientation);
 	matrix_t *mag_m = get_mag(orientation);
 
-	gyro = gyro_m->data;
+	gyro = gyro_out;
 	accel = accel_m->data;
 	mag = mag_m->data;
+}
+
+void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep) {
+	for (int time = 0; time < duration; time += timestep) {
+		float norm_time = time / duration;
+
+		matrix_t *prev_orientation = copy_matrix(orientation);
+		orientation = add_matrix(start_rot, scale_matrix(sub_matrix(end_rot, start_rot), norm_time));
+
+		matrix_t *gyro_m = get_gyro(prev_orientation, orientation, timestep);
+		matrix_t *accel_m = get_accel(orientation);
+		matrix_t *mag_m = get_mag(orientation);
+
+		gyro = gyro_m->data;
+		accel = accel_m->data;
+		mag = mag_m->data;
+
+		update_imu(kinetic, gyro, accel, mag, sample_rate_hertz);
+		sleep(timestep);
+	}
 }
 
 void sim_t::loop(void (*update_imu)(kinetic_t*, float*, float*, float*, float)) {
@@ -67,8 +85,14 @@ float *rand_rot(int range) {
 	return ret;
 }
 
-matrix_t *get_gyro(float *gyro_out) {
-	return arr_to_matrix(gyro_out, 3, 1);
+matrix_t *get_gyro(matrix_t *q1, matrix_t *q2, float dt) {
+	matrix_t *ret = init_matrix(3, 1);
+
+	ret->data[X] = q1->data[W] * q2->data[X] - q1->data[X] * q2->data[W] - q1->data[Y] * q2->data[Z] + q1->data[Z] * q2->data[Y];
+	ret->data[Y] = q1->data[W] * q2->data[Y] + q1->data[X] * q2->data[Z] - q1->data[Y] * q2->data[W] - q1->data[Z] * q2->data[X];
+	ret->data[Z] = q1->data[W] * q2->data[Z] - q1->data[X] * q2->data[Y] + q1->data[Y] * q2->data[X] - q1->data[Z] * q2->data[W];
+
+	return ret;
 }
 
 matrix_t *get_accel(matrix_t *orientation) {

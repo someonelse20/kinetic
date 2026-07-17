@@ -98,7 +98,12 @@ void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float
 
 	kinetic->estm_covariance = mul_matrix(estm_covariance, pred_cov);
 
-	printf("detrement: %f\n", matrix_det(meas_pred_covariance));
+	/*
+	print_matrix(kalman_gain);
+	printf("\n");
+	*/
+
+	// printf("detrement: %f\n", matrix_det(meas_pred_covariance));
 }
 
 void init_state(kinetic_t *kinetic, float accel[3], float mag[3]) {

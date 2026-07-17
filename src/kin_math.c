@@ -6,17 +6,19 @@
  * the matrix library from rubikproxy.
  */
 
-// TODO: update arr to matrix to include matrexes of any size
-
 #include "kin_math.h"
-#include <pthread.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <math.h>
-#include <sys/types.h>
+
+matrix_t *copy_matrix(matrix_t *matrix) {
+	matrix_t *ret = (matrix_t *)malloc(sizeof(matrix_t));
+	ret->rows = matrix->cols;
+	ret->cols = matrix->cols;
+	ret->data = memcpy(ret->data, matrix->data, ret->rows * ret->cols * sizeof(float));
+	return matrix;
+}
 
 matrix_t *init_matrix(uint8_t rows, uint8_t cols) {
 	matrix_t *matrix = (matrix_t *)malloc(sizeof(matrix_t));
