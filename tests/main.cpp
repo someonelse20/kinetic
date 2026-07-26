@@ -24,12 +24,18 @@ int main() {
 	sim.tick();
 	init_state(sim.kinetic, sim.accel, sim.mag);
 
-	while (1) {
+	for (int i = 0; i < 20; i++) {
 		sim.tick();
 		update_imu(&kinetic, sim.gyro, sim.accel, sim.mag, 1.0);
 
+		cout << "============================================" << endl;
+		cout << "Simulation orientation" << endl;
+		cout << "============================================" << endl;
 		print_matrix(quat_to_euler(sim.orientation));
 		cout << endl;
+		cout << "============================================" << endl;
+		cout << "Kinetic orientation" << endl;
+		cout << "============================================" << endl;
 		print_matrix(quat_to_euler(sim.kinetic->state_q));
 		cout << endl;
 

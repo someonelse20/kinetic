@@ -7,14 +7,22 @@
 #include <iomanip>
 #include <iostream>
 #include <cmath>
-#include <algorithm>
 #include <cstdlib>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <vector>
 
 namespace plot {
 
 // ============ Gnuplot-based CSV generation ============
+
+struct plot_point {
+    double time;
+    double x, y, z;
+    std::vector<double> values;
+};
+
+static std::vector<plot_point> g_points;
 
 bool gnuplot::save_csv(const std::string& filename) {
     if (g_points.empty()) {
@@ -41,10 +49,7 @@ bool gnuplot::save_csv(const std::string& filename) {
     
     for (size_t i = 0; i < g_points.size(); ++i) {
         const auto& pt = g_points[i];
-        out << pt.time << " ";
-        out << pt.x << " ";
-        out << pt.y << " ";
-        out << pt.z;
+        out << pt.time << " " << pt.x << " " << pt.y << " " << pt.z;
         // Add placeholder columns for additional data series
         for (size_t j = 0; j < pt.values.size(); ++j) {
             out << " " << pt.values[j];
@@ -198,19 +203,13 @@ bool gnuplot::generate_svg_script(const std::string& output_file) {
     oss << "<text x=\"5\" y=\"-15\" font-size=\"12\" font-weight=\"bold\">Legend</text>\n\n";
     
     // Add legend entries for different data series if they exist
-    oss << "<rect x=\"0\" y=\"5\" width=\"12\" height=\"2\" fill=\"#1f77b4\"/>\n";
-    oss << "<text x=\"25\" y=\"11\" font-size=\"11\">Roll Angle</text>\n\n";
-    
-    // Add pitch and yaw placeholder legend entries
-    if (g_points.size() > 0) {
-        std::vector<std::string> colors = {"#1f77b4", "#2ca02c", "#d62728"};
-        for (size_t i = 1; i <= 3 && i < g_points.size(); ++i) {
-            double angle_val = std::abs(g_points[0].x); // Use roll as proxy
-            oss << "<rect x=\"0\" y=\"" << (5 + i * 20) << "\" width=\"12\" height=\"2\" fill=\"" 
-                << (i <= colors.size() ? colors[i-1] : "#666666") << "\"/>\n";
-            std::string label = (i == 1) ? "Pitch Angle" : ((i == 2) ? "Yaw Angle" : "Additional Data");
-            oss << "<text x=\"25\" y=\"" << (15 + i * 20) << "\" font-size=\"11\">" << label << "</text>\n";
-        }
+    std::vector<std::string> colors = {"#1f77b4", "#2ca02c", "#d62728"};
+    size_t num_axes = std::max({static_cast<size_t>(g_points.size()), static_cast<size_t>(1)});
+    for (size_t i = 0; i < num_axes && i <= colors.size(); ++i) {
+        oss << "<rect x=\"0\" y=\"" << (5 + i * 20) << "\" width=\"12\" height=\"2\" fill=\"" 
+            << colors[i] << "\"/>\n";
+        std::string label = (i == 0) ? "Roll Angle" : ((i == 1) ? "Pitch Angle" : "Yaw Angle");
+        oss << "<text x=\"25\" y=\"" << (15 + i * 20) << "\" font-size=\"11\">" << label << "</text>\n";
     }
     
     oss << "</g>\n\n";

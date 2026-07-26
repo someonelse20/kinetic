@@ -17,7 +17,7 @@ matrix_t *copy_matrix(matrix_t *matrix) {
 	ret->rows = matrix->cols;
 	ret->cols = matrix->cols;
 	ret->data = (float*)memcpy(ret->data, matrix->data, ret->rows * ret->cols * sizeof(float));
-	return matrix;
+	return ret;
 }
 
 matrix_t *init_matrix(uint8_t rows, uint8_t cols) {
