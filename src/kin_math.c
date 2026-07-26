@@ -16,7 +16,7 @@ matrix_t *copy_matrix(matrix_t *matrix) {
 	matrix_t *ret = (matrix_t *)malloc(sizeof(matrix_t));
 	ret->rows = matrix->cols;
 	ret->cols = matrix->cols;
-	ret->data = memcpy(ret->data, matrix->data, ret->rows * ret->cols * sizeof(float));
+	ret->data = (float*)memcpy(ret->data, matrix->data, ret->rows * ret->cols * sizeof(float));
 	return matrix;
 }
 

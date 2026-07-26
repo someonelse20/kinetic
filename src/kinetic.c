@@ -36,7 +36,7 @@ void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float
 	// Precition step
 
 	// Convert gyro from deg/s to rad/s
-	float *gyro_rad = malloc(3 * sizeof(float));
+		float *gyro_rad = (float*)malloc(3 * sizeof(float));
 	for (int i = 0; i < 3; i++) {
 		gyro_rad[i] = deg_to_rad(gyro[i]);
 	}
@@ -215,7 +215,7 @@ static matrix_t *pred_covariance(matrix_t *prev_cov, matrix_t *state_trans_m, ma
 }
 
 static matrix_t *measurement_model(matrix_t *state, matrix_t *g_ref, matrix_t *m_ref) {
-	float *meas_model_data = malloc(6 * sizeof(float));
+	float *meas_model_data = (float*)malloc(6 * sizeof(float));
 
 	for (int i; i < 6; i++) {
 		if (i < 3) {
@@ -271,7 +271,7 @@ static matrix_t *measurement_noise_cov(float accel_noise, float mag_noise) {
 }
 
 static float *jacobian(float *arr, float *quat) {
-	float *ret = malloc(sizeof(float) * 12); // 3x4 matrix array
+	float *ret = (float*)malloc(sizeof(float) * 12); // 3x4 matrix array
 
 	ret[0]  =  arr[X] * quat[W] + arr[Y] * quat[Z] - arr[Z] * quat[Y];
 	ret[1]  =  arr[X] * quat[X] + arr[Y] * quat[Y] + arr[Z] * quat[Z];
