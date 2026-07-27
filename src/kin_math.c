@@ -8,16 +8,16 @@
 
 #include "kin_math.h"
 #include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
 #include <math.h>
 
 matrix_t *copy_matrix(matrix_t *matrix) {
-	matrix_t *ret = (matrix_t *)malloc(sizeof(matrix_t));
-	ret->rows = matrix->rows;
-	ret->cols = matrix->cols;
-	ret->data = (float *)malloc(ret->rows * ret->cols * sizeof(float));
-	ret->data = (float *)memcpy(ret->data, matrix->data, ret->rows * ret->cols * sizeof(float));
+	matrix_t *ret = init_matrix(matrix->rows, matrix->cols);
+
+	for (int i = 0; i < matrix->rows + matrix->cols; i++) {
+		ret->data[i] = matrix->data[i];
+	}
+
 	return ret;
 }
 
