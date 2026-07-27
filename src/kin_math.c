@@ -14,9 +14,10 @@
 
 matrix_t *copy_matrix(matrix_t *matrix) {
 	matrix_t *ret = (matrix_t *)malloc(sizeof(matrix_t));
-	ret->rows = matrix->cols;
+	ret->rows = matrix->rows;
 	ret->cols = matrix->cols;
-	ret->data = (float*)memcpy(ret->data, matrix->data, ret->rows * ret->cols * sizeof(float));
+	ret->data = (float *)malloc(ret->rows * ret->cols * sizeof(float));
+	ret->data = (float *)memcpy(ret->data, matrix->data, ret->rows * ret->cols * sizeof(float));
 	return ret;
 }
 
@@ -123,7 +124,7 @@ float matrix_det(const matrix_t *matrix) { // This function is ai generated with
 
 	uint8_t size = matrix->rows;
 
-	if (size == 1) 
+	if (size == 1)
 		return matrix->data[0];
 
 	if (size == 2)
@@ -175,7 +176,7 @@ float matrix_minor(const matrix_t *matrix, uint8_t row, uint8_t col) {
 			index++;
 		}
 	}
-	
+
 	return matrix_det(minor_m);
 }
 
@@ -202,7 +203,7 @@ matrix_t *ajt_matrix(matrix_t *matrix) {
 			// ret->data[i * size + j] = matrix_minor(matrix, i, j);
 		}
 	}
-	
+
 	return trans_matrix(ret);
 }
 
@@ -240,14 +241,14 @@ matrix_t *quat_to_euler(matrix_t *matrix) {
 	float z2 = pow(normed->data[Z], 2);
 
 	ret->data[X] = atan2(
-		2 * (normed->data[W] * normed->data[X] + normed->data[Y] * normed->data[Z]), 
+		2 * (normed->data[W] * normed->data[X] + normed->data[Y] * normed->data[Z]),
 		1 - 2 * (normed->data[X] * normed->data[X] + normed->data[Y] * normed->data[Y])
-	);
+		);
 	ret->data[Y] = asin(2 * (normed->data[W] * normed->data[Y] - normed->data[Z] * normed->data[X]));
 	ret->data[Z] = atan2(
-		2 * (normed->data[W] * normed->data[Z] + normed->data[X] * normed->data[Y]), 
+		2 * (normed->data[W] * normed->data[Z] + normed->data[X] * normed->data[Y]),
 		1 - 2 * (normed->data[Y] * normed->data[Y] + normed->data[Z] * normed->data[Z])
-	);
+		);
 
 	for (int i = 0; i < 3; i++) {
 		ret->data[i] = rad_to_deg(ret->data[i]);
@@ -257,7 +258,7 @@ matrix_t *quat_to_euler(matrix_t *matrix) {
 }
 
 matrix_t *quat_to_rot_matrix(matrix_t *matrix) { // NOTE: There seems to be multiple ways to do this
-	if (matrix->rows != 4 || matrix->cols != 1) return 0;
+	if (matrix->rows != 4 || matrix->cols != 1) return NULL;
 	matrix_t *result = init_matrix(3, 3);
 	float *data = matrix->data;
 
@@ -277,7 +278,7 @@ matrix_t *quat_to_rot_matrix(matrix_t *matrix) { // NOTE: There seems to be mult
 }
 
 matrix_t *rot_matrix_to_quat(matrix_t *matrix) { // this function is from https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
-	if (matrix->rows != 3 || matrix->cols != 3) return 0;
+	if (matrix->rows != 3 || matrix->cols != 3) return NULL;
 	matrix_t *ret = init_matrix(4, 1);
 
 	float tr = matrix->data[0] + matrix->data[4] + matrix->data[8];
@@ -319,7 +320,7 @@ matrix_t *mul_quat(const matrix_t *a, const matrix_t *b) {
 	ret->data[Z] = a->data[W] * b->data[Z] + a->data[X] * b->data[Y] - a->data[Y] * b->data[X] + a->data[Z] * b->data[W];
 	ret->data[W] = a->data[W] * b->data[W] - a->data[X] * b->data[X] - a->data[Y] * b->data[Y] - a->data[Z] * b->data[Z];
 
-	return  ret;
+	return ret;
 }
 
 matrix_t *mul_vector(const matrix_t *a, const matrix_t *b) {
@@ -341,12 +342,12 @@ float vector_dot(const matrix_t *a, const matrix_t *b) {
 }
 
 int sgn(float x) {
-	if (x == 0) {
-		return 0;
-	} else if (x > 0) {
+	if (x > 0) {
 		return 1;
-	} else {
+	} else if (x < 0) {
 		return -1;
+	} else {
+		return 0;
 	}
 }
 

@@ -42,10 +42,10 @@ install(DIRECTORY src/ DESTINATION include/kinetic_tests)
 # TEST TARGETS
 #==============================================================================
 
-add_executable(kinetic_main_test tests/main.cpp)
-target_include_directories(kinetic_main_test PRIVATE ${CMAKE_SOURCE_DIR}/tests/inc)
-target_link_libraries(kinetic_main_test PRIVATE kinetic)
+add_executable(tests tests/main.cpp)
+target_include_directories(tests PRIVATE ${CMAKE_SOURCE_DIR}/tests/inc)
+target_link_libraries(tests PRIVATE kinetic)
 
-# Link sim.cpp with kinetic_main_test
-target_sources(kinetic_main_test PRIVATE tests/src/sim.cpp)
+# Link sim.cpp with tests
+target_sources(tests PRIVATE tests/src/sim.cpp)
 

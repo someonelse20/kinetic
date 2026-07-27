@@ -9,8 +9,8 @@
 
 // TODO:
 // sensor calibration
-// seperate mag update
-// seperate accel/mag error
+// separate mag update
+// separate accel/mag error
 
 // Private function declaration
 
@@ -23,7 +23,7 @@ static matrix_t *pred_covariance(matrix_t *prev_cov, matrix_t *state_trans_m, ma
 // Correction step
 static matrix_t *measurement_model(matrix_t *state, matrix_t *g_ref, matrix_t *m_ref);
 static matrix_t *measurement_model_jacob(matrix_t *state, matrix_t *g_ref, matrix_t *m_ref);
-static matrix_t *measurement_noise_cov(float accel_noise, float mag_noise); // NOTE: This is usually static but in the future I want to make the noise dynamicaly change based on linear acceleration and magnetic interferance.
+static matrix_t *measurement_noise_cov(float accel_noise, float mag_noise); // NOTE: This is usually static but in the future I want to make the noise dynamically change based on linear acceleration and magnetic interference.
 // No idea what this does
 // but it seems to have something to do with the derivative
 // of the measurement model
@@ -36,7 +36,7 @@ void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float
 	// Precition step
 
 	// Convert gyro from deg/s to rad/s
-		float *gyro_rad = (float*)malloc(3 * sizeof(float));
+	float *gyro_rad = (float*)malloc(3 * sizeof(float));
 	for (int i = 0; i < 3; i++) {
 		gyro_rad[i] = deg_to_rad(gyro[i]);
 	}
@@ -47,9 +47,9 @@ void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float
 	matrix_t *pred_cov = pred_covariance(kinetic->estm_covariance, state_trans, proc_noise_cov);
 
 	/*
-	print_matrix(state_pred);
-	printf("\n");
-	*/
+	   print_matrix(state_pred);
+	   printf("\n");
+	 */
 
 	// Correction step
 
@@ -65,13 +65,13 @@ void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float
 	matrix_t *meas_noise_cov = measurement_noise_cov(kinetic->accel_noise, kinetic->mag_noise);
 
 	/*
-	print_matrix(meas_model_jacob);
-	printf("\n");
-	*/
+	   print_matrix(meas_model_jacob);
+	   printf("\n");
+	 */
 
-	// Build measurment (not model) matrix
+	// Build measurement (not model) matrix
 	float meas_m_data[6];
-	for (int i; i < 6; i++) {
+	for (int i = 0; i < 6; i++) {
 		if (i < 3) {
 			meas_m_data[i] = norm_accel_m->data[i];
 		} else {
@@ -99,11 +99,13 @@ void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float
 	kinetic->estm_covariance = mul_matrix(estm_covariance, pred_cov);
 
 	/*
-	print_matrix(kalman_gain);
-	printf("\n");
-	*/
+	   print_matrix(kalman_gain);
+	   printf("\n");
+	 */
 
 	// printf("detrement: %f\n", matrix_det(meas_pred_covariance));
+
+	free_matrix(rot_matrix);
 }
 
 void init_state(kinetic_t *kinetic, float accel[3], float mag[3]) {
@@ -134,7 +136,7 @@ void init_state(kinetic_t *kinetic, float accel[3], float mag[3]) {
 	// Initialize rest of variables
 	kinetic->estm_covariance = ident_matrix(4);
 
-	// NED refrence frame
+	// NED reference frame
 	// Factor in magnetic dip for m_ref
 	float g_ref_a[] = {0, 0, 1};
 	float m_ref_a[] = {cos(kinetic->mag_dip), 0, sin(kinetic->mag_dip)};
@@ -157,9 +159,9 @@ static matrix_t *state_prediction(matrix_t *prev_state, float *gyro, float dt) {
 	};
 
 	/*
-	print_matrix(prev_state);
-	printf("\n");
-	*/
+	   print_matrix(prev_state);
+	   printf("\n");
+	 */
 
 	return arr_to_matrix(estm_state_q, 4, 1);
 }
@@ -182,17 +184,17 @@ static matrix_t *process_noise_covariance(matrix_t *prev_state, float gyro_noise
 	float noise_data[] = { // If this doesn't work, put the last row in front
 		-state_q[Y],  state_q[X],  state_q[W],
 		-state_q[X], -state_q[Y], -state_q[Z],
-		 state_q[W], -state_q[Z],  state_q[Y],
-		 state_q[Z],  state_q[W], -state_q[X],
+		state_q[W], -state_q[Z],  state_q[Y],
+		state_q[Z],  state_q[W], -state_q[X],
 	};
 
 	noise_m = arr_to_matrix(noise_data, 4, 3);
 	noise_m = scale_matrix(noise_m, dt/2);
 
 	/*
-	print_matrix(noise_m);
-	printf("\n");
-	*/
+	   print_matrix(noise_m);
+	   printf("\n");
+	 */
 
 	matrix_t *procs_noise_cov_m = scale_matrix(noise_m, gyro_noise * gyro_noise);
 
@@ -207,9 +209,9 @@ static matrix_t *pred_covariance(matrix_t *prev_cov, matrix_t *state_trans_m, ma
 	ret = add_matrix(ret, proc_noise_cov_m);
 
 	/*
-	print_matrix(ret);
-	printf("\n");
-	*/
+	   print_matrix(ret);
+	   printf("\n");
+	 */
 
 	return ret;
 }
@@ -217,7 +219,7 @@ static matrix_t *pred_covariance(matrix_t *prev_cov, matrix_t *state_trans_m, ma
 static matrix_t *measurement_model(matrix_t *state, matrix_t *g_ref, matrix_t *m_ref) {
 	float *meas_model_data = (float*)malloc(6 * sizeof(float));
 
-	for (int i; i < 6; i++) {
+	for (int i = 0; i < 6; i++) {
 		if (i < 3) {
 			meas_model_data[i] = g_ref->data[i];
 		} else {
@@ -239,8 +241,16 @@ static matrix_t *measurement_model_jacob(matrix_t *state, matrix_t *g_ref, matri
 			if (i < 3) {
 				meas_model_jacob_data[index] = g_ref_jacob[index];
 			} else {
+				meas_model_jacob_data[index] = m_ref_jacob[(i - 3) * 4 + j];
+			}
+
+			/*
+			if (i < 3) {
+				meas_model_jacob_data[index] = g_ref_jacob[index];
+			} else {
 				meas_model_jacob_data[index] = m_ref_jacob[index - 12];
 			}
+			*/
 		}
 	}
 

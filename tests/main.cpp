@@ -21,6 +21,21 @@ int main() {
 
 	sim.sample_rate_hertz = 1;
 
+	matrix_t *start_rot = init_matrix(4, 1);
+	start_rot->data[X] = 0.0;
+	start_rot->data[Y] = 0.0;
+	start_rot->data[Z] = 0.0;
+	start_rot->data[W] = 1.0;
+
+	matrix_t *end_rot = init_matrix(4, 1);
+	end_rot->data[X] = 0.7071068;
+	end_rot->data[Y] = 0.0;
+	end_rot->data[Z] = 0.0;
+	end_rot->data[W] = 0.7071068;
+
+	sim.linear_interpolation(start_rot, end_rot, 10.0, 1.0);
+
+	/*
 	sim.tick();
 	init_state(sim.kinetic, sim.accel, sim.mag);
 
@@ -43,5 +58,6 @@ int main() {
 
 		sleep(1);
 	}
+	*/
 }
 

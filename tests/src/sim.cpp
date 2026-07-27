@@ -1,3 +1,4 @@
+#include <iostream>
 #include <unistd.h>
 #include <cstdlib>
 #include <math.h>
@@ -48,7 +49,12 @@ void sim_t::tick() {
 }
 
 void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep) {
-	for (int time = 0; time < duration; time += timestep) {
+	matrix_t *start_accel = get_accel(start_rot);
+	matrix_t *start_mag = get_accel(start_rot);
+
+	init_state(kinetic, start_accel->data, start_mag->data);
+
+	for (int time = 0; time <= duration; time += timestep) {
 		float norm_time = time / duration;
 
 		matrix_t *prev_orientation = copy_matrix(orientation);
@@ -63,6 +69,9 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 		mag = mag_m->data;
 
 		update_imu(kinetic, gyro, accel, mag, sample_rate_hertz);
+
+		print();
+
 		sleep(timestep);
 	}
 }
@@ -73,6 +82,22 @@ void sim_t::loop(void (*update_imu)(kinetic_t*, float*, float*, float*, float)) 
 		update_imu(kinetic, gyro, accel, mag, sample_rate_hertz);
 		sleep(1 / sample_rate_hertz);
 	}
+}
+
+void sim_t::print() {
+		cout << "============================================" << endl;
+		cout << "Simulation orientation" << endl;
+		cout << "============================================" << endl;
+
+		print_matrix(quat_to_euler(orientation));
+		cout << endl;
+
+		cout << "============================================" << endl;
+		cout << "Kinetic orientation" << endl;
+		cout << "============================================" << endl;
+
+		print_matrix(quat_to_euler(kinetic->state_q));
+		cout << endl;
 }
 
 float *rand_rot(int range) {
@@ -98,7 +123,7 @@ matrix_t *get_gyro(matrix_t *q1, matrix_t *q2, float dt) {
 matrix_t *get_accel(matrix_t *orientation) {
 	float g_ref_a[] = {0, 0, 1};
 	matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, 1);
-	matrix_t *m = quat_to_rot_matrix(orientation);
+	// matrix_t *m = quat_to_rot_matrix(orientation);
 
 	return mul_matrix(trans_matrix(quat_to_rot_matrix(orientation)), g_ref_m);
 }
@@ -107,7 +132,7 @@ matrix_t *get_mag(matrix_t *orientation) {
 	float mag_dip = 0;
 
 	float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
-	matrix_t *m_ref_m = scale_matrix(arr_to_matrix(m_ref_a, 3, true), 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
+	matrix_t *m_ref_m = scale_matrix(arr_to_matrix(m_ref_a, 3, 1), 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
 
 	return mul_matrix(trans_matrix(quat_to_rot_matrix(orientation)), m_ref_m);
 }
