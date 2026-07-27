@@ -208,7 +208,13 @@ matrix_t *ajt_matrix(matrix_t *matrix) {
 }
 
 matrix_t *normalize_matrix(matrix_t *matrix) {
-	return scale_matrix(matrix, 1 / matrix_norm(matrix));
+	float norm = matrix_norm(matrix);
+
+	if (norm == 0.f) {
+		return matrix;
+	}
+
+	return scale_matrix(matrix, 1 / norm);
 }
 
 eigen_t *matrix_eigen(const matrix_t *matrix_t) {

@@ -1,6 +1,8 @@
 #include <iostream>
 #include <unistd.h>
 #include <cstdlib>
+#include <chrono>
+#include <thread>
 #include <math.h>
 
 #include "sim.h"
@@ -49,12 +51,14 @@ void sim_t::tick() {
 }
 
 void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep) {
+	sample_rate_hertz = 1 / timestep;
+
 	matrix_t *start_accel = get_accel(start_rot);
 	matrix_t *start_mag = get_accel(start_rot);
 
 	init_state(kinetic, start_accel->data, start_mag->data);
 
-	for (int time = 0; time <= duration; time += timestep) {
+	for (float time = 0.0; time <= duration + timestep; time += timestep) {
 		float norm_time = time / duration;
 
 		matrix_t *prev_orientation = copy_matrix(orientation);
@@ -72,7 +76,8 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 
 		print();
 
-		sleep(timestep);
+		int sleep_ms = timestep * 1000; // TODO Add flag for under millisecond timestep and accuracy.
+		std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
 	}
 }
 
@@ -85,19 +90,19 @@ void sim_t::loop(void (*update_imu)(kinetic_t*, float*, float*, float*, float)) 
 }
 
 void sim_t::print() {
-		cout << "============================================" << endl;
-		cout << "Simulation orientation" << endl;
-		cout << "============================================" << endl;
+	cout << "============================================" << endl;
+	cout << "Simulation orientation" << endl;
+	cout << "============================================" << endl;
 
-		print_matrix(quat_to_euler(orientation));
-		cout << endl;
+	print_matrix(quat_to_euler(orientation));
+	cout << endl;
 
-		cout << "============================================" << endl;
-		cout << "Kinetic orientation" << endl;
-		cout << "============================================" << endl;
+	cout << "============================================" << endl;
+	cout << "Kinetic orientation" << endl;
+	cout << "============================================" << endl;
 
-		print_matrix(quat_to_euler(kinetic->state_q));
-		cout << endl;
+	print_matrix(quat_to_euler(kinetic->state_q));
+	cout << endl;
 }
 
 float *rand_rot(int range) {

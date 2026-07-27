@@ -114,6 +114,7 @@ void init_state(kinetic_t *kinetic, float accel[3], float mag[3]) {
 	matrix_t *mag_m = arr_to_matrix(mag, 3, 1);
 
 	matrix_t *accel_x_mag = mul_vector(accel_m, mag_m);
+
 	matrix_t *row_1 = normalize_matrix(mul_vector(accel_x_mag, accel_m));
 
 	matrix_t *row_2 = normalize_matrix(accel_x_mag);

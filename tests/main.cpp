@@ -19,8 +19,6 @@ int main() {
 
 	sim_t sim(&kinetic);
 
-	sim.sample_rate_hertz = 1;
-
 	matrix_t *start_rot = init_matrix(4, 1);
 	start_rot->data[X] = 0.0;
 	start_rot->data[Y] = 0.0;
@@ -33,7 +31,7 @@ int main() {
 	end_rot->data[Z] = 0.0;
 	end_rot->data[W] = 0.7071068;
 
-	sim.linear_interpolation(start_rot, end_rot, 10.0, 1.0);
+	sim.linear_interpolation(start_rot, end_rot, 5, 0.5);
 
 	/*
 	sim.tick();
