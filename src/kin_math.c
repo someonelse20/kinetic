@@ -29,6 +29,16 @@ matrix_t *init_matrix(uint8_t rows, uint8_t cols) {
 	return matrix;
 }
 
+matrix_t *fill_matrix(uint8_t rows, uint8_t cols, float value) {
+	matrix_t *ret = init_matrix(rows, cols);
+
+	for (int i = 0; i < rows + cols; i++) {
+		ret->data[i] = value;
+	}
+
+	return ret;
+}
+
 void free_matrix(matrix_t *matrix) {
 	free(matrix->data);
 	free(matrix);
@@ -185,7 +195,7 @@ matrix_t *inv_matrix(matrix_t *matrix) {
 	if (matrix->cols < 2) return NULL;
 
 	float det = matrix_det(matrix);
-	if (det == 0) return NULL; // TODO also error out if very very close to zero
+	if (det == 0.f) return NULL; // TODO also error out if very very close to zero
 
 	return scale_matrix(ajt_matrix(matrix), 1.0 / det);
 }
@@ -210,8 +220,9 @@ matrix_t *ajt_matrix(matrix_t *matrix) {
 matrix_t *normalize_matrix(matrix_t *matrix) {
 	float norm = matrix_norm(matrix);
 
+	// Prevent divide by zero.
 	if (norm == 0.f) {
-		return matrix;
+		return fill_matrix(matrix->rows, matrix->cols, 0);
 	}
 
 	return scale_matrix(matrix, 1 / norm);

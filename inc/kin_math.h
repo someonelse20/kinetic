@@ -37,6 +37,7 @@ typedef struct {
 void free_matrix(matrix_t *matrix);
 matrix_t *copy_matrix(matrix_t *matrix);
 matrix_t *init_matrix(uint8_t rows, uint8_t cols);
+matrix_t *fill_matrix(uint8_t rows, uint8_t cols, float value);
 matrix_t *arr_to_matrix(float *arr, uint8_t rows, uint8_t cols);
 void print_matrix(const matrix_t *matrix);
 void print_arr(const float *arr, uint8_t size);
