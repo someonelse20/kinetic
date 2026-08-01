@@ -46,16 +46,12 @@ void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float
 	matrix_t *proc_noise_cov = process_noise_covariance(kinetic->state_q, kinetic->gyro_noise, dt);
 	matrix_t *pred_cov = pred_covariance(kinetic->estm_covariance, state_trans, proc_noise_cov);
 
-	/*
-	   print_matrix(state_pred);
-	   printf("\n");
-	 */
-
 	// Correction step
 
 	// Calculate measurement model
 	matrix_t *expect_g_ref = mul_matrix(trans_matrix(rot_matrix), kinetic->g_ref);
 	matrix_t *expect_m_ref = mul_matrix(trans_matrix(rot_matrix), kinetic->m_ref);
+
 
 	matrix_t *norm_accel_m = normalize_matrix(arr_to_matrix(accel, 3, 1));
 	matrix_t *norm_mag_m = normalize_matrix(arr_to_matrix(mag, 3, 1));
@@ -63,11 +59,6 @@ void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float
 	matrix_t *meas_model = measurement_model(kinetic->state_q, expect_g_ref, expect_m_ref);
 	matrix_t *meas_model_jacob = measurement_model_jacob(kinetic->state_q, expect_g_ref, expect_m_ref);
 	matrix_t *meas_noise_cov = measurement_noise_cov(kinetic->accel_noise, kinetic->mag_noise);
-
-	/*
-	   print_matrix(meas_model_jacob);
-	   printf("\n");
-	 */
 
 	// Build measurement (not model) matrix
 	float meas_m_data[6];
@@ -97,13 +88,6 @@ void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float
 	estm_covariance = sub_matrix(ident_matrix(4), estm_covariance);
 
 	kinetic->estm_covariance = mul_matrix(estm_covariance, pred_cov);
-
-	/*
-	   print_matrix(kalman_gain);
-	   printf("\n");
-	 */
-
-	// printf("detrement: %f\n", matrix_det(meas_pred_covariance));
 
 	free_matrix(rot_matrix);
 }
@@ -139,6 +123,12 @@ void init_state(kinetic_t *kinetic, float accel[3], float mag[3]) {
 
 	// NED reference frame
 	// Factor in magnetic dip for m_ref
+	if (kinetic->mag_dip == 0.f) {
+		printf("Invalid mag dip. When setting mag dip to zero weird things happen.\n");
+		printf("Resetting mag dip to 0.000001\n");
+		kinetic->mag_dip = 0.000001;
+	}
+
 	float g_ref_a[] = {0, 0, 1};
 	float m_ref_a[] = {cos(kinetic->mag_dip), 0, sin(kinetic->mag_dip)};
 	kinetic->g_ref = arr_to_matrix(g_ref_a, 3, 1);

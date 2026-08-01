@@ -7,6 +7,7 @@ include_directories(${CMAKE_SOURCE_DIR}/inc)
 # Kinetic library (core C code)
 add_library(kinetic STATIC src/kin_math.c src/kinetic.c)
 target_include_directories(kinetic PUBLIC ${CMAKE_SOURCE_DIR}/inc)
+target_link_libraries(kinetic PRIVATE m)
 
 # Set compiler flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall")
@@ -19,24 +20,24 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 #==============================================================================
 
 # Plotting library (CSV export, SVG generation via gnuplot)
-add_library(plot STATIC
-    tests/src/plot.cpp           # CSV export + SVG generation
-    tests/src/plot_view.cpp      # Browser opener + HTML viewer
-    tests/src/plot_browse.cpp    # Cross-platform browser launcher
-)
-target_include_directories(plot PUBLIC ${CMAKE_SOURCE_DIR}/tests/inc)
+# add_library(plot STATIC
+#     tests/src/plot.cpp           # CSV export + SVG generation
+#     tests/src/plot_view.cpp      # Browser opener + HTML viewer
+#     tests/src/plot_browse.cpp    # Cross-platform browser launcher
+# )
+# target_include_directories(plot PUBLIC ${CMAKE_SOURCE_DIR}/tests/inc)
 
 # Find gnuplot if available on system, make optional
 find_program(GNUPLOT_EXECUTABLE gnuplot QUIET)
 if(GNUPLOT_EXECUTABLE)
     message(STATUS "Gnuplot found: ${GNUPLOT_EXECUTABLE}")
-    target_include_directories(plot PUBLIC ${CMAKE_SOURCE_DIR}/tests/src)
+	# target_include_directories(plot PUBLIC ${CMAKE_SOURCE_DIR}/tests/src)
 else()
     message(STATUS "WARNING: Gnuplot not found - SVG generation will use embedded methods")
 endif()
 
 # Install plot files (optional, for distribution)
-install(DIRECTORY src/ DESTINATION include/kinetic_tests)
+# install(DIRECTORY src/ DESTINATION include/kinetic_tests)
 
 #==============================================================================
 # TEST TARGETS
@@ -48,4 +49,17 @@ target_link_libraries(tests PRIVATE kinetic)
 
 # Link sim.cpp with tests
 target_sources(tests PRIVATE tests/src/sim.cpp)
+
+add_executable(plot tests/src/plot.cpp)
+target_include_directories(plot PRIVATE ${CMAKE_SOURCE_DIR}/tests/inc)
+target_link_libraries(plot PRIVATE kinetic)
+
+add_executable(matrix tests/matrix.cpp)
+target_include_directories(matrix PRIVATE ${CMAKE_SOURCE_DIR}/tests/inc)
+target_link_libraries(matrix PRIVATE kinetic)
+
+# Reproduction target for mag_dip=0 segfault
+add_executable(repro_mag_dip tests/repro_mag_dip.c)
+target_include_directories(repro_mag_dip PRIVATE ${CMAKE_SOURCE_DIR}/inc)
+target_link_libraries(repro_mag_dip PRIVATE kinetic)
 

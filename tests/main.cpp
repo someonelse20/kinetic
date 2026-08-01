@@ -12,10 +12,11 @@ int main() {
 	// cout << "hello world!" << endl;
 
 	kinetic_t kinetic;
-	kinetic.mag_dip = 67 * (180 / M_PI);
+	// kinetic.mag_dip = 67 * (180 / M_PI);
+	kinetic.mag_dip = 0.000001;
 	kinetic.gyro_noise = 1.0 * (180 / M_PI);
-	kinetic.accel_noise = 0.0;
-	kinetic.mag_noise = 0.0;
+	kinetic.accel_noise = 0.f;
+	kinetic.mag_noise = 0.f;
 
 	sim_t sim(&kinetic);
 

@@ -15,7 +15,7 @@ float *rand_rot(int range);
 
 matrix_t *get_gyro(matrix_t *, matrix_t *, float);
 matrix_t *get_accel(matrix_t *);
-matrix_t *get_mag(matrix_t *);
+matrix_t *get_mag(matrix_t *, float);
 
 sim_t::sim_t(kinetic_t *kinetic) {
 	this->kinetic = kinetic;
@@ -43,7 +43,7 @@ void sim_t::tick() {
 	orientation = normalize_matrix(orientation);
 
 	matrix_t *accel_m = get_accel(orientation);
-	matrix_t *mag_m = get_mag(orientation);
+	matrix_t *mag_m = get_mag(orientation, kinetic->mag_dip);
 
 	gyro = gyro_out;
 	accel = accel_m->data;
@@ -54,11 +54,18 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 	sample_rate_hertz = 1 / timestep;
 
 	matrix_t *start_accel = get_accel(start_rot);
-	matrix_t *start_mag = get_accel(start_rot);
+	matrix_t *start_mag = get_mag(start_rot, kinetic->mag_dip);
 
 	init_state(kinetic, start_accel->data, start_mag->data);
 
-	for (float time = 0.0; time <= duration + timestep; time += timestep) {
+	cout << "============================================" << endl;
+	cout << "Initial kinetic orientation" << endl;
+	cout << "============================================" << endl;
+
+	print_matrix(quat_to_euler(kinetic->state_q));
+	cout << endl;
+
+	for (float time = 0.0; time <= duration; time += timestep) {
 		float norm_time = time / duration;
 
 		matrix_t *prev_orientation = copy_matrix(orientation);
@@ -66,7 +73,7 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 
 		matrix_t *gyro_m = get_gyro(prev_orientation, orientation, timestep);
 		matrix_t *accel_m = get_accel(orientation);
-		matrix_t *mag_m = get_mag(orientation);
+		matrix_t *mag_m = get_mag(orientation, kinetic->mag_dip);
 
 		gyro = gyro_m->data;
 		accel = accel_m->data;
@@ -133,9 +140,7 @@ matrix_t *get_accel(matrix_t *orientation) {
 	return mul_matrix(trans_matrix(quat_to_rot_matrix(orientation)), g_ref_m);
 }
 
-matrix_t *get_mag(matrix_t *orientation) {
-	float mag_dip = 0;
-
+matrix_t *get_mag(matrix_t *orientation, float mag_dip) {
 	float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
 	matrix_t *m_ref_m = scale_matrix(arr_to_matrix(m_ref_a, 3, 1), 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
 
