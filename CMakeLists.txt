@@ -48,18 +48,9 @@ target_include_directories(tests PRIVATE ${CMAKE_SOURCE_DIR}/tests/inc)
 target_link_libraries(tests PRIVATE kinetic)
 
 # Link sim.cpp with tests
-target_sources(tests PRIVATE tests/src/sim.cpp)
-
-add_executable(plot tests/src/plot.cpp)
-target_include_directories(plot PRIVATE ${CMAKE_SOURCE_DIR}/tests/inc)
-target_link_libraries(plot PRIVATE kinetic)
+target_sources(tests PRIVATE tests/src/sim.cpp tests/src/plot.cpp)
 
 add_executable(matrix tests/matrix.cpp)
 target_include_directories(matrix PRIVATE ${CMAKE_SOURCE_DIR}/tests/inc)
 target_link_libraries(matrix PRIVATE kinetic)
-
-# Reproduction target for mag_dip=0 segfault
-add_executable(repro_mag_dip tests/repro_mag_dip.c)
-target_include_directories(repro_mag_dip PRIVATE ${CMAKE_SOURCE_DIR}/inc)
-target_link_libraries(repro_mag_dip PRIVATE kinetic)
 

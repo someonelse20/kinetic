@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <iostream>
 #include <unistd.h>
 #include <cstdlib>
@@ -50,7 +51,7 @@ void sim_t::tick() {
 	mag = mag_m->data;
 }
 
-void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep) {
+void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep, plot_t *Plot) {
 	sample_rate_hertz = 1 / timestep;
 
 	matrix_t *start_accel = get_accel(start_rot);
@@ -64,6 +65,10 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 
 	print_matrix(quat_to_euler(kinetic->state_q));
 	cout << endl;
+
+	if (Plot != NULL) {
+		Plot->init();
+	}
 
 	for (float time = 0.0; time <= duration; time += timestep) {
 		float norm_time = time / duration;
@@ -83,8 +88,17 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 
 		print();
 
+		if (Plot != NULL) {
+			Plot->add_point(quat_to_euler(orientation), "true");
+			Plot->add_point(quat_to_euler(kinetic->state_q), "estm");
+		}
+
 		int sleep_ms = timestep * 1000; // TODO Add flag for under millisecond timestep and accuracy.
 		std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+	}
+
+	if (Plot != NULL) {
+		Plot->plot();
 	}
 }
 

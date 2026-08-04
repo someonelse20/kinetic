@@ -3,6 +3,7 @@
 
 #include "kin_math.h"
 #include "kinetic.h"
+#include "plot.h"
 
 class sim_t {
 	private:
@@ -22,7 +23,7 @@ class sim_t {
 
 		void tick();
 
-		void linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep);
+		void linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep, plot_t *Plot = NULL);
 
 		void loop(void (*update_imu)(kinetic_t*, float*, float*, float*, float));
 

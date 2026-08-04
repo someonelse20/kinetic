@@ -7,10 +7,14 @@
 
 using namespace std;
 
-void init();
+class plot_t {
+	public:
 
-void plot();
+	void init();
 
-void add_point(matrix_t *orientation, string type = "refrence");
+	void plot();
+
+	void add_point(matrix_t *orientation, string type = "true");
+};
 
 #endif

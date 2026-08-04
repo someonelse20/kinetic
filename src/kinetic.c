@@ -49,6 +49,11 @@ void update_imu(kinetic_t *kinetic, float *gyro, float *accel, float *mag, float
 	// Correction step
 
 	// Calculate measurement model
+	/*
+	matrix_t *expect_g_ref = mul_matrix(trans_matrix(rot_matrix), kinetic->g_ref);
+	matrix_t *expect_m_ref = mul_matrix(trans_matrix(rot_matrix), kinetic->m_ref);
+	*/
+	rot_matrix = quat_to_rot_matrix(state_pred);
 	matrix_t *expect_g_ref = mul_matrix(trans_matrix(rot_matrix), kinetic->g_ref);
 	matrix_t *expect_m_ref = mul_matrix(trans_matrix(rot_matrix), kinetic->m_ref);
 
