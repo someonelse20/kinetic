@@ -16,18 +16,14 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
+#include "kin_types.h"
+
 // Defines for vector/quaternion indexes
 // quaternions are in the format x y z w
 #define X 0
 #define Y 1
 #define Z 2
 #define W 3
-
-typedef struct {
-	uint8_t rows;
-	uint8_t cols;
-	float *data;
-} matrix_t;
 
 typedef struct {
 	matrix_t *vector;
