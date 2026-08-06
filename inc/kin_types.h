@@ -13,11 +13,23 @@ typedef struct {
 	float *data;
 } matrix_t;
 
+typedef struct {
+	matrix_t *state_pred;
+	matrix_t *observe_model;
+	matrix_t *observe_model_jacob;
+	matrix_t *state_trans_model;
+	matrix_t *state_trans_model_jacob;
+	matrix_t *proc_noise;
+	matrix_t *meas_noise;
+	matrix_t *meas;
+} ekf_input_t;
+
 // TODO: Move over function pointers to main function arguments.
 //       Maybe use a struct to avoid unwieldy number of function args.
 typedef struct {
 	// Function pointers
 	// Required
+	/*
 	matrix_t *(*state_trans_model)(matrix_t *prev_state, matrix_t *contrl_vector);
 	matrix_t *(*observe_model)(matrix_t *);
 	matrix_t *(*state_trans_model_jacob)(matrix_t *prev_state);
@@ -26,6 +38,7 @@ typedef struct {
 	// Implementation specific
 	matrix_t *(*contrl_input_model)(matrix_t *);
 	matrix_t *(*contrl_vector)();
+	*/
 
 	// Output variables
 	matrix_t *state;

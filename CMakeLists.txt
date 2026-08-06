@@ -5,7 +5,7 @@ project(Kinetic VERSION 1.0.0 LANGUAGES CXX C)
 include_directories(${CMAKE_SOURCE_DIR}/inc)
 
 # Kinetic library (core C code)
-add_library(kinetic STATIC src/kin_math.c src/kinetic.c)
+add_library(kinetic STATIC src/kin_math.c src/kin_ekf.c src/kinetic.c)
 target_include_directories(kinetic PUBLIC ${CMAKE_SOURCE_DIR}/inc)
 target_link_libraries(kinetic PRIVATE m)
 

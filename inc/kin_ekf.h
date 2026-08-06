@@ -8,9 +8,9 @@ extern "C" {
 
 #include "kin_types.h"
 
-uint8_t ekf_init(ekf_t *ekf, matrix_t *init_state);
+uint8_t ekf_init(ekf_t *ekf, matrix_t *state, matrix_t *variance);
 
-uint8_t ekf_update(ekf_t *ekf, matrix_t *meas, matrix_t *proc_noise, matrix_t *meas_noise);
+uint8_t ekf_update(ekf_t *ekf, ekf_input_t input);
 
 #ifdef __cplusplus
 }
