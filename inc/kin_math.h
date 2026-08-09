@@ -49,17 +49,20 @@ matrix_t *ident_matrix(uint8_t size);
 float matrix_det(const matrix_t *matrix);
 float matrix_norm(const matrix_t *matrix);
 float matrix_minor(const matrix_t *matrix, uint8_t row, uint8_t col);
-matrix_t *inv_matrix(matrix_t *matrix);
-matrix_t *ajt_matrix(matrix_t *matrix);
-matrix_t *normalize_matrix(matrix_t *matrix);
+matrix_t *inv_matrix(const matrix_t *matrix);
+matrix_t *ajt_matrix(const matrix_t *matrix);
+matrix_t *normalize_matrix(const matrix_t *matrix);
+matrix_t *skew_symm_matrix(const matrix_t *matrix);
 
 eigen_t *eigen_matrix(const matrix_t *matrix_t);
 
-matrix_t *euler_to_quat(matrix_t *matrix);
-matrix_t *quat_to_euler(matrix_t *matrix);
-matrix_t *quat_to_rot_matrix(matrix_t *matrix);
-matrix_t *rot_matrix_to_quat(matrix_t *matrix);
+matrix_t *euler_to_quat(const matrix_t *matrix);
+matrix_t *quat_to_euler(const matrix_t *matrix);
+matrix_t *quat_to_rot_matrix(const matrix_t *matrix);
+matrix_t *rot_matrix_to_quat(const matrix_t *matrix);
 
+bool is_quat(const matrix_t *matrix);
+bool is_vector(const matrix_t *matrix);
 matrix_t *mul_quat(const matrix_t *a, const matrix_t *b);
 matrix_t *mul_vector(const matrix_t *a, const matrix_t *b);
 float vector_dot(const matrix_t *a, const matrix_t *b);

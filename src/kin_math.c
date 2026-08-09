@@ -101,7 +101,7 @@ matrix_t *mul_matrix(const matrix_t *a, const matrix_t *b) {
 	return result;
 }
 
-matrix_t *scale_matrix(matrix_t *matrix, float scalar) {
+matrix_t *scale_matrix(const matrix_t *matrix, float scalar) {
 	matrix_t *result = init_matrix(matrix->rows, matrix->cols);
 	for (uint8_t i = 0; i < matrix->rows * matrix->cols; i++) {
 		result->data[i] = scalar * matrix->data[i];
@@ -190,7 +190,7 @@ float matrix_minor(const matrix_t *matrix, uint8_t row, uint8_t col) {
 	return matrix_det(minor_m);
 }
 
-matrix_t *inv_matrix(matrix_t *matrix) {
+matrix_t *inv_matrix(const matrix_t *matrix) {
 	if (matrix->cols != matrix->rows) return NULL;
 	if (matrix->cols < 2) return NULL;
 
@@ -200,7 +200,7 @@ matrix_t *inv_matrix(matrix_t *matrix) {
 	return scale_matrix(ajt_matrix(matrix), 1.0 / det);
 }
 
-matrix_t *ajt_matrix(matrix_t *matrix) {
+matrix_t *ajt_matrix(const matrix_t *matrix) {
 	if (matrix->cols != matrix->rows) return NULL;
 	if (matrix->cols < 2) return NULL;
 
@@ -217,7 +217,7 @@ matrix_t *ajt_matrix(matrix_t *matrix) {
 	return trans_matrix(ret);
 }
 
-matrix_t *normalize_matrix(matrix_t *matrix) {
+matrix_t *normalize_matrix(const matrix_t *matrix) {
 	float norm = matrix_norm(matrix);
 
 	// Prevent divide by zero.
@@ -228,11 +228,20 @@ matrix_t *normalize_matrix(matrix_t *matrix) {
 	return scale_matrix(matrix, 1 / norm);
 }
 
+matrix_t *skew_symm_matrix(const matrix_t *matrix) {
+	if (!is_vector(matrix)) {
+		printf("For now skew_symm_matrix only works for 3x1 vectors.");
+		return NULL;
+	}
+
+
+}
+
 eigen_t *matrix_eigen(const matrix_t *matrix_t) {
 
 }
 
-matrix_t *euler_to_quat(matrix_t *matrix) {
+matrix_t *euler_to_quat(const matrix_t *matrix) {
 	matrix_t *ret = init_matrix(4, 1);
 
 	float u = matrix->data[X] / 2;
@@ -252,10 +261,12 @@ matrix_t *quat_to_euler(matrix_t *matrix) {
 	// matrix_t *normed = normalize_matrix(matrix);
 	matrix_t *normed = matrix;
 
+	/* Not sure if this is left over code.
 	float w2 = pow(normed->data[W], 2);
 	float x2 = pow(normed->data[X], 2);
 	float y2 = pow(normed->data[Y], 2);
 	float z2 = pow(normed->data[Z], 2);
+	*/
 
 	ret->data[X] = atan2(
 		2 * (normed->data[W] * normed->data[X] + normed->data[Y] * normed->data[Z]),
@@ -274,7 +285,7 @@ matrix_t *quat_to_euler(matrix_t *matrix) {
 	return ret;
 }
 
-matrix_t *quat_to_rot_matrix(matrix_t *matrix) { // NOTE: There seems to be multiple ways to do this
+matrix_t *quat_to_rot_matrix(const matrix_t *matrix) { // NOTE: There seems to be multiple ways to do this
 	if (matrix->rows != 4 || matrix->cols != 1) return NULL;
 	matrix_t *result = init_matrix(3, 3);
 	float *data = matrix->data;
@@ -294,7 +305,7 @@ matrix_t *quat_to_rot_matrix(matrix_t *matrix) { // NOTE: There seems to be mult
 	return result;
 }
 
-matrix_t *rot_matrix_to_quat(matrix_t *matrix) { // this function is from https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
+matrix_t *rot_matrix_to_quat(const matrix_t *matrix) { // this function is from https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
 	if (matrix->rows != 3 || matrix->cols != 3) return NULL;
 	matrix_t *ret = init_matrix(4, 1);
 
@@ -329,7 +340,25 @@ matrix_t *rot_matrix_to_quat(matrix_t *matrix) { // this function is from https:
 	return ret;
 }
 
+bool is_quat(const matrix_t *matrix) {
+	if (matrix->rows == 4 && matrix->cols == 1) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool is_vector(const matrix_t *matrix) {
+	if (matrix->rows == 3 && matrix->cols == 1) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 matrix_t *mul_quat(const matrix_t *a, const matrix_t *b) {
+	if (!is_quat(a) || !is_quat(b)) return NULL;
+
 	matrix_t *ret = init_matrix(4, 1);
 
 	ret->data[X] = a->data[W] * b->data[X] + a->data[X] * b->data[W] + a->data[Y] * b->data[Z] - a->data[Z] * b->data[Y];
@@ -341,6 +370,8 @@ matrix_t *mul_quat(const matrix_t *a, const matrix_t *b) {
 }
 
 matrix_t *mul_vector(const matrix_t *a, const matrix_t *b) {
+	if (!is_vector(a) || !is_vector(b)) return NULL;
+
 	matrix_t *ret = init_matrix(3, 1);
 
 	ret->data[X] = a->data[Y] * b->data[Z] - a->data[Z] * b->data[Y];
@@ -351,6 +382,8 @@ matrix_t *mul_vector(const matrix_t *a, const matrix_t *b) {
 }
 
 float vector_dot(const matrix_t *a, const matrix_t *b) {
+	if (!is_vector(a) || !is_vector(b)) return -1;
+
 	float ret = 0;
 	for (int i = 0; i < 3; i++) {
 		ret += a->data[i] * b->data[i];
