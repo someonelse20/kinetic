@@ -78,9 +78,9 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 			uint8_t index = i * 6 + j;
 			float noise = (i < 3) ? imu->accel_noise : imu->mag_noise;
 			if (i == j) {
-				imu->proc_noise->data[index] = noise * noise;
+				imu->meas_noise->data[index] = noise * noise;
 			} else {
-				imu->proc_noise->data[index] = 0;
+				imu->meas_noise->data[index] = 0;
 			}
 		}
 	}
