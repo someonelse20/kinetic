@@ -41,7 +41,7 @@ void print_arr(const float *arr, uint8_t size);
 matrix_t *add_matrix(const matrix_t *a, const matrix_t *b);
 matrix_t *sub_matrix(const matrix_t *a, const matrix_t *b);
 matrix_t *mul_matrix(const matrix_t *a, const matrix_t *b);
-matrix_t *scale_matrix(matrix_t *matrix, float scalar);
+matrix_t *scale_matrix(const matrix_t *matrix, float scalar);
 
 matrix_t *trans_matrix(const matrix_t *matrix);
 matrix_t *ident_matrix(uint8_t size);
@@ -56,8 +56,8 @@ matrix_t *skew_symm_matrix(const matrix_t *matrix);
 
 eigen_t *eigen_matrix(const matrix_t *matrix_t);
 
+matrix_t *quat_to_euler(matrix_t *matrix);
 matrix_t *euler_to_quat(const matrix_t *matrix);
-matrix_t *quat_to_euler(const matrix_t *matrix);
 matrix_t *quat_to_rot_matrix(const matrix_t *matrix);
 matrix_t *rot_matrix_to_quat(const matrix_t *matrix);
 

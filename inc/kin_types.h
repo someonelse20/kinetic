@@ -1,6 +1,7 @@
 #ifndef KIN_TYPES_H
 #define KIN_TYPES_H
 
+#include <sys/types.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,26 +25,33 @@ typedef struct {
 	matrix_t *meas;
 } ekf_input_t;
 
-// TODO: Move over function pointers to main function arguments.
-//       Maybe use a struct to avoid unwieldy number of function args.
 typedef struct {
-	// Function pointers
-	// Required
-	/*
-	matrix_t *(*state_trans_model)(matrix_t *prev_state, matrix_t *contrl_vector);
-	matrix_t *(*observe_model)(matrix_t *);
-	matrix_t *(*state_trans_model_jacob)(matrix_t *prev_state);
-	matrix_t *(*observe_model_jacob)(matrix_t *state_pred);
-
-	// Implementation specific
-	matrix_t *(*contrl_input_model)(matrix_t *);
-	matrix_t *(*contrl_vector)();
-	*/
-
-	// Output variables
 	matrix_t *state;
 	matrix_t *covariance;
 } ekf_t;
+
+typedef struct {
+	float gyro_noise;
+	float accel_noise;
+	float mag_noise;
+	float mag_dip;
+	float mag_dec;
+	float dt;
+
+	ekf_t *ekf;
+
+	matrix_t *m_ref;
+	matrix_t *g_ref;
+	matrix_t *proc_noise;
+	matrix_t *meas_noise;
+} imu_t;
+
+// TODO: Remove if not used.
+typedef struct {
+	matrix_t *data;
+	matrix_t *noise;
+	ulong timestamp;
+} sensor_t;
 
 typedef struct {
 	float attitude_q[4];

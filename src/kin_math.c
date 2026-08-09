@@ -234,7 +234,21 @@ matrix_t *skew_symm_matrix(const matrix_t *matrix) {
 		return NULL;
 	}
 
+	matrix_t *ret = init_matrix(3, 3);
 
+	ret->data[0] = 0;
+	ret->data[1] = -matrix->data[Z];
+	ret->data[2] = matrix->data[Y];
+
+	ret->data[3] = matrix->data[Z];
+	ret->data[4] = 0;
+	ret->data[5] = -matrix->data[X];
+
+	ret->data[6] = -matrix->data[Y];
+	ret->data[7] = matrix->data[X];
+	ret->data[8] = 0;
+
+	return ret;
 }
 
 eigen_t *matrix_eigen(const matrix_t *matrix_t) {
