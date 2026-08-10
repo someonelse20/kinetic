@@ -11,12 +11,13 @@
 #include <math.h>
 
 #include "kin_error.h"
+#include "kin_types.h"
 #include "kin_math.h"
 
 matrix_t *copy_matrix(matrix_t *matrix) {
 	matrix_t *ret = init_matrix(matrix->rows, matrix->cols);
 
-	for (int i = 0; i < matrix->rows + matrix->cols; i++) {
+	for (int i = 0; i < matrix->rows * matrix->cols; i++) {
 		ret->data[i] = matrix->data[i];
 	}
 
@@ -34,7 +35,7 @@ matrix_t *init_matrix(uint8_t rows, uint8_t cols) {
 matrix_t *fill_matrix(uint8_t rows, uint8_t cols, float value) {
 	matrix_t *ret = init_matrix(rows, cols);
 
-	for (int i = 0; i < rows + cols; i++) {
+	for (int i = 0; i < rows * cols; i++) {
 		ret->data[i] = value;
 	}
 
@@ -197,8 +198,13 @@ matrix_t *inv_matrix(const matrix_t *matrix) {
 	if (matrix->cols < 2) error_handler(MATRIX_DIMENTION_ERROR);
 
 	float det = matrix_det(matrix);
-	// if (det == 0.f) error_handler(MATRIX_INV_ERROR); // TODO also error out if very very close to zero
-	if (det == 0.f) det = 0.000001;
+	// Technically if the detrement is 0 the math is saying there isn't an inverse.
+	// But sometimes the detrement is actually just really close to zero and the
+	// rest of the program still expects an output. Setting the detrement to almost
+	// zero returns an output of pretty much all zeros which satifies the rest of the
+	// math.
+	if (det == 0.f) det = 0.000001; // NOTE: This isn't pretty but gets the job done.
+	// TODO: See if returning a matrix filled with zeros works as well.
 
 	return scale_matrix(ajt_matrix(matrix), 1.0 / det);
 }
@@ -225,7 +231,13 @@ matrix_t *normalize_matrix(const matrix_t *matrix) {
 
 	// Prevent divide by zero.
 	if (norm == 0.f) {
-		return fill_matrix(matrix->rows, matrix->cols, 0);
+		// Quaternions are a special case where a unit quaternion is {0, 0, 0, 1} not {0, 0, 0, 0}.
+		if (is_quat(matrix)) {
+			matrix_t *ret = fill_matrix(4, 1, 0.f);
+			ret->data[W] = 1.f;
+			return ret;
+		}
+		return fill_matrix(matrix->rows, matrix->cols, 0.f);
 	}
 
 	return scale_matrix(matrix, 1 / norm);

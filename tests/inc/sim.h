@@ -1,10 +1,12 @@
 #ifndef SIM_H
 #define SIM_H
 
-#include "kin_math.h"
 #include "kin_types.h"
-#include "kinetic.h"
 #include "plot.h"
+
+typedef struct {
+	matrix_t (*imu_update);
+} test_t;
 
 class sim_t {
 	private:

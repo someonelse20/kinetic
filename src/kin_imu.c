@@ -137,7 +137,7 @@ static matrix_t *state_prediction_jacobian(float *gyro, float dt) {
 static matrix_t *process_noise(matrix_t *prev_state, float gyro_noise, float dt) {
 	matrix_t *ret;
 
-	float noise_data[] = { // If this doesn't work, put the last row in front
+	float noise_data[] = {
 		-prev_state->data[Y],  prev_state->data[X],  prev_state->data[W],
 		-prev_state->data[X], -prev_state->data[Y], -prev_state->data[Z],
 		 prev_state->data[W], -prev_state->data[Z],  prev_state->data[Y],
