@@ -88,7 +88,7 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 
 		imu_update(imu, gyro, accel, mag);
 
-		// print();
+		print();
 
 		if (Plot != NULL) {
 			Plot->add_point(quat_to_euler(orientation), "true");
@@ -130,6 +130,15 @@ void sim_t::print() {
 
 	print_matrix(quat_to_euler(imu->ekf.state));
 	cout << endl;
+
+	/*
+	cout << "============================================" << endl;
+	cout << "Kinetic covariance" << endl;
+	cout << "============================================" << endl;
+
+	print_matrix(imu->ekf.covariance);
+	cout << endl;
+	*/
 }
 
 float *rand_rot(int range) {

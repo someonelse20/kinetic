@@ -197,7 +197,8 @@ matrix_t *inv_matrix(const matrix_t *matrix) {
 	if (matrix->cols < 2) error_handler(MATRIX_DIMENTION_ERROR);
 
 	float det = matrix_det(matrix);
-	if (det == 0.f) error_handler(MATRIX_DIMENTION_ERROR); // TODO also error out if very very close to zero
+	// if (det == 0.f) error_handler(MATRIX_INV_ERROR); // TODO also error out if very very close to zero
+	if (det == 0.f) det = 0.000001;
 
 	return scale_matrix(ajt_matrix(matrix), 1.0 / det);
 }

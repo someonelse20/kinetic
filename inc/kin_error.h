@@ -7,7 +7,10 @@ extern "C" {
 
 #include <stdint.h>
 
+// kin_math errors
 #define MATRIX_DIMENTION_ERROR 10
+#define MATRIX_INV_ERROR 11
+
 
 // Error code lookup table.
 static const char* ERROR_CODE_STR[] = {
@@ -22,7 +25,7 @@ static const char* ERROR_CODE_STR[] = {
 	"", // 8
 	"", // 9
 	"MATRIX_DIMENTION_ERROR", // 10
-	"", // 11
+	"MATRIX_INV_ERROR", // 11
 	"", // 12
 	"", // 13
 	"", // 14

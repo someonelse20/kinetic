@@ -8,6 +8,7 @@
 
 static matrix_t *state_prediction(matrix_t *prev_state, float *gyro, float dt);
 static matrix_t *state_prediction_jacobian(float *gyro, float dt);
+static matrix_t *process_noise(matrix_t *prev_state, float gyro_noise, float dt);
 static matrix_t *observe_model(matrix_t *state, matrix_t *g_ref, matrix_t *m_ref);
 static matrix_t *observe_model_jacobian(matrix_t *state, matrix_t *g_ref, matrix_t *m_ref);
 static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref, matrix_t *real, float scalar);
@@ -97,8 +98,9 @@ matrix_t *imu_update(imu_t *imu, float *gyro, float *accel, float *mag) {
 	matrix_t *state_pred_jacob = state_prediction_jacobian(gyro, imu->dt);
 	matrix_t *obsv_model = observe_model(state_pred, imu->g_ref, imu->m_ref);
 	matrix_t *obsv_model_jacob = observe_model_jacobian(state_pred, imu->g_ref, imu->m_ref);
+	matrix_t *proc_noise = process_noise(imu->ekf.state, imu->gyro_noise, imu->dt);
 
-	ekf_update(&imu->ekf, meas, state_pred, state_pred_jacob, obsv_model, obsv_model_jacob, imu->proc_noise, imu->meas_noise);
+	ekf_update(&imu->ekf, meas, state_pred, state_pred_jacob, obsv_model, obsv_model_jacob, proc_noise, imu->meas_noise);
 	/*
 	*/
 
@@ -130,6 +132,25 @@ static matrix_t *state_prediction_jacobian(float *gyro, float dt) {
 	};
 
 	return arr_to_matrix(state_trans_data, 4, 4);
+}
+
+static matrix_t *process_noise(matrix_t *prev_state, float gyro_noise, float dt) {
+	matrix_t *ret;
+
+	float noise_data[] = { // If this doesn't work, put the last row in front
+		-prev_state->data[Y],  prev_state->data[X],  prev_state->data[W],
+		-prev_state->data[X], -prev_state->data[Y], -prev_state->data[Z],
+		 prev_state->data[W], -prev_state->data[Z],  prev_state->data[Y],
+		 prev_state->data[Z],  prev_state->data[W], -prev_state->data[X],
+	};
+
+	matrix_t *noise_m = arr_to_matrix(noise_data, 4, 3);
+	noise_m = scale_matrix(noise_m, dt/2);
+
+	ret = scale_matrix(noise_m, gyro_noise * gyro_noise);
+	ret = mul_matrix(ret, trans_matrix(noise_m));
+
+	return ret;
 }
 
 static matrix_t *observe_model(matrix_t *state_pred, matrix_t *g_ref, matrix_t *m_ref) {
@@ -168,13 +189,12 @@ static matrix_t *observe_model_jacobian(matrix_t *state_pred, matrix_t *g_ref, m
 	matrix_t *mag_ctr_vctr = mul_matrix(skew_symm_matrix(m_ref), state_pred_real); // = U_r
 
 	matrix_t *accel_model = observe_model_jacobian_helper(accel_ctr_vctr, g_ref, state_pred_real, state_pred_scalar);
-	/*
 	matrix_t *mag_model = observe_model_jacobian_helper(mag_ctr_vctr, m_ref, state_pred_real, state_pred_scalar);
 
 	ret = stack_matrix(accel_model, mag_model);
+	/*
 	*/
 
-	/*
 	for (int i = 0; i < 6; i++) {
 		for (int j = 0; j < 4; j++) {
 			int index = i * 4 + j;
@@ -186,6 +206,7 @@ static matrix_t *observe_model_jacobian(matrix_t *state_pred, matrix_t *g_ref, m
 			}
 		}
 	}
+	/*
 	*/
 
 	return scale_matrix(ret, 2);
