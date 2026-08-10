@@ -32,7 +32,8 @@ class sim_t {
 
 		void linear_interpolation_comp(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep, plot_t *Plot = NULL);
 
-		void loop(void (*update_imu)(kinetic_t*, float*, float*, float*, float));
+		// TODO: Migrate kinetic_t over to new imu_t.
+		// void loop(void (*update_imu)(kinetic_t*, float*, float*, float*, float));
 
 		void print();
 };

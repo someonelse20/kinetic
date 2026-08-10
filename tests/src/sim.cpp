@@ -45,7 +45,7 @@ void sim_t::tick() {
 	orientation = normalize_matrix(orientation);
 
 	matrix_t *accel_m = get_accel(orientation);
-	matrix_t *mag_m = get_mag(orientation, kinetic->mag_dip);
+	matrix_t *mag_m = get_mag(orientation, imu->mag_dip);
 
 	gyro = gyro_out;
 	accel = accel_m->data;
@@ -166,6 +166,7 @@ void sim_t::linear_interpolation_comp(matrix_t *start_rot, matrix_t *end_rot, fl
 	*/
 }
 
+/*
 void sim_t::loop(void (*update_imu)(kinetic_t*, float*, float*, float*, float)) {
 	while (true) {
 		tick();
@@ -173,6 +174,7 @@ void sim_t::loop(void (*update_imu)(kinetic_t*, float*, float*, float*, float)) 
 		sleep(1 / sample_rate_hertz);
 	}
 }
+*/
 
 void sim_t::print() {
 	cout << "============================================" << endl;

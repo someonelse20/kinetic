@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
-project(Kinetic VERSION 1.0.0 LANGUAGES CXX C)
+project(Kinetic VERSION 0.1.0 LANGUAGES CXX C)
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/inc)
 
 # Kinetic library (core C code)
-add_library(kinetic STATIC src/kin_error.c src/kin_math.c src/kin_ekf.c src/kin_imu.c src/kinetic.c)
+add_library(kinetic STATIC src/kin_error.c src/kin_math.c src/kin_ekf.c src/kin_imu.c)
 target_include_directories(kinetic PUBLIC ${CMAKE_SOURCE_DIR}/inc)
 target_link_libraries(kinetic PRIVATE m)
 
