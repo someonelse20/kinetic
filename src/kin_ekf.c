@@ -37,13 +37,6 @@ uint8_t ekf_update(ekf_t *ekf, matrix_t *meas, matrix_t *state_pred, matrix_t *s
 	meas_pred_cov = mul_matrix(meas_pred_cov, obsv_model_jacob_trans);
 	meas_pred_cov = add_matrix(meas_pred_cov, meas_noise);
 
-	/*
-	print_matrix(inv_matrix(meas_pred_cov));
-	// printf("\n%f\n", matrix_det(meas_pred_cov));
-	// printf("\n====================================\n");
-	printf("\n");
-	*/
-
 	matrix_t *kalman_gain; // K_k = ^P_k * H_k^T * S_k^-1
 	kalman_gain = mul_matrix(cov_pred, obsv_model_jacob_trans);
 	kalman_gain = mul_matrix(kalman_gain, inv_matrix(meas_pred_cov));

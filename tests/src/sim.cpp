@@ -6,9 +6,10 @@
 #include <thread>
 #include <math.h>
 
-#include "sim.h"
+#include "comp_filter.h"
 #include "kin_math.h"
 #include "kin_imu.h"
+#include "sim.h"
 
 using namespace std;
 
@@ -57,7 +58,7 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 	imu->dt = timestep;
 
 	matrix_t *start_accel = get_accel(start_rot);
-	matrix_t *start_mag = get_mag(start_rot, kinetic->mag_dip);
+	matrix_t *start_mag = get_mag(start_rot, imu->mag_dip);
 
 	imu_init(imu, start_accel->data, start_mag->data);
 
@@ -80,13 +81,70 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 
 		matrix_t *gyro_m = get_gyro(prev_orientation, orientation, timestep);
 		matrix_t *accel_m = get_accel(orientation);
-		matrix_t *mag_m = get_mag(orientation, kinetic->mag_dip);
+		matrix_t *mag_m = get_mag(orientation, imu->mag_dip);
 
 		gyro = gyro_m->data;
 		accel = accel_m->data;
 		mag = mag_m->data;
 
 		imu_update(imu, gyro, accel, mag);
+
+		print();
+
+		if (Plot != NULL) {
+			Plot->add_point(quat_to_euler(orientation), "true");
+			Plot->add_point(quat_to_euler(imu->ekf.state), "estm");
+		}
+		/*
+		*/
+
+		int sleep_ms = timestep * 1000; // TODO Add flag for under millisecond timestep and accuracy.
+		std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+	}
+
+	if (Plot != NULL) {
+		Plot->plot();
+	}
+	/*
+	*/
+}
+
+void sim_t::linear_interpolation_comp(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep, plot_t *Plot) {
+	sample_rate_hertz = 1 / timestep;
+
+	imu->dt = timestep;
+
+	matrix_t *start_accel = get_accel(start_rot);
+	matrix_t *start_mag = get_mag(start_rot, imu->mag_dip);
+
+	comp_imu_init(imu, start_accel->data, start_mag->data);
+
+	cout << "============================================" << endl;
+	cout << "Initial kinetic orientation" << endl;
+	cout << "============================================" << endl;
+
+	print_matrix(quat_to_euler(imu->ekf.state));
+	cout << endl;
+
+	if (Plot != NULL) {
+		Plot->init();
+	}
+
+	for (float time = 0.0; time <= duration; time += timestep) {
+		float norm_time = time / duration;
+
+		matrix_t *prev_orientation = copy_matrix(orientation);
+		orientation = add_matrix(start_rot, scale_matrix(sub_matrix(end_rot, start_rot), norm_time));
+
+		matrix_t *gyro_m = get_gyro(prev_orientation, orientation, timestep);
+		matrix_t *accel_m = get_accel(orientation);
+		matrix_t *mag_m = get_mag(orientation, imu->mag_dip);
+
+		gyro = gyro_m->data;
+		accel = accel_m->data;
+		mag = mag_m->data;
+
+		comp_imu_update(imu, gyro, accel, mag);
 
 		print();
 
