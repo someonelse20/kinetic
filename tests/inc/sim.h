@@ -2,6 +2,7 @@
 #define SIM_H
 
 #include "kin_math.h"
+#include "kin_types.h"
 #include "kinetic.h"
 #include "plot.h"
 
@@ -11,6 +12,8 @@ class sim_t {
 	public:
 		kinetic_t *kinetic;
 
+		imu_t *imu;
+
 		matrix_t *orientation;
 
 		float *gyro;
@@ -19,7 +22,7 @@ class sim_t {
 
 		float sample_rate_hertz = 1;
 
-		sim_t(kinetic_t *kinetic);
+		sim_t(imu_t *imu);
 
 		void tick();
 

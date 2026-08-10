@@ -8,7 +8,7 @@
 
 #include "sim.h"
 #include "kin_math.h"
-#include "kinetic.h"
+#include "kin_imu.h"
 
 using namespace std;
 
@@ -18,8 +18,8 @@ matrix_t *get_gyro(matrix_t *, matrix_t *, float);
 matrix_t *get_accel(matrix_t *);
 matrix_t *get_mag(matrix_t *, float);
 
-sim_t::sim_t(kinetic_t *kinetic) {
-	this->kinetic = kinetic;
+sim_t::sim_t(imu_t *imu) {
+	this->imu = imu;
 
 	this->orientation = init_matrix(4, 1);
 
@@ -54,16 +54,18 @@ void sim_t::tick() {
 void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep, plot_t *Plot) {
 	sample_rate_hertz = 1 / timestep;
 
+	imu->dt = timestep;
+
 	matrix_t *start_accel = get_accel(start_rot);
 	matrix_t *start_mag = get_mag(start_rot, kinetic->mag_dip);
 
-	init_state(kinetic, start_accel->data, start_mag->data);
+	imu_init(imu, start_accel->data, start_mag->data);
 
 	cout << "============================================" << endl;
 	cout << "Initial kinetic orientation" << endl;
 	cout << "============================================" << endl;
 
-	print_matrix(quat_to_euler(kinetic->state_q));
+	print_matrix(quat_to_euler(imu->ekf.state));
 	cout << endl;
 
 	if (Plot != NULL) {
@@ -84,14 +86,16 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 		accel = accel_m->data;
 		mag = mag_m->data;
 
-		update_imu(kinetic, gyro, accel, mag, sample_rate_hertz);
+		imu_update(imu, gyro, accel, mag);
 
-		print();
+		// print();
 
 		if (Plot != NULL) {
 			Plot->add_point(quat_to_euler(orientation), "true");
-			Plot->add_point(quat_to_euler(kinetic->state_q), "estm");
+			Plot->add_point(quat_to_euler(imu->ekf.state), "estm");
 		}
+		/*
+		*/
 
 		int sleep_ms = timestep * 1000; // TODO Add flag for under millisecond timestep and accuracy.
 		std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
@@ -100,6 +104,8 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 	if (Plot != NULL) {
 		Plot->plot();
 	}
+	/*
+	*/
 }
 
 void sim_t::loop(void (*update_imu)(kinetic_t*, float*, float*, float*, float)) {
@@ -122,7 +128,7 @@ void sim_t::print() {
 	cout << "Kinetic orientation" << endl;
 	cout << "============================================" << endl;
 
-	print_matrix(quat_to_euler(kinetic->state_q));
+	print_matrix(quat_to_euler(imu->ekf.state));
 	cout << endl;
 }
 

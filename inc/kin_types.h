@@ -38,7 +38,7 @@ typedef struct {
 	float mag_dec;
 	float dt;
 
-	ekf_t *ekf;
+	ekf_t ekf;
 
 	matrix_t *m_ref;
 	matrix_t *g_ref;

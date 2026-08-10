@@ -21,10 +21,58 @@ Build artifacts go to `build/`; omit from version control.
 
 ## Implementation Status
 
-- **kin_math.c**: Matrix operations (initially populated, see file)
-- **kinetic.c**: EKF state estimation and sensor updates
-- **kin_ekf.c**: Extended Kalman filter logic (currently empty stub)
-- EKF math is based on but not constrained to https://ahrs.readthedocs.io/en/latest/filters/ekf.html
+### Core Files
+
+- **kin_math.c** (427 lines, ~12KB): Fully implemented matrix and quaternion operations
+  - Matrix ops: init/free/copy/fill/arr_to_matrix/print, add/sub/mul, scale/transpose/identity
+  - Determinant/inverse via adjugate transpose
+  - Quaternion ops: mul, quat_to_euler (XYZ, deg output), quat_to_rot_matrix, rot_matrix_to_quat
+  - Vector ops: dot product, cross product (mul_vector)
+  - Utilities: sgn(), normalize_matrix, skew_symm_matrix, euler_to_quat
+  - Missing: `matrix_eigen()` (stub), `normalize_matrix()` uses L2 norm (not unit quaternion norm)
+
+- **kinetic.c** (299 lines, ~10KB): EKF state estimation and IMU sensor updates
+  - `init_state()`: Computes initial quaternion from accel/mag vectors, sets NED reference frames
+  - `update_imu()`: Full EKF cycle with prediction + correction for IMU data
+  - Prediction: `state_prediction()`, `state_transition()`, `process_noise_covariance()`, `pred_covariance()`
+  - Correction: `measurement_model()`, `measurement_model_jacob()`, `measurement_noise_cov()`
+  - State: quaternion only (`kinetic->state_q`), covariance initialized as 4x4 identity
+
+- **kin_ekf.c** (80 lines, ~3KB): Partially implemented EKF interface
+  - `ekf_init()`: Copies state and covariance (handles free-on-args)
+  - `ekf_update()`: Mostly commented-out; 4 EKF steps defined but not executed
+  - Expects: `state_pred`, `state_pred_jacob`, `obsv_model`, `obsv_model_jacob`, `proc_noise`, `meas_noise`
+  - Currently prints debug output but doesn't return updated state/covariance
+
+- **src/**: C implementations of EKF, kinematic model, matrix/quat operations
+- **inc/**: Public API (kinetic.h, kin_math.h, kin_ekf.h)
+- **tests/**: C unit tests, C++ simulations
+- **EKF math**: Based on AHRS EKF documentation (https://ahrs.readthedocs.io/en/latest/filters/ekf.html)
+
+### Build Commands
+
+```bash
+mkdir -p build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make
+```
+
+Artifacts go to `build/`; omit from version control.
+
+## Kinetic Structure
+
+```c
+typedef struct {
+    matrix_t state_q;        // 4x1 quaternion (XYZW)
+    matrix_t estim_covariance; // 4x4 covariance
+    matrix_t g_ref;          // 3x1 gravity reference (NED: 0,0,1)
+    matrix_t m_ref;          // 3x1 magnetometer reference (incl. mag_dip)
+    float gyro_noise;
+    float accel_noise;
+    float mag_noise;
+    float mag_dip;
+} kinetic_t;
+```
 
 ## Critical Behaviors and Patterns
 

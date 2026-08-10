@@ -1,4 +1,3 @@
-#include <cstdint>
 #include <stdio.h>
 #include <math.h>
 
@@ -18,6 +17,7 @@ static matrix_t *stack_matrix(const matrix_t *a, const matrix_t *b);
 
 matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 	// Calculate orientation purly based of the accelerometer and magnetometer to start with.
+
 	matrix_t *accel_m = arr_to_matrix(accel, 3, 1);
 	matrix_t *mag_m = arr_to_matrix(mag, 3, 1);
 
@@ -40,11 +40,11 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 		rot_matrix->data[3 * i + 2] = row_3->data[i];
 	}
 
-	imu->ekf->state = rot_matrix_to_quat(rot_matrix);
+	imu->ekf.state = rot_matrix_to_quat(rot_matrix);
 
 	// Initialize rest of variables
 
-	imu->ekf->covariance = ident_matrix(4);
+	imu->ekf.covariance = ident_matrix(4);
 
 	// NED reference frame
 	// Factor in magnetic dip for m_ref
@@ -85,7 +85,7 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 		}
 	}
 
-	return imu->ekf->state;
+	return imu->ekf.state;
 }
 
 matrix_t *imu_update(imu_t *imu, float *gyro, float *accel, float *mag) {
@@ -93,14 +93,19 @@ matrix_t *imu_update(imu_t *imu, float *gyro, float *accel, float *mag) {
 	matrix_t *mag_m = arr_to_matrix(mag, 3, 1);
 
 	matrix_t *meas = stack_matrix(accel_m, mag_m);
-	matrix_t *state_pred = state_prediction(imu->ekf->state, gyro, imu->dt);
+	matrix_t *state_pred = state_prediction(imu->ekf.state, gyro, imu->dt);
 	matrix_t *state_pred_jacob = state_prediction_jacobian(gyro, imu->dt);
 	matrix_t *obsv_model = observe_model(state_pred, imu->g_ref, imu->m_ref);
 	matrix_t *obsv_model_jacob = observe_model_jacobian(state_pred, imu->g_ref, imu->m_ref);
 
-	ekf_update(imu->ekf, meas, state_pred, state_pred_jacob, obsv_model, obsv_model_jacob, imu->proc_noise, imu->meas_noise);
+	ekf_update(&imu->ekf, meas, state_pred, state_pred_jacob, obsv_model, obsv_model_jacob, imu->proc_noise, imu->meas_noise);
+	/*
+	*/
 
-	return imu->ekf->state;
+	// Normalize output.
+	imu->ekf.state = normalize_matrix(imu->ekf.state);
+
+	return imu->ekf.state;
 }
 
 static matrix_t *state_prediction(matrix_t *prev_state, float *gyro, float dt) {
@@ -159,13 +164,15 @@ static matrix_t *observe_model_jacobian(matrix_t *state_pred, matrix_t *g_ref, m
 
 	float state_pred_scalar = state_pred->data[W]; // = ^Q_w
 
-	matrix_t *accel_ctr_vctr = mul_matrix(g_ref, state_pred_real); // = U_g
-	matrix_t *mag_ctr_vctr = mul_matrix(m_ref, state_pred_real); // = U_r
+	matrix_t *accel_ctr_vctr = mul_matrix(skew_symm_matrix(g_ref), state_pred_real); // = U_g
+	matrix_t *mag_ctr_vctr = mul_matrix(skew_symm_matrix(m_ref), state_pred_real); // = U_r
 
 	matrix_t *accel_model = observe_model_jacobian_helper(accel_ctr_vctr, g_ref, state_pred_real, state_pred_scalar);
+	/*
 	matrix_t *mag_model = observe_model_jacobian_helper(mag_ctr_vctr, m_ref, state_pred_real, state_pred_scalar);
 
 	ret = stack_matrix(accel_model, mag_model);
+	*/
 
 	/*
 	for (int i = 0; i < 6; i++) {
@@ -189,11 +196,14 @@ static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref,
 
 	matrix_t *skew_matrix = skew_symm_matrix(add_matrix(ctr_vtr, scale_matrix(ref, scalar))); // = [ctr_vtr + scalar * ref]x
 
-	matrix_t *real_half = mul_matrix(real, ref); // = (real * ref) * I_3 - ref * real^T
-	real_half = mul_matrix(real_half, ident_matrix(3));
+	float dot = vector_dot(real, ref);
+
+	matrix_t *real_half= scale_matrix(ident_matrix(3), dot); // = (real * ref) * I_3 - ref * real^T
 	real_half = sub_matrix(real_half, mul_matrix(ref, trans_matrix(real)));
 
 	matrix_t *model_left = add_matrix(skew_matrix, real_half);
+	/*
+	*/
 
 	/* Build matrix with structure:
 	 * ctr_vtr = u
@@ -213,6 +223,8 @@ static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref,
 			}
 		}
 	}
+	/*
+	*/
 
 	return ret;
 }

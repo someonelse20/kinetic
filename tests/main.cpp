@@ -1,9 +1,8 @@
-#include <iostream>
 #include <unistd.h>
 #include <math.h>
 
 #include "kin_math.h"
-#include "kinetic.h"
+#include "kin_types.h"
 #include "sim.h"
 
 using namespace std;
@@ -11,14 +10,14 @@ using namespace std;
 int main() {
 	// cout << "hello world!" << endl;
 
-	kinetic_t kinetic;
+	imu_t imu;
 	// kinetic.mag_dip = 67 * (180 / M_PI);
-	kinetic.mag_dip = 0.000001;
-	kinetic.gyro_noise = 1.0 * (180 / M_PI);
-	kinetic.accel_noise = 0.f;
-	kinetic.mag_noise = 0.f;
+	imu.mag_dip = 0.000001;
+	imu.gyro_noise = 1.0 * (180 / M_PI);
+	imu.accel_noise = 0.f;
+	imu.mag_noise = 0.f;
 
-	sim_t sim(&kinetic);
+	sim_t sim(&imu);
 
 	matrix_t *start_rot = init_matrix(4, 1);
 	start_rot->data[X] = 0.0;

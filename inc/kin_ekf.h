@@ -1,7 +1,6 @@
 #ifndef KIN_EKF_H
 #define KIN_EKF_H
 
-#include <cstdint>
 #ifdef __cplusplus
 extern "C" {
 #endif
