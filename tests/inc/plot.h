@@ -3,18 +3,14 @@
 
 #include <string>
 
-#include "kin_math.h"
-
-using namespace std;
+#include "kin_types.h"
 
 class plot_t {
 	public:
 
-	void init();
-
 	void plot();
 
-	void add_point(matrix_t *orientation, string type = "true");
+	void add_point(matrix_t *orientation, std::string type = "true");
 };
 
 #endif

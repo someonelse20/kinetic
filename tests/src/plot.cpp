@@ -1,142 +1,143 @@
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
+#include <string>
 
 #include "plot.h"
 #include "kin_math.h"
 
-FILE *true_x_data;
-FILE *true_y_data;
-FILE *true_z_data;
-FILE *estm_x_data;
-FILE *estm_y_data;
-FILE *estm_z_data;
+using namespace std;
+
+struct Data_type {
+	FILE *x_file;
+	FILE *y_file;
+	FILE *z_file;
+
+	string name;
+	float axis_ranges[3] = {0, 0, 0};
+};
+
+Data_type *get_type(string name);
+
+FILE *open_file(string filename);
+
 FILE *gp;
+string gp_input;
 
-float true_axis_ranges[3] = {0, 0, 0};
-float estm_axis_ranges[3] = {0, 0, 0};
-
-void plot_t::init() {
-	gp = popen("gnuplot -persist", "w");
-	if (!gp) {
-		fprintf(stderr, "Error opening GNUplot\n");
-		return;
-	}
-
-	true_x_data = fopen("true_x_data.txt", "w");
-	if (!true_x_data) {
-		fprintf(stderr, "Error opening x data file\n");
-		pclose(gp);
-		return;
-	}
-
-	true_y_data = fopen("true_y_data.txt", "w");
-	if (!true_y_data) {
-		fprintf(stderr, "Error opening y data file\n");
-		pclose(gp);
-		return;
-	}
-
-	true_z_data = fopen("true_z_data.txt", "w");
-	if (!true_z_data) {
-		fprintf(stderr, "Error opening z data file\n");
-		pclose(gp);
-		return;
-	}
-
-	estm_x_data = fopen("estm_x_data.txt", "w");
-	if (!estm_x_data) {
-		fprintf(stderr, "Error opening x data file\n");
-		pclose(gp);
-		return;
-	}
-
-	estm_y_data = fopen("estm_y_data.txt", "w");
-	if (!estm_y_data) {
-		fprintf(stderr, "Error opening y data file\n");
-		pclose(gp);
-		return;
-	}
-
-	estm_z_data = fopen("estm_z_data.txt", "w");
-	if (!estm_z_data) {
-		fprintf(stderr, "Error opening z data file\n");
-		pclose(gp);
-		return;
-	}
-}
+int num_of_types = 0;
+string type_names[100];
+Data_type type_buf[100];
 
 void plot_t::plot() {
-	fclose(true_x_data);
-	fclose(true_y_data);
-	fclose(true_z_data);
-	fclose(estm_x_data);
-	fclose(estm_y_data);
-	fclose(estm_z_data);
+	if (num_of_types == 0) {
+		return;
+	}
 
-	fprintf(gp, "set ylabel 'deg'\n");  // Y-axis label
+	for (int i = 0; i < num_of_types; i++) {
+		fclose(type_buf[i].x_file);
+		fclose(type_buf[i].y_file);
+		fclose(type_buf[i].z_file);
+	}
+
+	gp = popen("gnuplot -persist", "w");
+
+	if (!gp) {
+		cerr << "Error opening GNUplot" << endl;
+		return;
+	}
+
+	fprintf(gp, "set ylabel 'deg'\n");
 	fprintf(gp, "set term qt font 'Arial,8'\n");
 	fprintf(gp, "set multiplot layout 3,1 rows\n");
 
-	fprintf(gp, "plot 'true_x_data.txt' lt rgb 'forest-green' with lines title 'True', ");
-	fprintf(gp, "'estm_x_data.txt' lt rgb 'medium-blue' with lines title 'Estmated'\n");
+	string begin_name = type_buf[0].name;
+	gp_input = "plot '" + begin_name + "_x_data.txt' with lines title '" + begin_name + "', ";
+	fprintf(gp, gp_input.c_str());
+	for (int i = 1; i < num_of_types; i++) {
+		string name = type_buf[i].name;
 
-	fprintf(gp, "plot 'true_y_data.txt' lt rgb 'forest-green' with lines title 'True', ");
-	fprintf(gp, "'estm_y_data.txt' lt rgb 'medium-blue' with lines title 'Estmated'\n");
+		gp_input = "'" + name + "_x_data.txt' with lines title '" + name + "'";
+		fprintf(gp, gp_input.c_str());
+	}
+	fprintf(gp, "\n");
 
-	fprintf(gp, "plot 'true_z_data.txt' lt rgb 'forest-green' with lines title 'True', ");
-	fprintf(gp, "'estm_z_data.txt' lt rgb 'medium-blue' with lines title 'Estmated'\n");
+	begin_name = type_buf[0].name;
+	gp_input = "plot '" + begin_name + "_y_data.txt' with lines title '" + begin_name + "', ";
+	fprintf(gp, gp_input.c_str());
+	for (int i = 1; i < num_of_types; i++) {
+		string name = type_buf[i].name;
+
+		gp_input = "'" + name + "_y_data.txt' with lines title '" + name + "'";
+		fprintf(gp, gp_input.c_str());
+	}
+	fprintf(gp, "\n");
+
+	begin_name = type_buf[0].name;
+	gp_input = "plot '" + begin_name + "_z_data.txt' with lines title '" + begin_name + "', ";
+	fprintf(gp, gp_input.c_str());
+	for (int i = 1; i < num_of_types; i++) {
+		string name = type_buf[i].name;
+
+		gp_input = "'" + name + "_z_data.txt' with lines title '" + name + "'";
+		fprintf(gp, gp_input.c_str());
+	}
+	fprintf(gp, "\n");
 
 	fflush(gp);
 	pclose(gp);
+
+	num_of_types = 0;
 }
 
 void plot_t::add_point(matrix_t *orientation, string type) {
+	Data_type *data_type = get_type(type);
 
-	if (type == "true") {
-		fprintf(true_x_data, "%f %f\n", true_axis_ranges[X], orientation->data[X]);
-		true_axis_ranges[X]++;
+	fprintf(data_type->x_file, "%f %f\n", data_type->axis_ranges[X], orientation->data[X]);
+	data_type->axis_ranges[X] += 1;
 
-		fprintf(true_y_data, "%f %f\n", true_axis_ranges[Y], orientation->data[Y]);
-		true_axis_ranges[Y]++;
+	fprintf(data_type->y_file, "%f %f\n", data_type->axis_ranges[Y], orientation->data[Y]);
+	data_type->axis_ranges[Y] += 1;
 
-		fprintf(true_z_data, "%f %f\n", true_axis_ranges[Z], orientation->data[Z]);
-		true_axis_ranges[Z]++;
-	} else if (type == "estm") {
-		fprintf(estm_x_data, "%f %f\n", estm_axis_ranges[X], orientation->data[X]);
-		estm_axis_ranges[X]++;
-
-		fprintf(estm_y_data, "%f %f\n", estm_axis_ranges[Y], orientation->data[Y]);
-		estm_axis_ranges[Y]++;
-
-		fprintf(estm_z_data, "%f %f\n", estm_axis_ranges[Z], orientation->data[Z]);
-		estm_axis_ranges[Z]++;
-	} else {
-		cout << "Incorrect type: " << type << " select 'true' or 'estm'" << endl;
-	}
+	fprintf(data_type->z_file, "%f %f\n", data_type->axis_ranges[Z], orientation->data[Z]);
+	data_type->axis_ranges[Z] += 1;
 }
 
-/*
-int main() {
-	plot_t plot;
-	plot.init();
-
-	for (double x = 0; x < 10; x += 0.1) {
-		matrix_t *True = init_matrix(3, 1);
-		True->data[X] = sin(x);
-		True->data[Y] = cos(x);
-		True->data[Z] = tan(x);
-		plot.add_point(True, "true");
-
-		matrix_t *Estm = init_matrix(3, 1);
-		Estm->data[X] = cos(x);
-		Estm->data[Y] = sin(x);
-		Estm->data[Z] = atan(x);
-		plot.add_point(Estm, "estm");
+Data_type *get_type(string name) {
+	for (int i = 0; i < num_of_types; i++) {
+		if (type_buf[i].name == name) {
+			cout << name + " matching to " + name + " success!" << endl;
+			print_arr(type_buf[i].axis_ranges, 3);
+			cout << endl;
+			return &type_buf[i];
+		}
 	}
 
-	plot.plot();
+	// cout << " matching to " + name + " failure!" << endl;
 
-	return 0;
+	// Create new data type.
+
+	type_buf[num_of_types].name = name;
+
+	type_buf[num_of_types].axis_ranges[X] = 0;
+	type_buf[num_of_types].axis_ranges[Y] = 0;
+	type_buf[num_of_types].axis_ranges[Z] = 0;
+
+	type_buf[num_of_types].x_file = open_file(name + "_x_data.txt");
+	type_buf[num_of_types].y_file = open_file(name + "_y_data.txt");
+	type_buf[num_of_types].z_file = open_file(name + "_z_data.txt");
+
+	num_of_types++;
+
+	return &type_buf[num_of_types - 1];
 }
-*/
+
+FILE *open_file(string filename) {
+	FILE *File = fopen(filename.c_str(), "w");
+	if (!File) {
+		fprintf(stderr, "Error opening x data file\n");
+		pclose(gp);
+		return NULL;
+	}
+	return File;
+}
+

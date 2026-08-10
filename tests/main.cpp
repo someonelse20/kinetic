@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <math.h>
 
+#include "kin_imu.h"
 #include "kin_math.h"
 #include "kin_types.h"
 #include "plot.h"
@@ -46,7 +47,16 @@ int main() {
 
 	plot_t Plot;
 
-	sim.linear_interpolation(start_rot, end_rot, 5, 1, &Plot);
+	ahrs_alg_t ahrs_ekf;
+	ahrs_ekf.imu_init = imu_init;
+	ahrs_ekf.imu_update = imu_update;
+	ahrs_ekf.name = "EKF";
+
+	sim.num_of_algs = 1;
+	sim.ahrs_algs[0] = ahrs_ekf;
+
+	sim.linear_interpolation(start_rot, end_rot, 1, 0.1, &Plot);
+	// sim.linear_interpolation(start_rot, end_rot, 5, 1, &Plot);
 
 	/*
 	imu_t comp_imu;
