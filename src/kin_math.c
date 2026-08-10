@@ -2,14 +2,16 @@
  * Copyright (c) 2024 Rubik Proxy. All rights reserved.
  * https://github.com/rubikproxy/matrix.h
  *
- * This software is provided for educational purposes and inspired by
+ * This software uses and is inspired by
  * the matrix library from rubikproxy.
  */
 
-#include "kin_math.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+
+#include "kin_error.h"
+#include "kin_math.h"
 
 matrix_t *copy_matrix(matrix_t *matrix) {
 	matrix_t *ret = init_matrix(matrix->rows, matrix->cols);
@@ -70,7 +72,7 @@ void print_arr(const float *arr, uint8_t size) {
 }
 
 matrix_t *add_matrix(const matrix_t *a, const matrix_t *b) {
-	if (a->rows != b->rows || a->cols != b->cols) return NULL;
+	if (a->rows != b->rows || a->cols != b->cols) error_handler(MATRIX_DIMENTION_ERROR);
 	matrix_t *result = init_matrix(a->rows, a->cols);
 	for (uint8_t i = 0; i < a->rows * a->cols; i++) {
 		result->data[i] = a->data[i] + b->data[i];
@@ -79,7 +81,7 @@ matrix_t *add_matrix(const matrix_t *a, const matrix_t *b) {
 }
 
 matrix_t *sub_matrix(const matrix_t *a, const matrix_t *b) {
-	if (a->rows != b->rows || a->cols != b->cols) return NULL;
+	if (a->rows != b->rows || a->cols != b->cols) error_handler(MATRIX_DIMENTION_ERROR);
 	matrix_t *result = init_matrix(a->rows, a->cols);
 	for (uint8_t i = 0; i < a->rows * a->cols; i++) {
 		result->data[i] = a->data[i] - b->data[i];
@@ -88,7 +90,7 @@ matrix_t *sub_matrix(const matrix_t *a, const matrix_t *b) {
 }
 
 matrix_t *mul_matrix(const matrix_t *a, const matrix_t *b) {
-	if (a->cols != b->rows) return NULL;
+	if (a->cols != b->rows) error_handler(MATRIX_DIMENTION_ERROR);
 	matrix_t *result = init_matrix(a->rows, b->cols);
 	for (uint8_t i = 0; i < a->rows; i++) {
 		for (uint8_t j = 0; j < b->cols; j++) {
@@ -191,18 +193,18 @@ float matrix_minor(const matrix_t *matrix, uint8_t row, uint8_t col) {
 }
 
 matrix_t *inv_matrix(const matrix_t *matrix) {
-	if (matrix->cols != matrix->rows) return NULL;
-	if (matrix->cols < 2) return NULL;
+	if (matrix->cols != matrix->rows) error_handler(MATRIX_DIMENTION_ERROR);
+	if (matrix->cols < 2) error_handler(MATRIX_DIMENTION_ERROR);
 
 	float det = matrix_det(matrix);
-	if (det == 0.f) return NULL; // TODO also error out if very very close to zero
+	if (det == 0.f) error_handler(MATRIX_DIMENTION_ERROR); // TODO also error out if very very close to zero
 
 	return scale_matrix(ajt_matrix(matrix), 1.0 / det);
 }
 
 matrix_t *ajt_matrix(const matrix_t *matrix) {
-	if (matrix->cols != matrix->rows) return NULL;
-	if (matrix->cols < 2) return NULL;
+	if (matrix->cols != matrix->rows) error_handler(MATRIX_DIMENTION_ERROR);
+	if (matrix->cols < 2) error_handler(MATRIX_DIMENTION_ERROR);
 
 	matrix_t *ret = init_matrix(matrix->rows, matrix->cols);
 	uint8_t size = matrix->rows;
@@ -231,7 +233,7 @@ matrix_t *normalize_matrix(const matrix_t *matrix) {
 matrix_t *skew_symm_matrix(const matrix_t *matrix) {
 	if (!is_vector(matrix)) {
 		printf("For now skew_symm_matrix only works for 3x1 vectors.");
-		return NULL;
+		error_handler(MATRIX_DIMENTION_ERROR);
 	}
 
 	matrix_t *ret = init_matrix(3, 3);
@@ -300,7 +302,7 @@ matrix_t *quat_to_euler(matrix_t *matrix) {
 }
 
 matrix_t *quat_to_rot_matrix(const matrix_t *matrix) { // NOTE: There seems to be multiple ways to do this
-	if (matrix->rows != 4 || matrix->cols != 1) return NULL;
+	if (matrix->rows != 4 || matrix->cols != 1) error_handler(MATRIX_DIMENTION_ERROR);
 	matrix_t *result = init_matrix(3, 3);
 	float *data = matrix->data;
 
@@ -320,7 +322,7 @@ matrix_t *quat_to_rot_matrix(const matrix_t *matrix) { // NOTE: There seems to b
 }
 
 matrix_t *rot_matrix_to_quat(const matrix_t *matrix) { // this function is from https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
-	if (matrix->rows != 3 || matrix->cols != 3) return NULL;
+	if (matrix->rows != 3 || matrix->cols != 3) error_handler(MATRIX_DIMENTION_ERROR);
 	matrix_t *ret = init_matrix(4, 1);
 
 	float tr = matrix->data[0] + matrix->data[4] + matrix->data[8];
@@ -371,7 +373,7 @@ bool is_vector(const matrix_t *matrix) {
 }
 
 matrix_t *mul_quat(const matrix_t *a, const matrix_t *b) {
-	if (!is_quat(a) || !is_quat(b)) return NULL;
+	if (!is_quat(a) || !is_quat(b)) error_handler(MATRIX_DIMENTION_ERROR);
 
 	matrix_t *ret = init_matrix(4, 1);
 
@@ -384,7 +386,7 @@ matrix_t *mul_quat(const matrix_t *a, const matrix_t *b) {
 }
 
 matrix_t *mul_vector(const matrix_t *a, const matrix_t *b) {
-	if (!is_vector(a) || !is_vector(b)) return NULL;
+	if (!is_vector(a) || !is_vector(b)) error_handler(MATRIX_DIMENTION_ERROR);
 
 	matrix_t *ret = init_matrix(3, 1);
 
