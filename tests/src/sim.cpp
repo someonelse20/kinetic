@@ -123,7 +123,7 @@ void sim_t::linear_interpolation_comp(matrix_t *start_rot, matrix_t *end_rot, fl
 	cout << "Initial kinetic orientation" << endl;
 	cout << "============================================" << endl;
 
-	print_matrix(quat_to_euler(imu->ekf.state));
+	print_matrix(imu->ekf.state);
 	cout << endl;
 
 	if (Plot != NULL) {
@@ -150,7 +150,7 @@ void sim_t::linear_interpolation_comp(matrix_t *start_rot, matrix_t *end_rot, fl
 
 		if (Plot != NULL) {
 			Plot->add_point(quat_to_euler(orientation), "true");
-			Plot->add_point(quat_to_euler(imu->ekf.state), "estm");
+			Plot->add_point(imu->ekf.state, "estm");
 		}
 		/*
 		*/
@@ -187,6 +187,7 @@ void sim_t::print() {
 	cout << "============================================" << endl;
 
 	print_matrix(quat_to_euler(imu->ekf.state));
+	// print_matrix(imu->ekf.state);
 	cout << endl;
 
 	/*
@@ -216,7 +217,7 @@ matrix_t *get_gyro(matrix_t *q1, matrix_t *q2, float dt) {
 	ret->data[Y] = q1->data[W] * q2->data[Y] + q1->data[X] * q2->data[Z] - q1->data[Y] * q2->data[W] - q1->data[Z] * q2->data[X];
 	ret->data[Z] = q1->data[W] * q2->data[Z] - q1->data[X] * q2->data[Y] + q1->data[Y] * q2->data[X] - q1->data[Z] * q2->data[W];
 
-	return ret;
+	return scale_matrix(ret, 2 / dt);
 }
 
 matrix_t *get_accel(matrix_t *orientation) {
