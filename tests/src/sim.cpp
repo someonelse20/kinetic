@@ -58,15 +58,9 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 	matrix_t *start_mag = get_mag(start_rot, imu->mag_dip);
 
 	for (int i = 0; i < num_of_algs; i++) {
-		ahrs_algs[i]->imu_init(imu, start_accel->data, start_mag->data);
+		ahrs_algs[i]->imu->dt = timestep;
+		ahrs_algs[i]->imu_init(ahrs_algs[i]->imu, start_accel->data, start_mag->data);
 	}
-
-	cout << "============================================" << endl;
-	cout << "Initial kinetic orientation" << endl;
-	cout << "============================================" << endl;
-
-	print_matrix(quat_to_euler(imu->ekf.state));
-	cout << endl;
 
 	for (float time = 0.0; time <= duration; time += timestep) {
 		float norm_time = time / duration;
@@ -76,25 +70,23 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 
 		matrix_t *gyro_m = get_gyro(prev_orientation, orientation, timestep);
 		matrix_t *accel_m = get_accel(orientation);
-		matrix_t *mag_m = get_mag(orientation, imu->mag_dip);
+		matrix_t *mag_m = get_mag(orientation, imu->mag_dip); // TODO: Be specific to each ahrs mag_dip not just global mag_dip.
 
 		gyro = gyro_m->data;
 		accel = accel_m->data;
 		mag = mag_m->data;
 
 		for (int i = 0; i < num_of_algs; i++) {
-			ahrs_algs[i]->imu_update(imu, gyro, accel, mag);
+			ahrs_algs[i]->imu_update(ahrs_algs[i]->imu, gyro, accel, mag);
 
 			if (Plot == NULL) continue;
 
-			if (is_quat(imu->ekf.state)) {
-				Plot->add_point(quat_to_euler(imu->ekf.state), ahrs_algs[i]->name);
+			if (is_quat(ahrs_algs[i]->imu->ekf.state)) {
+				Plot->add_point(quat_to_euler(ahrs_algs[i]->imu->ekf.state), ahrs_algs[i]->name);
 			} else {
-				Plot->add_point(imu->ekf.state, ahrs_algs[i]->name);
+				Plot->add_point(ahrs_algs[i]->imu->ekf.state, ahrs_algs[i]->name);
 			}
 		}
-
-		// print();
 
 		if (Plot != NULL) {
 			Plot->add_point(quat_to_euler(orientation), "true");
@@ -107,8 +99,6 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 	if (Plot != NULL) {
 		Plot->plot();
 	}
-	/*
-	*/
 }
 
 void sim_t::print() {
@@ -128,13 +118,13 @@ void sim_t::print() {
 	cout << endl;
 
 	/*
-	cout << "============================================" << endl;
-	cout << "Kinetic covariance" << endl;
-	cout << "============================================" << endl;
+	   cout << "============================================" << endl;
+	   cout << "Kinetic covariance" << endl;
+	   cout << "============================================" << endl;
 
-	print_matrix(imu->ekf.covariance);
-	cout << endl;
-	*/
+	   print_matrix(imu->ekf.covariance);
+	   cout << endl;
+	 */
 }
 
 void sim_t::add_ahrs(matrix_t *(*imu_init)(imu_t *imu, float *accel, float *mag), matrix_t *(*imu_update)(imu_t *imu, float *gyro, float *accel, float *mag), std::string name) {
@@ -142,6 +132,14 @@ void sim_t::add_ahrs(matrix_t *(*imu_init)(imu_t *imu, float *accel, float *mag)
 	new_ahrs->imu_init = imu_init;
 	new_ahrs->imu_update = imu_update;
 	new_ahrs->name = name;
+
+	new_ahrs->imu = (imu_t *)malloc(sizeof(imu_t));
+	new_ahrs->imu->gyro_noise = imu->gyro_noise;
+	new_ahrs->imu->accel_noise = imu->accel_noise;
+	new_ahrs->imu->mag_noise = imu->mag_noise;
+	new_ahrs->imu->mag_dip = imu->mag_dip;
+	new_ahrs->imu->mag_dec = imu->mag_dec;
+	new_ahrs->imu->dt = imu->dt;
 
 	ahrs_algs[num_of_algs] = new_ahrs;
 

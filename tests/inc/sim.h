@@ -10,6 +10,7 @@ typedef struct ahrs_alg_t {
 	matrix_t *(*imu_init)(imu_t *imu, float *accel, float *mag);
 	matrix_t *(*imu_update)(imu_t *imu, float *gyro, float *accel, float *mag);
 	std::string name = "EKF";
+	imu_t *imu;
 } ahrs_alg_t;
 
 class sim_t {
@@ -19,6 +20,7 @@ class sim_t {
 		int num_of_algs = 0;
 		ahrs_alg_t *ahrs_algs[3];
 
+		// TODO: Eventually replace this to avoid confusion with ahrs_alg_t::imu.
 		imu_t *imu;
 
 		matrix_t *orientation;

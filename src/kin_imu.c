@@ -17,10 +17,13 @@ static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref,
 static matrix_t *stack_matrix(const matrix_t *a, const matrix_t *b);
 
 matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
+	float *accel_cpy = copy_arr(accel, 3);
+	float *mag_cpy = copy_arr(mag, 3);
+
 	// Calculate orientation purly based of the accelerometer and magnetometer to start with.
 
-	matrix_t *accel_m = arr_to_matrix(accel, 3, 1);
-	matrix_t *mag_m = arr_to_matrix(mag, 3, 1);
+	matrix_t *accel_m = arr_to_matrix(accel_cpy, 3, 1);
+	matrix_t *mag_m = arr_to_matrix(mag_cpy, 3, 1);
 
 	matrix_t *accel_x_mag = mul_vector(accel_m, mag_m);
 
@@ -90,12 +93,16 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 }
 
 matrix_t *imu_update(imu_t *imu, float *gyro, float *accel, float *mag) {
-	matrix_t *accel_m = arr_to_matrix(accel, 3, 1);
-	matrix_t *mag_m = arr_to_matrix(mag, 3, 1);
+	float *gyro_cpy = copy_arr(gyro, 3);
+	float *accel_cpy = copy_arr(accel, 3);
+	float *mag_cpy = copy_arr(mag, 3);
+
+	matrix_t *accel_m = arr_to_matrix(accel_cpy, 3, 1);
+	matrix_t *mag_m = arr_to_matrix(mag_cpy, 3, 1);
 
 	matrix_t *meas = stack_matrix(accel_m, mag_m);
-	matrix_t *state_pred = state_prediction(imu->ekf.state, gyro, imu->dt);
-	matrix_t *state_pred_jacob = state_prediction_jacobian(gyro, imu->dt);
+	matrix_t *state_pred = state_prediction(imu->ekf.state, gyro_cpy, imu->dt);
+	matrix_t *state_pred_jacob = state_prediction_jacobian(gyro_cpy, imu->dt);
 	matrix_t *obsv_model = observe_model(state_pred, imu->g_ref, imu->m_ref);
 	matrix_t *obsv_model_jacob = observe_model_jacobian(state_pred, imu->g_ref, imu->m_ref);
 	matrix_t *proc_noise = process_noise(imu->ekf.state, imu->gyro_noise, imu->dt);
