@@ -14,6 +14,7 @@ struct Data_type {
 	FILE *z_file;
 
 	string name;
+	string linetype = "";
 	float axis_ranges[3] = {0, 0, 0};
 };
 
@@ -28,7 +29,7 @@ int num_of_types = 0;
 string type_names[100];
 Data_type type_buf[100];
 
-void plot_t::plot() {
+void plot_t::plot(string title) {
 	if (num_of_types == 0) {
 		return;
 	}
@@ -46,47 +47,49 @@ void plot_t::plot() {
 		return;
 	}
 
+	string title_cmd = " title '" + title + "'\n";
 	fprintf(gp, "set ylabel 'deg'\n");
 	fprintf(gp, "set term qt font 'Arial,8'\n");
-	fprintf(gp, "set multiplot layout 3,1 rows\n");
+	fprintf(gp, "set multiplot layout 3,1 rows");
+	fprintf(gp, title_cmd.c_str());
 
 	string begin_name = type_buf[0].name;
-	gp_input = "plot '" + begin_name + "_x_data.txt' with lines title '" + begin_name + "', ";
+	gp_input = "plot '" + begin_name + "_x_data.txt'" + type_buf[0].linetype + " with lines title '" + begin_name + "', ";
 	fprintf(gp, gp_input.c_str());
 	for (int i = 1; i < num_of_types - 1; i++) {
 		string name = type_buf[i].name;
 
-		gp_input = "'" + name + "_x_data.txt' with lines title '" + name + "', ";
+		gp_input = "'" + name + "_x_data.txt'" + type_buf[i].linetype + " with lines title '" + name + "', ";
 		fprintf(gp, gp_input.c_str());
 	}
 	string end_name = type_buf[num_of_types - 1].name;
-	gp_input = "'" + end_name + "_x_data.txt' with lines title '" + end_name + "'\n";
+	gp_input = "'" + end_name + "_x_data.txt'" + type_buf[num_of_types - 1].linetype + " with lines title '" + end_name + "'\n";
 	fprintf(gp, gp_input.c_str());
 
 	begin_name = type_buf[0].name;
-	gp_input = "plot '" + begin_name + "_y_data.txt' with lines title '" + begin_name + "', ";
+	gp_input = "plot '" + begin_name + "_y_data.txt'" + type_buf[0].linetype + " with lines title '" + begin_name + "', ";
 	fprintf(gp, gp_input.c_str());
 	for (int i = 1; i < num_of_types - 1; i++) {
 		string name = type_buf[i].name;
 
-		gp_input = "'" + name + "_y_data.txt' with lines title '" + name + "', ";
+		gp_input = "'" + name + "_y_data.txt'" + type_buf[i].linetype + " with lines title '" + name + "', ";
 		fprintf(gp, gp_input.c_str());
 	}
 	end_name = type_buf[num_of_types - 1].name;
-	gp_input = "'" + end_name + "_y_data.txt' with lines title '" + end_name + "'\n";
+	gp_input = "'" + end_name + "_y_data.txt'" + type_buf[num_of_types - 1].linetype + " with lines title '" + end_name + "'\n";
 	fprintf(gp, gp_input.c_str());
 
 	begin_name = type_buf[0].name;
-	gp_input = "plot '" + begin_name + "_z_data.txt' with lines title '" + begin_name + "', ";
+	gp_input = "plot '" + begin_name + "_z_data.txt'" + type_buf[0].linetype + " with lines title '" + begin_name + "', ";
 	fprintf(gp, gp_input.c_str());
 	for (int i = 1; i < num_of_types - 1; i++) {
 		string name = type_buf[i].name;
 
-		gp_input = "'" + name + "_z_data.txt' with lines title '" + name + "', ";
+		gp_input = "'" + name + "_z_data.txt'" + type_buf[i].linetype + " with lines title '" + name + "', ";
 		fprintf(gp, gp_input.c_str());
 	}
 	end_name = type_buf[num_of_types - 1].name;
-	gp_input = "'" + end_name + "_z_data.txt' with lines title '" + end_name + "'\n";
+	gp_input = "'" + end_name + "_z_data.txt'" + type_buf[num_of_types - 1].linetype + " with lines title '" + end_name + "'\n";
 	fprintf(gp, gp_input.c_str());
 
 	fflush(gp);
@@ -126,6 +129,10 @@ Data_type *get_type(string name) {
 	type_buf[num_of_types].x_file = open_file(name + "_x_data.txt");
 	type_buf[num_of_types].y_file = open_file(name + "_y_data.txt");
 	type_buf[num_of_types].z_file = open_file(name + "_z_data.txt");
+
+	if (name == "true") {
+		type_buf[num_of_types].linetype = " lt 0 ";
+	}
 
 	num_of_types++;
 

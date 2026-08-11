@@ -40,8 +40,11 @@ class sim_t {
 
 		void tick();
 
+		void one_axis_test(int steps, plot_t *Plot = NULL);
+		void all_axis_test(int steps, plot_t *Plot = NULL);
 		void linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep, plot_t *Plot = NULL);
 
+		void error_report(int iterations);
 		void print();
 
 		void add_ahrs(matrix_t *(*imu_init)(imu_t *imu, float *accel, float *mag), matrix_t *(*imu_update)(imu_t *imu, float *gyro, float *accel, float *mag), std::string name);

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 
 #include "kin_math.h"
 #include "kin_types.h"
@@ -13,6 +14,7 @@ int main() {
 	matrix_t *a = arr_to_matrix(a_arr, 4, 1);
 	matrix_t *b = arr_to_matrix(b_arr, 4, 1);
 
-	printf("%f\n", dot_prod(a, b));
+	// cout << dot_prod(a, b) << endl;
+	cout << sqrt(0) << endl;;
 }
 

@@ -8,7 +8,7 @@
 class plot_t {
 	public:
 
-	void plot();
+	void plot(std::string title);
 
 	void add_point(matrix_t *orientation, std::string type = "true");
 };

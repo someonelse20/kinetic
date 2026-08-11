@@ -1,3 +1,4 @@
+#include <cmath>
 #include <iostream>
 #include <unistd.h>
 #include <cstring>
@@ -55,18 +56,166 @@ void sim_t::tick() {
 	mag = mag_m->data;
 }
 
+void sim_t::one_axis_test(int steps, plot_t *Plot) {
+	float step_size = 2 * M_PI / steps;
+	float timestep = step_size;
+	imu->dt = timestep;
+
+	float x_count = 0.f;
+
+	matrix_t *orientation_euler = init_matrix(3, 1);
+	orientation_euler->data[X] = sin(x_count);
+	orientation_euler->data[Y] = 0.f;
+	orientation_euler->data[Z] = 0.f;
+
+	orientation = euler_to_quat(orientation_euler);
+
+	matrix_t *start_accel = get_accel(orientation);
+	matrix_t *start_mag = get_mag(orientation, imu->mag_dip);
+
+	for (int i = 0; i < num_of_algs; i++) {
+		ahrs_algs[i]->imu->dt = timestep;
+		ahrs_algs[i]->imu_init(ahrs_algs[i]->imu, start_accel->data, start_mag->data);
+		ahrs_algs[i]->error_buf = (float *)malloc(steps * sizeof(float) + 10); // Add 10 for good measure.
+	}
+
+	int count = 0;
+	while (x_count <= 2 * M_PI) {
+		x_count += step_size;
+
+		orientation_euler->data[X] = sin(x_count);
+
+		matrix_t *prev_orientation = copy_matrix(orientation);
+		orientation = euler_to_quat(orientation_euler);
+
+		matrix_t *gyro_m = get_gyro(prev_orientation, orientation, timestep);
+		matrix_t *accel_m = get_accel(orientation);
+		matrix_t *mag_m = get_mag(orientation, imu->mag_dip); // TODO: Be specific to each ahrs mag_dip not just global mag_dip.
+
+		gyro = gyro_m->data;
+		accel = accel_m->data;
+		mag = mag_m->data;
+
+		for (int i = 0; i < num_of_algs; i++) {
+			ahrs_algs[i]->imu_update(ahrs_algs[i]->imu, gyro, accel, mag);
+
+			if (is_quat(ahrs_algs[i]->imu->ekf.state)) {
+				ahrs_algs[i]->error_buf[count] = get_error(orientation, ahrs_algs[i]->imu->ekf.state);
+			} else {
+				ahrs_algs[i]->error_buf[count] = get_error(orientation, euler_to_quat(ahrs_algs[i]->imu->ekf.state));
+			}
+
+			if (Plot == NULL) continue;
+
+			if (is_quat(ahrs_algs[i]->imu->ekf.state)) {
+				Plot->add_point(quat_to_euler(ahrs_algs[i]->imu->ekf.state), ahrs_algs[i]->name);
+			} else {
+				Plot->add_point(ahrs_algs[i]->imu->ekf.state, ahrs_algs[i]->name);
+			}
+		}
+
+		if (Plot != NULL) {
+			Plot->add_point(quat_to_euler(orientation), "true");
+		}
+
+		count++;
+	}
+
+	error_report(steps);
+
+	if (Plot != NULL) {
+		Plot->plot("One Axit Test");
+	}
+}
+
+void sim_t::all_axis_test(int steps, plot_t *Plot) {
+	float step_size = 2 * M_PI / steps;
+	float timestep = step_size;
+	imu->dt = timestep;
+
+	float x_count = 0.f;
+	float y_count = M_PI / 2.f;
+	float z_count = M_PI;
+
+	matrix_t *orientation_euler = init_matrix(3, 1);
+	orientation_euler->data[X] = sin(x_count);
+	orientation_euler->data[Y] = sin(y_count);
+	orientation_euler->data[Z] = sin(z_count);
+
+	orientation = euler_to_quat(orientation_euler);
+
+	matrix_t *start_accel = get_accel(orientation);
+	matrix_t *start_mag = get_mag(orientation, imu->mag_dip);
+
+	for (int i = 0; i < num_of_algs; i++) {
+		ahrs_algs[i]->imu->dt = timestep;
+		ahrs_algs[i]->imu_init(ahrs_algs[i]->imu, start_accel->data, start_mag->data);
+		ahrs_algs[i]->error_buf = (float *)malloc(steps * sizeof(float) + 10); // Add 10 for good measure.
+	}
+
+	int count = 0;
+	while (x_count <= 2 * M_PI) {
+		x_count += step_size;
+		y_count += step_size;
+		z_count += step_size;
+
+		orientation_euler->data[X] = sin(x_count);
+		orientation_euler->data[Y] = sin(y_count);
+		orientation_euler->data[Z] = sin(z_count);
+
+		matrix_t *prev_orientation = copy_matrix(orientation);
+		orientation = euler_to_quat(orientation_euler);
+
+		matrix_t *gyro_m = get_gyro(prev_orientation, orientation, timestep);
+		matrix_t *accel_m = get_accel(orientation);
+		matrix_t *mag_m = get_mag(orientation, imu->mag_dip); // TODO: Be specific to each ahrs mag_dip not just global mag_dip.
+
+		gyro = gyro_m->data;
+		accel = accel_m->data;
+		mag = mag_m->data;
+
+		for (int i = 0; i < num_of_algs; i++) {
+			ahrs_algs[i]->imu_update(ahrs_algs[i]->imu, gyro, accel, mag);
+
+			if (is_quat(ahrs_algs[i]->imu->ekf.state)) {
+				ahrs_algs[i]->error_buf[count] = get_error(orientation, ahrs_algs[i]->imu->ekf.state);
+			} else {
+				ahrs_algs[i]->error_buf[count] = get_error(orientation, euler_to_quat(ahrs_algs[i]->imu->ekf.state));
+			}
+
+			if (Plot == NULL) continue;
+
+			if (is_quat(ahrs_algs[i]->imu->ekf.state)) {
+				Plot->add_point(quat_to_euler(ahrs_algs[i]->imu->ekf.state), ahrs_algs[i]->name);
+			} else {
+				Plot->add_point(ahrs_algs[i]->imu->ekf.state, ahrs_algs[i]->name);
+			}
+		}
+
+		if (Plot != NULL) {
+			Plot->add_point(quat_to_euler(orientation), "true");
+		}
+
+		count++;
+	}
+
+	error_report(steps);
+
+	if (Plot != NULL) {
+		Plot->plot("3 Axis Test");
+	}
+}
+
 void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep, plot_t *Plot) {
 	imu->dt = timestep;
 
 	matrix_t *start_accel = get_accel(start_rot);
 	matrix_t *start_mag = get_mag(start_rot, imu->mag_dip);
 
-	int iterations = ceil(duration / timestep) + 10; // Add 10 for good measure.
-
 	for (int i = 0; i < num_of_algs; i++) {
 		ahrs_algs[i]->imu->dt = timestep;
 		ahrs_algs[i]->imu_init(ahrs_algs[i]->imu, start_accel->data, start_mag->data);
-		ahrs_algs[i]->error_buf = (float *)malloc(iterations * sizeof(float));
+		ahrs_algs[i]->error_buf = (float *)malloc(ceil(duration / timestep) * sizeof(float) + 10); // Add 10 for good measure.
 	}
 
 	int count = 0;
@@ -106,17 +255,27 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 			Plot->add_point(quat_to_euler(orientation), "true");
 		}
 
-		int sleep_ms = timestep * 1000; // TODO Add flag for under millisecond timestep and accuracy.
-		std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+		/*
+		   int sleep_ms = timestep * 1000; // TODO Add flag for under millisecond timestep and accuracy.
+		   std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+		 */
+
+		count++;
 	}
 
-	// TODO break up into sperate functions
+	error_report(count);
 
+	if (Plot != NULL) {
+		Plot->plot("Linear Interpolation Test");
+	}
+}
+
+void sim_t::error_report(int count) {
 	int min_spacing = 17;
 
 	for (int i = 0; i < num_of_algs; i++) {
 		float sum = 0;
-		for (int j = 0; j < iterations; j++) {
+		for (int j = 0; j < count; j++) {
 			float error = ahrs_algs[i]->error_buf[j];
 			sum += error;
 
@@ -129,7 +288,7 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 			}
 		}
 
-		ahrs_algs[i]->mean_error = sum / iterations;
+		ahrs_algs[i]->mean_error = sum / count;
 
 		if (ahrs_algs[i]->name.size() >= min_spacing) min_spacing = ahrs_algs[i]->name.size() + 1;
 	}
@@ -171,9 +330,6 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 	}
 	cout << endl;
 
-	if (Plot != NULL) {
-		Plot->plot();
-	}
 }
 
 void sim_t::print() {
@@ -257,7 +413,10 @@ matrix_t *get_mag(matrix_t *orientation, float mag_dip) {
 }
 
 static float get_error(matrix_t *true_q, matrix_t *estm_q) {
+	// return dot_prod(true_q, estm_q);
 	matrix_t *ret = sub_matrix(true_q, estm_q);
 	return matrix_norm(ret);
+	/*
+	*/
 }
 
