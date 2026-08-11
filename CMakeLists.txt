@@ -48,7 +48,7 @@ target_include_directories(tests PRIVATE ${CMAKE_SOURCE_DIR}/tests/inc)
 target_link_libraries(tests PRIVATE kinetic)
 
 # Link sim.cpp with tests
-target_sources(tests PRIVATE tests/src/sim.cpp tests/src/plot.cpp tests/src/comp_filter.cpp)
+target_sources(tests PRIVATE tests/src/sim.cpp tests/src/plot.cpp tests/src/reference_ahrs.cpp)
 
 add_executable(matrix tests/matrix.cpp)
 target_include_directories(matrix PRIVATE ${CMAKE_SOURCE_DIR}/tests/inc)

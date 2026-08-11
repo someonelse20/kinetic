@@ -16,8 +16,8 @@ class sim_t {
 	private:
 
 	public:
-		int num_of_algs = 1;
-		ahrs_alg_t ahrs_algs[3];
+		int num_of_algs = 0;
+		ahrs_alg_t *ahrs_algs[3];
 
 		imu_t *imu;
 
@@ -35,10 +35,10 @@ class sim_t {
 
 		void linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep, plot_t *Plot = NULL);
 
-		// TODO: Migrate kinetic_t over to new imu_t.
-		// void loop(void (*update_imu)(kinetic_t*, float*, float*, float*, float));
-
 		void print();
+
+		void add_ahrs(matrix_t *(*imu_init)(imu_t *imu, float *accel, float *mag), matrix_t *(*imu_update)(imu_t *imu, float *gyro, float *accel, float *mag), std::string name);
+
 };
 
 #endif

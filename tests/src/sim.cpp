@@ -58,7 +58,7 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 	matrix_t *start_mag = get_mag(start_rot, imu->mag_dip);
 
 	for (int i = 0; i < num_of_algs; i++) {
-		ahrs_algs[i].imu_init(imu, start_accel->data, start_mag->data);
+		ahrs_algs[i]->imu_init(imu, start_accel->data, start_mag->data);
 	}
 
 	cout << "============================================" << endl;
@@ -83,14 +83,14 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 		mag = mag_m->data;
 
 		for (int i = 0; i < num_of_algs; i++) {
-			ahrs_algs[i].imu_update(imu, gyro, accel, mag);
+			ahrs_algs[i]->imu_update(imu, gyro, accel, mag);
 
 			if (Plot == NULL) continue;
 
 			if (is_quat(imu->ekf.state)) {
-				Plot->add_point(quat_to_euler(imu->ekf.state), ahrs_algs[i].name);
+				Plot->add_point(quat_to_euler(imu->ekf.state), ahrs_algs[i]->name);
 			} else {
-				Plot->add_point(imu->ekf.state, ahrs_algs[i].name);
+				Plot->add_point(imu->ekf.state, ahrs_algs[i]->name);
 			}
 		}
 
@@ -99,8 +99,6 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 		if (Plot != NULL) {
 			Plot->add_point(quat_to_euler(orientation), "true");
 		}
-		/*
-		*/
 
 		int sleep_ms = timestep * 1000; // TODO Add flag for under millisecond timestep and accuracy.
 		std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
@@ -112,16 +110,6 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 	/*
 	*/
 }
-
-/*
-void sim_t::loop(void (*update_imu)(kinetic_t*, float*, float*, float*, float)) {
-	while (true) {
-		tick();
-		update_imu(kinetic, gyro, accel, mag, sample_rate_hertz);
-		sleep(1 / sample_rate_hertz);
-	}
-}
-*/
 
 void sim_t::print() {
 	cout << "============================================" << endl;
@@ -147,6 +135,17 @@ void sim_t::print() {
 	print_matrix(imu->ekf.covariance);
 	cout << endl;
 	*/
+}
+
+void sim_t::add_ahrs(matrix_t *(*imu_init)(imu_t *imu, float *accel, float *mag), matrix_t *(*imu_update)(imu_t *imu, float *gyro, float *accel, float *mag), std::string name) {
+	ahrs_alg_t *new_ahrs = (ahrs_alg_t *)malloc(sizeof(ahrs_alg_t));
+	new_ahrs->imu_init = imu_init;
+	new_ahrs->imu_update = imu_update;
+	new_ahrs->name = name;
+
+	ahrs_algs[num_of_algs] = new_ahrs;
+
+	num_of_algs++;
 }
 
 float *rand_rot(int range) {

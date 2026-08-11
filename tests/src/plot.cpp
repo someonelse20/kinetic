@@ -53,35 +53,41 @@ void plot_t::plot() {
 	string begin_name = type_buf[0].name;
 	gp_input = "plot '" + begin_name + "_x_data.txt' with lines title '" + begin_name + "', ";
 	fprintf(gp, gp_input.c_str());
-	for (int i = 1; i < num_of_types; i++) {
+	for (int i = 1; i < num_of_types - 1; i++) {
 		string name = type_buf[i].name;
 
-		gp_input = "'" + name + "_x_data.txt' with lines title '" + name + "'";
+		gp_input = "'" + name + "_x_data.txt' with lines title '" + name + "', ";
 		fprintf(gp, gp_input.c_str());
 	}
-	fprintf(gp, "\n");
+	string end_name = type_buf[num_of_types - 1].name;
+	gp_input = "'" + end_name + "_x_data.txt' with lines title '" + end_name + "'\n";
+	fprintf(gp, gp_input.c_str());
 
 	begin_name = type_buf[0].name;
 	gp_input = "plot '" + begin_name + "_y_data.txt' with lines title '" + begin_name + "', ";
 	fprintf(gp, gp_input.c_str());
-	for (int i = 1; i < num_of_types; i++) {
+	for (int i = 1; i < num_of_types - 1; i++) {
 		string name = type_buf[i].name;
 
-		gp_input = "'" + name + "_y_data.txt' with lines title '" + name + "'";
+		gp_input = "'" + name + "_y_data.txt' with lines title '" + name + "', ";
 		fprintf(gp, gp_input.c_str());
 	}
-	fprintf(gp, "\n");
+	end_name = type_buf[num_of_types - 1].name;
+	gp_input = "'" + end_name + "_y_data.txt' with lines title '" + end_name + "'\n";
+	fprintf(gp, gp_input.c_str());
 
 	begin_name = type_buf[0].name;
 	gp_input = "plot '" + begin_name + "_z_data.txt' with lines title '" + begin_name + "', ";
 	fprintf(gp, gp_input.c_str());
-	for (int i = 1; i < num_of_types; i++) {
+	for (int i = 1; i < num_of_types - 1; i++) {
 		string name = type_buf[i].name;
 
-		gp_input = "'" + name + "_z_data.txt' with lines title '" + name + "'";
+		gp_input = "'" + name + "_z_data.txt' with lines title '" + name + "', ";
 		fprintf(gp, gp_input.c_str());
 	}
-	fprintf(gp, "\n");
+	end_name = type_buf[num_of_types - 1].name;
+	gp_input = "'" + end_name + "_z_data.txt' with lines title '" + end_name + "'\n";
+	fprintf(gp, gp_input.c_str());
 
 	fflush(gp);
 	pclose(gp);
@@ -105,14 +111,9 @@ void plot_t::add_point(matrix_t *orientation, string type) {
 Data_type *get_type(string name) {
 	for (int i = 0; i < num_of_types; i++) {
 		if (type_buf[i].name == name) {
-			cout << name + " matching to " + name + " success!" << endl;
-			print_arr(type_buf[i].axis_ranges, 3);
-			cout << endl;
 			return &type_buf[i];
 		}
 	}
-
-	// cout << " matching to " + name + " failure!" << endl;
 
 	// Create new data type.
 

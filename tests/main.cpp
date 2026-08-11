@@ -1,9 +1,9 @@
 #include <unistd.h>
 #include <math.h>
 
-#include "kin_imu.h"
+#include "reference_ahrs.h"
 #include "kin_math.h"
-#include "kin_types.h"
+#include "kin_imu.h"
 #include "plot.h"
 #include "sim.h"
 
@@ -47,49 +47,10 @@ int main() {
 
 	plot_t Plot;
 
-	ahrs_alg_t ahrs_ekf;
-	ahrs_ekf.imu_init = imu_init;
-	ahrs_ekf.imu_update = imu_update;
-	ahrs_ekf.name = "EKF";
-
-	sim.num_of_algs = 1;
-	sim.ahrs_algs[0] = ahrs_ekf;
+	sim.add_ahrs(imu_init, imu_update, "EKF");
+	sim.add_ahrs(gyro_imu_init, gyro_imu_update, "gyro-only");
+	sim.add_ahrs(comp_imu_init, comp_imu_update, "comp-filter");
 
 	sim.linear_interpolation(start_rot, end_rot, 1, 0.1, &Plot);
-	// sim.linear_interpolation(start_rot, end_rot, 5, 1, &Plot);
-
-	/*
-	imu_t comp_imu;
-	sim_t comp_sim(&comp_imu);
-
-	plot_t comp_Plot;
-
-	comp_sim.linear_interpolation_comp(start_rot, end_rot, 5, 1, &comp_Plot);
-	*/
-
-	/*
-	sim.tick();
-	init_state(sim.kinetic, sim.accel, sim.mag);
-
-	for (int i = 0; i < 20; i++) {
-		sim.tick();
-		update_imu(&kinetic, sim.gyro, sim.accel, sim.mag, 1.0);
-
-		cout << "============================================" << endl;
-		cout << "Simulation orientation" << endl;
-		cout << "============================================" << endl;
-		print_matrix(quat_to_euler(sim.orientation));
-		cout << endl;
-		cout << "============================================" << endl;
-		cout << "Kinetic orientation" << endl;
-		cout << "============================================" << endl;
-		print_matrix(quat_to_euler(sim.kinetic->state_q));
-		cout << endl;
-
-		// break;
-
-		sleep(1);
-	}
-	*/
 }
 
