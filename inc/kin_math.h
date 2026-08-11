@@ -14,7 +14,6 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include <stddef.h>
 
 #include "kin_types.h"
 
@@ -25,16 +24,12 @@ extern "C" {
 #define Z 2
 #define W 3
 
-typedef struct {
-	matrix_t *vector;
-	float value;
-} eigen_t;
-
 void free_matrix(matrix_t *matrix);
 matrix_t *copy_matrix(matrix_t *matrix);
 matrix_t *init_matrix(uint8_t rows, uint8_t cols);
 matrix_t *fill_matrix(uint8_t rows, uint8_t cols, float value);
 matrix_t *arr_to_matrix(float *arr, uint8_t rows, uint8_t cols);
+float *copy_arr(float *arr, uint8_t size);
 void print_matrix(const matrix_t *matrix);
 void print_arr(const float *arr, uint8_t size);
 
@@ -53,8 +48,6 @@ matrix_t *inv_matrix(const matrix_t *matrix);
 matrix_t *ajt_matrix(const matrix_t *matrix);
 matrix_t *normalize_matrix(const matrix_t *matrix);
 matrix_t *skew_symm_matrix(const matrix_t *matrix);
-
-eigen_t *eigen_matrix(const matrix_t *matrix_t);
 
 matrix_t *quat_to_euler(matrix_t *matrix);
 matrix_t *euler_to_quat(const matrix_t *matrix);

@@ -57,6 +57,16 @@ matrix_t *arr_to_matrix(float *arr, uint8_t rows, uint8_t cols) {
 	return matrix;
 }
 
+float *copy_arr(float *arr, uint8_t size) {
+	float *ret = (float *)malloc(sizeof(arr));
+
+	for (int i = 0; i < size; i++) {
+		ret[i] = arr[i];
+	}
+
+	return ret;
+}
+
 void print_matrix(const matrix_t *matrix) {
 	for (uint8_t i = 0; i < matrix->rows; i++) {
 		for (uint8_t j = 0; j < matrix->cols; j++) {
@@ -264,10 +274,6 @@ matrix_t *skew_symm_matrix(const matrix_t *matrix) {
 	ret->data[8] = 0;
 
 	return ret;
-}
-
-eigen_t *matrix_eigen(const matrix_t *matrix_t) {
-
 }
 
 matrix_t *euler_to_quat(const matrix_t *matrix) {
