@@ -56,9 +56,9 @@ matrix_t *rot_matrix_to_quat(const matrix_t *matrix);
 
 bool is_quat(const matrix_t *matrix);
 bool is_vector(const matrix_t *matrix);
+float dot_prod(const matrix_t *a, const matrix_t *b);
 matrix_t *mul_quat(const matrix_t *a, const matrix_t *b);
 matrix_t *mul_vector(const matrix_t *a, const matrix_t *b);
-float vector_dot(const matrix_t *a, const matrix_t *b);
 
 int sgn(float x);
 float rad_to_deg(float rad);

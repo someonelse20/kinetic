@@ -224,7 +224,7 @@ static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref,
 
 	matrix_t *skew_matrix = skew_symm_matrix(add_matrix(ctr_vtr, scale_matrix(ref, scalar))); // = [ctr_vtr + scalar * ref]x
 
-	float dot = vector_dot(real, ref);
+	float dot = dot_prod(real, ref);
 
 	matrix_t *real_half= scale_matrix(ident_matrix(3), dot); // = (real * ref) * I_3 - ref * real^T
 	real_half = sub_matrix(real_half, mul_matrix(ref, trans_matrix(real)));

@@ -1,20 +1,26 @@
 #include <iostream>
 #include <unistd.h>
+#include <cstring>
+#include <iomanip>
 #include <cstdlib>
+#include <limits>
 #include <chrono>
 #include <thread>
 #include <math.h>
+#include <ctime>
 
 #include "kin_math.h"
+#include "kin_types.h"
 #include "sim.h"
 
 using namespace std;
 
 float *rand_rot(int range);
 
-matrix_t *get_gyro(matrix_t *, matrix_t *, float);
-matrix_t *get_accel(matrix_t *);
-matrix_t *get_mag(matrix_t *, float);
+static matrix_t *get_gyro(matrix_t *, matrix_t *, float);
+static matrix_t *get_accel(matrix_t *);
+static matrix_t *get_mag(matrix_t *, float);
+static float get_error(matrix_t *true_q, matrix_t *estm_q);
 
 sim_t::sim_t(imu_t *imu) {
 	this->imu = imu;
@@ -50,18 +56,20 @@ void sim_t::tick() {
 }
 
 void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep, plot_t *Plot) {
-	sample_rate_hertz = 1 / timestep;
-
 	imu->dt = timestep;
 
 	matrix_t *start_accel = get_accel(start_rot);
 	matrix_t *start_mag = get_mag(start_rot, imu->mag_dip);
 
+	int iterations = ceil(duration / timestep) + 10; // Add 10 for good measure.
+
 	for (int i = 0; i < num_of_algs; i++) {
 		ahrs_algs[i]->imu->dt = timestep;
 		ahrs_algs[i]->imu_init(ahrs_algs[i]->imu, start_accel->data, start_mag->data);
+		ahrs_algs[i]->error_buf = (float *)malloc(iterations * sizeof(float));
 	}
 
+	int count = 0;
 	for (float time = 0.0; time <= duration; time += timestep) {
 		float norm_time = time / duration;
 
@@ -79,6 +87,12 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 		for (int i = 0; i < num_of_algs; i++) {
 			ahrs_algs[i]->imu_update(ahrs_algs[i]->imu, gyro, accel, mag);
 
+			if (is_quat(ahrs_algs[i]->imu->ekf.state)) {
+				ahrs_algs[i]->error_buf[count] = get_error(orientation, ahrs_algs[i]->imu->ekf.state);
+			} else {
+				ahrs_algs[i]->error_buf[count] = get_error(orientation, euler_to_quat(ahrs_algs[i]->imu->ekf.state));
+			}
+
 			if (Plot == NULL) continue;
 
 			if (is_quat(ahrs_algs[i]->imu->ekf.state)) {
@@ -95,6 +109,67 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 		int sleep_ms = timestep * 1000; // TODO Add flag for under millisecond timestep and accuracy.
 		std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
 	}
+
+	// TODO break up into sperate functions
+
+	int min_spacing = 17;
+
+	for (int i = 0; i < num_of_algs; i++) {
+		float sum = 0;
+		for (int j = 0; j < iterations; j++) {
+			float error = ahrs_algs[i]->error_buf[j];
+			sum += error;
+
+			if (error < ahrs_algs[i]->min_error) {
+				ahrs_algs[i]->min_error = error;
+			}
+
+			if (error > ahrs_algs[i]->max_error) {
+				ahrs_algs[i]->max_error = error;
+			}
+		}
+
+		ahrs_algs[i]->mean_error = sum / iterations;
+
+		if (ahrs_algs[i]->name.size() >= min_spacing) min_spacing = ahrs_algs[i]->name.size() + 1;
+	}
+
+	for (int i = 0; i < min_spacing * num_of_algs; i++) cout << "=";
+	cout << endl;
+	cout << "Simulation error report:" << endl;
+	for (int i = 0; i < min_spacing * num_of_algs; i++) cout << "=";
+	cout << endl;
+
+	for (int i = 0; i < num_of_algs; i++) {
+		cout << ahrs_algs[i]->name;
+		for (int j = 0; j < min_spacing - ahrs_algs[i]->name.size() - 2; j++) cout << " ";
+		cout << "| ";
+	}
+	cout << endl;
+
+	for (int i = 0; i < num_of_algs; i++) {
+		cout << "mean: ";
+		cout << fixed << setprecision(numeric_limits<float>::max()) << ahrs_algs[i]->mean_error;
+		for (int j = 0; j < min_spacing - 16; j++) cout << " ";
+		cout << "| ";
+	}
+	cout << endl;
+
+	for (int i = 0; i < num_of_algs; i++) {
+		cout << "min:  ";
+		cout << fixed << setprecision(numeric_limits<float>::max()) << ahrs_algs[i]->min_error;
+		for (int j = 0; j < min_spacing - 16; j++) cout << " ";
+		cout << "| ";
+	}
+	cout << endl;
+
+	for (int i = 0; i < num_of_algs; i++) {
+		cout << "max:  ";
+		cout << fixed << setprecision(numeric_limits<float>::max()) << ahrs_algs[i]->max_error;
+		for (int j = 0; j < min_spacing - 16; j++) cout << " ";
+		cout << "| ";
+	}
+	cout << endl;
 
 	if (Plot != NULL) {
 		Plot->plot();
@@ -179,5 +254,10 @@ matrix_t *get_mag(matrix_t *orientation, float mag_dip) {
 	matrix_t *m_ref_m = scale_matrix(arr_to_matrix(m_ref_a, 3, 1), 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
 
 	return mul_matrix(trans_matrix(quat_to_rot_matrix(orientation)), m_ref_m);
+}
+
+static float get_error(matrix_t *true_q, matrix_t *estm_q) {
+	matrix_t *ret = sub_matrix(true_q, estm_q);
+	return matrix_norm(ret);
 }
 

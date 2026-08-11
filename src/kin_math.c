@@ -143,7 +143,7 @@ matrix_t *ident_matrix(uint8_t size) {
 }
 
 float matrix_det(const matrix_t *matrix) { // This function is ai generated with some modification.
-	if (matrix->rows != matrix->cols) return -1; // TODO: find better error code
+	if (matrix->rows != matrix->cols) error_handler(MATRIX_DIMENTION_ERROR); // TODO: find better error code
 
 	uint8_t size = matrix->rows;
 
@@ -184,8 +184,8 @@ float matrix_norm(const matrix_t *matrix) {
 }
 
 float matrix_minor(const matrix_t *matrix, uint8_t row, uint8_t col) {
-	if (matrix->cols != matrix->rows) return -1;
-	if (matrix->cols < 2) return -1;
+	if (matrix->cols != matrix->rows) error_handler(MATRIX_DIMENTION_ERROR);
+	if (matrix->cols < 2) error_handler(MATRIX_DIMENTION_ERROR);
 	uint8_t size = matrix->rows;
 
 	uint8_t index = 0;
@@ -391,6 +391,18 @@ bool is_vector(const matrix_t *matrix) {
 	}
 }
 
+float dot_prod(const matrix_t *a, const matrix_t *b) {
+	// Must have 1 collumn and same ammount of rows.
+	if (a->cols != 1 || b->cols != 1) error_handler(MATRIX_DIMENTION_ERROR);
+	if (a->rows != b->rows) error_handler(MATRIX_DIMENTION_ERROR);
+
+	float ret = 0;
+	for (int i = 0; i < 3; i++) {
+		ret += a->data[i] * b->data[i];
+	}
+	return ret;
+}
+
 matrix_t *mul_quat(const matrix_t *a, const matrix_t *b) {
 	if (!is_quat(a) || !is_quat(b)) error_handler(MATRIX_DIMENTION_ERROR);
 
@@ -413,16 +425,6 @@ matrix_t *mul_vector(const matrix_t *a, const matrix_t *b) {
 	ret->data[Y] = a->data[Z] * b->data[X] - a->data[X] * b->data[Z];
 	ret->data[Z] = a->data[X] * b->data[Y] - a->data[Y] * b->data[X];
 
-	return ret;
-}
-
-float vector_dot(const matrix_t *a, const matrix_t *b) {
-	if (!is_vector(a) || !is_vector(b)) return -1;
-
-	float ret = 0;
-	for (int i = 0; i < 3; i++) {
-		ret += a->data[i] * b->data[i];
-	}
 	return ret;
 }
 

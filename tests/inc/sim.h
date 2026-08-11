@@ -9,8 +9,13 @@
 typedef struct ahrs_alg_t {
 	matrix_t *(*imu_init)(imu_t *imu, float *accel, float *mag);
 	matrix_t *(*imu_update)(imu_t *imu, float *gyro, float *accel, float *mag);
-	std::string name = "EKF";
+	std::string name;
 	imu_t *imu;
+
+	float *error_buf;
+	float min_error = 0.000000;
+	float max_error = 0.000000;
+	float mean_error = 0.000000;
 } ahrs_alg_t;
 
 class sim_t {

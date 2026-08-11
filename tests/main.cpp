@@ -51,6 +51,7 @@ int main() {
 	sim.add_ahrs(gyro_imu_init, gyro_imu_update, "gyro-only");
 	sim.add_ahrs(comp_imu_init, comp_imu_update, "comp-filter");
 
-	sim.linear_interpolation(start_rot, end_rot, 1, 0.1, &Plot);
+	sim.linear_interpolation(start_rot, end_rot, 1, 0.1);
+	// sim.linear_interpolation(start_rot, end_rot, 1, 0.1, &Plot);
 }
 
