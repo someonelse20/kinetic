@@ -142,7 +142,8 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 	matrix_t *orientation_euler = init_matrix(3, 1);
 	orientation_euler->data[X] = sin(x_count);
 	orientation_euler->data[Y] = sin(y_count);
-	orientation_euler->data[Z] = sin(z_count);
+	orientation_euler->data[Z] = 0.f;
+	// orientation_euler->data[Z] = sin(z_count);
 
 	orientation = euler_to_quat(orientation_euler);
 
@@ -163,7 +164,8 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 
 		orientation_euler->data[X] = sin(x_count);
 		orientation_euler->data[Y] = sin(y_count);
-		orientation_euler->data[Z] = sin(z_count);
+		orientation_euler->data[Z] = 0.f;
+		// orientation_euler->data[Z] = sin(z_count);
 
 		matrix_t *prev_orientation = copy_matrix(orientation);
 		orientation = euler_to_quat(orientation_euler);
@@ -178,6 +180,18 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 
 		for (int i = 0; i < num_of_algs; i++) {
 			ahrs_algs[i]->imu_update(ahrs_algs[i]->imu, gyro, accel, mag);
+
+			cout << "=========================" << endl;
+			cout << "simulation orientation" << endl;
+			cout << "=========================" << endl;
+			print_matrix(quat_to_euler(orientation));
+			cout << endl;
+
+			cout << "=========================" << endl;
+			cout << "kinetic orientation" << endl;
+			cout << "=========================" << endl;
+			print_matrix(quat_to_euler(ahrs_algs[i]->imu->ekf.state));
+			cout << endl;
 
 			if (is_quat(ahrs_algs[i]->imu->ekf.state)) {
 				ahrs_algs[i]->error_buf[count] = get_error(orientation, ahrs_algs[i]->imu->ekf.state);
@@ -257,8 +271,6 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 			Plot->add_point(quat_to_euler(orientation), "true");
 		}
 
-		cout << get_error(start_rot, orientation) << endl;
-
 		/*
 		   int sleep_ms = timestep * 1000; // TODO Add flag for under millisecond timestep and accuracy.
 		   std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
@@ -266,6 +278,8 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 
 		count++;
 	}
+
+	error_report(count);
 
 	if (Plot != NULL) {
 		Plot->plot("Linear Interpolation Test");

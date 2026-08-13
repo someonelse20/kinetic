@@ -42,23 +42,33 @@ int main() {
 	start_rot->data[W] = 1.0;
 
 	matrix_t *end_rot = init_matrix(4, 1);
+	/* deg: 45, 45, 0
+	end_rot->data[X] = 0.3535534;
+	end_rot->data[Y] = 0.3535534;
+	end_rot->data[Z] = 0.1464466;
+	end_rot->data[W] = 0.8535534;
+	 */
+	/* deg: 45, 0, 0 */
 	end_rot->data[X] = 0.7071068;
 	end_rot->data[Y] = 0.0;
 	end_rot->data[Z] = 0.0;
 	end_rot->data[W] = 0.7071068;
+	/*
+	 */
 
 	plot_t Plot;
 
 	sim.add_ahrs(imu_init, imu_update, "EKF");
+	/*
 	sim.add_ahrs(gyro_imu_init, gyro_imu_update, "gyro-only");
 	sim.add_ahrs(comp_imu_init, comp_imu_update, "comp-filter");
-	/*
 	*/
 
-	sim.one_axis_test(100);
+	// sim.one_axis_test(100);
 	// sim.one_axis_test(100, &Plot);
+	sim.all_axis_test(100);
 	// sim.all_axis_test(100, &Plot);
 	// sim.linear_interpolation(start_rot, end_rot, 1, 0.001);
-	// sim.linear_interpolation(start_rot, end_rot, 1, 0.1, &Plot);
+	// sim.linear_interpolation(start_rot, end_rot, 1, 0.01, &Plot);
 }
 
