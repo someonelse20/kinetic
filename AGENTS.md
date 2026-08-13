@@ -6,7 +6,8 @@ C/C++ sensor fusion library implementing EKF (extended Kalman filter) for IMU da
 
 ```bash
 mkdir -p build && cd build && cmake ..
-./tests  # Run linear interpolation test
+cd .. && ./build/tests      # Run linear interpolation test
+cd .. && ./build/matrix     # Run matrix operations test
 ```
 
 Build artifacts go to `build/`; omit from version control.
@@ -42,6 +43,8 @@ Two primary test modes:
 
 **Zero-noise test mode**: During linear interpolation, no noise is added to measurements. This tests perfect sensor convergence but doesn't represent real IMU behavior.
 
+**Default test**: `sim.all_axis_test(100)` runs all-axis test with 100 steps.
+
 ## Key Implementation Details
 
 - `update_imu()`: Core EKF update function using `state_pred` (prediction step) instead of `prev_state` for rotation matrix computation
@@ -49,6 +52,7 @@ Two primary test modes:
 - `init_state()`: Initializes EKF from raw accelerometer/magnetometer readings
 - `get_accel()`: Computes expected accelerometer reading given current orientation and gravity vector
 - `get_mag()`: Computes expected magnetometer reading given current orientation and magnetic dip angle
+- `plot_t::add_point()` / `plot_t::plot()`: CSV export + SVG generation via gnuplot; outputs to `*_x_data.txt`, `*_y_data.txt`, `*_z_data.txt`
 
 ## Platform Notes
 
