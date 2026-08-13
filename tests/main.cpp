@@ -1,6 +1,8 @@
+#include <cmath>
 #include <unistd.h>
 #include <math.h>
 
+#include "kin_types.h"
 #include "reference_ahrs.h"
 #include "kin_math.h"
 #include "kin_imu.h"
@@ -47,14 +49,15 @@ int main() {
 
 	plot_t Plot;
 
-	// sim.add_ahrs(imu_init, imu_update, "EKF");
-	// sim.add_ahrs(gyro_imu_init, gyro_imu_update, "gyro-only");
-	// sim.add_ahrs(comp_imu_init, comp_imu_update, "comp-filter");
+	sim.add_ahrs(imu_init, imu_update, "EKF");
+	sim.add_ahrs(gyro_imu_init, gyro_imu_update, "gyro-only");
+	sim.add_ahrs(comp_imu_init, comp_imu_update, "comp-filter");
 	/*
 	*/
 
-	sim.one_axis_test(100, &Plot);
-	sim.all_axis_test(100, &Plot);
+	sim.one_axis_test(100);
+	// sim.one_axis_test(100, &Plot);
+	// sim.all_axis_test(100, &Plot);
 	// sim.linear_interpolation(start_rot, end_rot, 1, 0.001);
 	// sim.linear_interpolation(start_rot, end_rot, 1, 0.1, &Plot);
 }

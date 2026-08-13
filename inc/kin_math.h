@@ -25,13 +25,13 @@ extern "C" {
 #define W 3
 
 void free_matrix(matrix_t *matrix);
-matrix_t *copy_matrix(matrix_t *matrix);
+matrix_t *copy_matrix(const matrix_t *matrix);
 matrix_t *init_matrix(uint8_t rows, uint8_t cols);
 matrix_t *fill_matrix(uint8_t rows, uint8_t cols, float value);
 matrix_t *arr_to_matrix(float *arr, uint8_t rows, uint8_t cols);
-float *copy_arr(float *arr, uint8_t size);
 void print_matrix(const matrix_t *matrix);
 void print_arr(const float *arr, uint8_t size);
+float *copy_arr(const float *arr, uint8_t size);
 
 matrix_t *add_matrix(const matrix_t *a, const matrix_t *b);
 matrix_t *sub_matrix(const matrix_t *a, const matrix_t *b);
@@ -44,6 +44,7 @@ matrix_t *ident_matrix(uint8_t size);
 float matrix_det(const matrix_t *matrix);
 float matrix_norm(const matrix_t *matrix);
 float matrix_minor(const matrix_t *matrix, uint8_t row, uint8_t col);
+matrix_t *inv_quat(const matrix_t *matrix);
 matrix_t *inv_matrix(const matrix_t *matrix);
 matrix_t *ajt_matrix(const matrix_t *matrix);
 matrix_t *normalize_matrix(const matrix_t *matrix);
@@ -57,8 +58,9 @@ matrix_t *rot_matrix_to_quat(const matrix_t *matrix);
 bool is_quat(const matrix_t *matrix);
 bool is_vector(const matrix_t *matrix);
 float dot_prod(const matrix_t *a, const matrix_t *b);
-matrix_t *mul_quat(const matrix_t *a, const matrix_t *b);
-matrix_t *mul_vector(const matrix_t *a, const matrix_t *b);
+matrix_t *cross_prod(const matrix_t *a, const matrix_t *b);
+matrix_t *quat_prod(const matrix_t *a, const matrix_t *b);
+matrix_t *quat_conjugate(const matrix_t *matrix);
 
 int sgn(float x);
 float rad_to_deg(float rad);

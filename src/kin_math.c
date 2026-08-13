@@ -14,7 +14,7 @@
 #include "kin_types.h"
 #include "kin_math.h"
 
-matrix_t *copy_matrix(matrix_t *matrix) {
+matrix_t *copy_matrix(const matrix_t *matrix) {
 	matrix_t *ret = init_matrix(matrix->rows, matrix->cols);
 
 	for (int i = 0; i < matrix->rows * matrix->cols; i++) {
@@ -57,7 +57,7 @@ matrix_t *arr_to_matrix(float *arr, uint8_t rows, uint8_t cols) {
 	return matrix;
 }
 
-float *copy_arr(float *arr, uint8_t size) {
+float *copy_arr(const float *arr, uint8_t size) {
 	float *ret = (float *)malloc(sizeof(arr));
 
 	for (int i = 0; i < size; i++) {
@@ -143,7 +143,7 @@ matrix_t *ident_matrix(uint8_t size) {
 }
 
 float matrix_det(const matrix_t *matrix) { // This function is ai generated with some modification.
-	if (matrix->rows != matrix->cols) error_handler(MATRIX_DIMENTION_ERROR); // TODO: find better error code
+	if (matrix->rows != matrix->cols) error_handler(MATRIX_DIMENTION_ERROR);
 
 	uint8_t size = matrix->rows;
 
@@ -203,6 +203,30 @@ float matrix_minor(const matrix_t *matrix, uint8_t row, uint8_t col) {
 	return matrix_det(minor_m);
 }
 
+matrix_t *inv_quat(const matrix_t *matrix) {
+	// Computation of a unit quaternion (normal of 1) is much easier.
+	// q^-1 = q^8 / ||q||^2
+
+	if (!is_quat(matrix)) error_handler(MATRIX_DIMENTION_ERROR);
+
+	matrix_t *ret;
+
+	matrix_t *quat;
+
+	// Normalize matrix if needed.
+	float norm = matrix_norm(matrix);
+	if (abs(norm) < 0.99) {
+		quat = normalize_matrix(matrix);
+	} else {
+		quat = copy_matrix(matrix);
+	}
+
+	ret = scale_matrix(quat_conjugate(quat), 1 / (norm * norm));
+
+	free_matrix(quat);
+	return ret;
+}
+
 matrix_t *inv_matrix(const matrix_t *matrix) {
 	if (matrix->cols != matrix->rows) error_handler(MATRIX_DIMENTION_ERROR);
 	if (matrix->cols < 2) error_handler(MATRIX_DIMENTION_ERROR);
@@ -211,7 +235,7 @@ matrix_t *inv_matrix(const matrix_t *matrix) {
 	// Technically if the detrement is 0 the math is saying there isn't an inverse.
 	// But sometimes the detrement is actually just really close to zero and the
 	// rest of the program still expects an output. Setting the detrement to almost
-	// zero returns an output of pretty much all zeros which satifies the rest of the
+	// zero returns an output of pretty much all zeros which satisfies the rest of the
 	// math.
 	if (det == 0.f) det = 0.000001; // NOTE: This isn't pretty but gets the job done.
 	// TODO: See if returning a matrix filled with zeros works as well.
@@ -297,11 +321,11 @@ matrix_t *quat_to_euler(matrix_t *matrix) {
 	matrix_t *normed = matrix;
 
 	/* Not sure if this is left over code.
-	float w2 = pow(normed->data[W], 2);
-	float x2 = pow(normed->data[X], 2);
-	float y2 = pow(normed->data[Y], 2);
-	float z2 = pow(normed->data[Z], 2);
-	*/
+	   float w2 = pow(normed->data[W], 2);
+	   float x2 = pow(normed->data[X], 2);
+	   float y2 = pow(normed->data[Y], 2);
+	   float z2 = pow(normed->data[Z], 2);
+	 */
 
 	ret->data[X] = atan2(
 		2 * (normed->data[W] * normed->data[X] + normed->data[Y] * normed->data[Z]),
@@ -392,7 +416,7 @@ bool is_vector(const matrix_t *matrix) {
 }
 
 float dot_prod(const matrix_t *a, const matrix_t *b) {
-	// Must have 1 collumn and same ammount of rows.
+	// Must have 1 column and same amount of rows.
 	if (a->cols != 1 || b->cols != 1) error_handler(MATRIX_DIMENTION_ERROR);
 	if (a->rows != b->rows) error_handler(MATRIX_DIMENTION_ERROR);
 
@@ -403,7 +427,7 @@ float dot_prod(const matrix_t *a, const matrix_t *b) {
 	return ret;
 }
 
-matrix_t *mul_quat(const matrix_t *a, const matrix_t *b) {
+matrix_t *quat_prod(const matrix_t *a, const matrix_t *b) {
 	if (!is_quat(a) || !is_quat(b)) error_handler(MATRIX_DIMENTION_ERROR);
 
 	matrix_t *ret = init_matrix(4, 1);
@@ -416,7 +440,7 @@ matrix_t *mul_quat(const matrix_t *a, const matrix_t *b) {
 	return ret;
 }
 
-matrix_t *mul_vector(const matrix_t *a, const matrix_t *b) {
+matrix_t *cross_prod(const matrix_t *a, const matrix_t *b) {
 	if (!is_vector(a) || !is_vector(b)) error_handler(MATRIX_DIMENTION_ERROR);
 
 	matrix_t *ret = init_matrix(3, 1);
@@ -424,6 +448,18 @@ matrix_t *mul_vector(const matrix_t *a, const matrix_t *b) {
 	ret->data[X] = a->data[Y] * b->data[Z] - a->data[Z] * b->data[Y];
 	ret->data[Y] = a->data[Z] * b->data[X] - a->data[X] * b->data[Z];
 	ret->data[Z] = a->data[X] * b->data[Y] - a->data[Y] * b->data[X];
+
+	return ret;
+}
+
+matrix_t *quat_conjugate(const matrix_t *matrix) {
+	if (!is_quat(matrix)) error_handler(MATRIX_DIMENTION_ERROR);
+
+	matrix_t *ret = init_matrix(4, 1);
+	ret->data[X] = -matrix->data[X];
+	ret->data[Y] = -matrix->data[Y];
+	ret->data[Z] = -matrix->data[Z];
+	ret->data[W] =  matrix->data[W];
 
 	return ret;
 }

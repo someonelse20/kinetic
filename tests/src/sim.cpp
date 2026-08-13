@@ -44,7 +44,7 @@ void sim_t::tick() {
 		gyro_q->data[i] = gyro_out[i];
 	}
 
-	matrix_t *rate_of_change_q = scale_matrix(mul_quat(orientation, gyro_q), 0.5);
+	matrix_t *rate_of_change_q = scale_matrix(quat_prod(orientation, gyro_q), 0.5);
 	orientation = add_matrix(orientation, rate_of_change_q);
 	orientation = normalize_matrix(orientation);
 
@@ -112,6 +112,8 @@ void sim_t::one_axis_test(int steps, plot_t *Plot) {
 			} else {
 				Plot->add_point(ahrs_algs[i]->imu->ekf.state, ahrs_algs[i]->name);
 			}
+			/*
+			 */
 		}
 
 		if (Plot != NULL) {
@@ -255,6 +257,8 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 			Plot->add_point(quat_to_euler(orientation), "true");
 		}
 
+		cout << get_error(start_rot, orientation) << endl;
+
 		/*
 		   int sleep_ms = timestep * 1000; // TODO Add flag for under millisecond timestep and accuracy.
 		   std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
@@ -262,8 +266,6 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 
 		count++;
 	}
-
-	error_report(count);
 
 	if (Plot != NULL) {
 		Plot->plot("Linear Interpolation Test");
@@ -279,11 +281,11 @@ void sim_t::error_report(int count) {
 			float error = ahrs_algs[i]->error_buf[j];
 			sum += error;
 
-			if (error < ahrs_algs[i]->min_error) {
+			if (error < abs(ahrs_algs[i]->min_error)) {
 				ahrs_algs[i]->min_error = error;
 			}
 
-			if (error > ahrs_algs[i]->max_error) {
+			if (error > abs(ahrs_algs[i]->max_error)) {
 				ahrs_algs[i]->max_error = error;
 			}
 		}
@@ -413,10 +415,22 @@ matrix_t *get_mag(matrix_t *orientation, float mag_dip) {
 }
 
 static float get_error(matrix_t *true_q, matrix_t *estm_q) {
-	// return dot_prod(true_q, estm_q);
-	matrix_t *ret = sub_matrix(true_q, estm_q);
-	return matrix_norm(ret);
 	/*
-	*/
+	   // Angle between quaternions (maybe) and scaled from 0 to pi/2 to 0 to 1.
+	   float angle = 2 * asin(dot_prod(true_q, estm_q));
+	   return angle / (M_PI / 2);
+	 */
+	// Calculate error orientation
+	matrix_t *error_q = quat_prod(estm_q, inv_quat(true_q));
+
+	// Calculate the angle between the orientations
+	float x2 = error_q->data[X] * error_q->data[X];
+	float y2 = error_q->data[Y] * error_q->data[Y];
+	float z2 = error_q->data[Z] * error_q->data[Z];
+	float angle = atan2(sqrt(x2 + y2 + z2), error_q->data[W]);
+	return angle;
+
+	// Scale from [0 pi/2] to [0 1].
+	// return angle / (M_PI);
 }
 
