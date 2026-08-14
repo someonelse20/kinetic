@@ -142,18 +142,33 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 	matrix_t *orientation_euler = init_matrix(3, 1);
 	orientation_euler->data[X] = sin(x_count);
 	orientation_euler->data[Y] = sin(y_count);
-	orientation_euler->data[Z] = 0.f;
-	// orientation_euler->data[Z] = sin(z_count);
+	orientation_euler->data[Z] = sin(z_count);
+	// orientation_euler->data[Z] = 0.f;
 
 	orientation = euler_to_quat(orientation_euler);
 
 	matrix_t *start_accel = get_accel(orientation);
 	matrix_t *start_mag = get_mag(orientation, imu->mag_dip);
 
+	print_matrix(start_accel);
+	cout << endl;
+
 	for (int i = 0; i < num_of_algs; i++) {
 		ahrs_algs[i]->imu->dt = timestep;
 		ahrs_algs[i]->imu_init(ahrs_algs[i]->imu, start_accel->data, start_mag->data);
 		ahrs_algs[i]->error_buf = (float *)malloc(steps * sizeof(float) + 10); // Add 10 for good measure.
+
+		cout << "=========================" << endl;
+		cout << "init simulation orientation" << endl;
+		cout << "=========================" << endl;
+		print_matrix(quat_to_euler(orientation));
+		cout << endl;
+
+		cout << "=========================" << endl;
+		cout << "init kinetic orientation" << endl;
+		cout << "=========================" << endl;
+		print_matrix(quat_to_euler(ahrs_algs[i]->imu->ekf.state));
+		cout << endl;
 	}
 
 	int count = 0;
@@ -164,8 +179,8 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 
 		orientation_euler->data[X] = sin(x_count);
 		orientation_euler->data[Y] = sin(y_count);
-		orientation_euler->data[Z] = 0.f;
-		// orientation_euler->data[Z] = sin(z_count);
+		orientation_euler->data[Z] = sin(z_count);
+		// orientation_euler->data[Z] = 0.f;
 
 		matrix_t *prev_orientation = copy_matrix(orientation);
 		orientation = euler_to_quat(orientation_euler);
@@ -181,6 +196,7 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 		for (int i = 0; i < num_of_algs; i++) {
 			ahrs_algs[i]->imu_update(ahrs_algs[i]->imu, gyro, accel, mag);
 
+			/*
 			cout << "=========================" << endl;
 			cout << "simulation orientation" << endl;
 			cout << "=========================" << endl;
@@ -192,6 +208,7 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 			cout << "=========================" << endl;
 			print_matrix(quat_to_euler(ahrs_algs[i]->imu->ekf.state));
 			cout << endl;
+			*/
 
 			if (is_quat(ahrs_algs[i]->imu->ekf.state)) {
 				ahrs_algs[i]->error_buf[count] = get_error(orientation, ahrs_algs[i]->imu->ekf.state);

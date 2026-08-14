@@ -408,7 +408,9 @@ bool is_quat(const matrix_t *matrix) {
 }
 
 bool is_vector(const matrix_t *matrix) {
-	if (matrix->rows == 3 && matrix->cols == 1) {
+	if (matrix->rows == 3 && matrix->cols == 1) { // Vertical vector.
+		return true;
+	} else if (matrix->rows == 1 && matrix->cols == 3) { // Horizontal vector.
 		return true;
 	} else {
 		return false;

@@ -25,26 +25,52 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 	matrix_t *accel_m = arr_to_matrix(accel_cpy, 3, 1);
 	matrix_t *mag_m = arr_to_matrix(mag_cpy, 3, 1);
 
+	/* This used to calculate a rotation matrix but there is a bug where the y axis has the wrong
+	 * sign (What I was testing it was ~-57 deg when it should be ~57 deg). I have no clue why it
+	 * is doing this. It has been replaced with code that calculates the euler angles instead.
+	 * I'm leaving this code here in case I find a fix and want to go back to the old code.
+
 	matrix_t *accel_x_mag = cross_prod(accel_m, mag_m);
 
-	matrix_t *row_1 = normalize_matrix(cross_prod(accel_x_mag, accel_m));
+	matrix_t *collumn_1 = normalize_matrix(cross_prod(accel_x_mag, accel_m));
+	matrix_t *collumn_2 = normalize_matrix(accel_x_mag);
+	matrix_t *collumn_3 = normalize_matrix(accel_m);
 
-	matrix_t *row_2 = normalize_matrix(accel_x_mag);
-
-	matrix_t *row_3 = normalize_matrix(accel_m);
+	print_matrix(collumn_1);
+	printf("\n");
+	print_matrix(collumn_2);
+	printf("\n");
+	print_matrix(collumn_3);
+	printf("\n");
 
 	matrix_t *rot_matrix = init_matrix(3, 3);
 	for (size_t i = 0; i < 3; i++) {
-		rot_matrix->data[3 * i] = row_1->data[i];
+		rot_matrix->data[3 * i] = collumn_1->data[i];
 	}
 	for (size_t i = 0; i < 3; i++) {
-		rot_matrix->data[3 * i + 1] = row_2->data[i];
+		rot_matrix->data[3 * i + 1] = collumn_2->data[i];
 	}
 	for (size_t i = 0; i < 3; i++) {
-		rot_matrix->data[3 * i + 2] = row_3->data[i];
+		rot_matrix->data[3 * i + 2] = collumn_3->data[i];
 	}
 
+	print_matrix(rot_matrix);
+	printf("\n");
+
 	imu->ekf.state = rot_matrix_to_quat(rot_matrix);
+	*/
+
+	matrix_t *state_euler = init_matrix(3, 1);
+	state_euler->data[X] = atan2(accel[Y], accel[Z]);
+	state_euler->data[Y] = atan2(-accel[X], sqrt(accel[Y] * accel[Y] + accel[Z] * accel[Z]));
+
+	matrix_t *west = cross_prod(accel_m, mag_m);
+	matrix_t *north = cross_prod(west, accel_m);
+	matrix_t *frame = fill_matrix(3, 1, 0.f);
+	frame->data[X] = 1.f;
+	state_euler->data[Z] = -atan2(dot_prod(west, frame), dot_prod(north, frame));
+
+	imu->ekf.state = euler_to_quat(state_euler);
 
 	// Initialize rest of variables
 
@@ -63,7 +89,9 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 	imu->g_ref = arr_to_matrix(g_ref_a, 3, 1);
 	imu->m_ref = scale_matrix(arr_to_matrix(m_ref_a, 3, 1), 1 / (sqrt(pow(cos(imu->mag_dip), 2) + pow(sin(imu->mag_dip), 2))));
 
+
 	// Use static noise for now.
+
 	imu->proc_noise = init_matrix(3, 3);
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
