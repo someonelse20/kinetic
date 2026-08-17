@@ -13,6 +13,7 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "kin_types.h"
@@ -29,9 +30,10 @@ matrix_t *copy_matrix(const matrix_t *matrix);
 matrix_t *init_matrix(uint8_t rows, uint8_t cols);
 matrix_t *fill_matrix(uint8_t rows, uint8_t cols, float value);
 matrix_t *arr_to_matrix(float *arr, uint8_t rows, uint8_t cols);
+float *matrix_to_arr(matrix_t *matrix);
+float *copy_arr(const float *arr, uint8_t size);
 void print_matrix(const matrix_t *matrix);
 void print_arr(const float *arr, uint8_t size);
-float *copy_arr(const float *arr, uint8_t size);
 
 matrix_t *add_matrix(const matrix_t *a, const matrix_t *b);
 matrix_t *sub_matrix(const matrix_t *a, const matrix_t *b);
