@@ -94,16 +94,21 @@ void print_arr(const float *arr, uint8_t size) {
 
 matrix_t *add_matrix(const matrix_t *a, const matrix_t *b) {
 	if (a->rows != b->rows || a->cols != b->cols) error_handler(MATRIX_DIMENTION_ERROR);
+
 	matrix_t *result = init_matrix(a->rows, a->cols);
+
 	for (uint8_t i = 0; i < a->rows * a->cols; i++) {
 		result->data[i] = a->data[i] + b->data[i];
 	}
+
 	return result;
 }
 
 matrix_t *sub_matrix(const matrix_t *a, const matrix_t *b) {
 	if (a->rows != b->rows || a->cols != b->cols) error_handler(MATRIX_DIMENTION_ERROR);
+
 	matrix_t *result = init_matrix(a->rows, a->cols);
+
 	for (uint8_t i = 0; i < a->rows * a->cols; i++) {
 		result->data[i] = a->data[i] - b->data[i];
 	}
@@ -112,7 +117,9 @@ matrix_t *sub_matrix(const matrix_t *a, const matrix_t *b) {
 
 matrix_t *mul_matrix(const matrix_t *a, const matrix_t *b) {
 	if (a->cols != b->rows) error_handler(MATRIX_DIMENTION_ERROR);
+
 	matrix_t *result = init_matrix(a->rows, b->cols);
+
 	for (uint8_t i = 0; i < a->rows; i++) {
 		for (uint8_t j = 0; j < b->cols; j++) {
 			result->data[i * b->cols + j] = 0;
@@ -121,6 +128,7 @@ matrix_t *mul_matrix(const matrix_t *a, const matrix_t *b) {
 			}
 		}
 	}
+
 	return result;
 }
 
