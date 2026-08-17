@@ -58,7 +58,7 @@ matrix_t *arr_to_matrix(float *arr, uint8_t rows, uint8_t cols) {
 }
 
 float *matrix_to_arr(matrix_t *matrix) {
-	float *arr = malloc(matrix->rows * matrix->cols * sizeof(float));
+	float *arr = (float *)malloc(matrix->rows * matrix->cols * sizeof(float));
 
 	for (uint8_t i = 0; i < matrix->rows * matrix->cols; i++) {
 		arr[i] = matrix->data[i];

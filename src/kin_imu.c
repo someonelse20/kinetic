@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -17,13 +18,13 @@ static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref,
 static matrix_t *stack_matrix(const matrix_t *a, const matrix_t *b);
 
 matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
-	float *accel_cpy = copy_arr(accel, 3);
-	float *mag_cpy = copy_arr(mag, 3);
+	// float *accel_cpy = copy_arr(accel, 3);
+	// float *mag_cpy = copy_arr(mag, 3);
 
 	// Calculate orientation purly based of the accelerometer and magnetometer to start with.
 
-	matrix_t *accel_m = arr_to_matrix(accel_cpy, 3, 1);
-	matrix_t *mag_m = arr_to_matrix(mag_cpy, 3, 1);
+	matrix_t *accel_m = arr_to_matrix(accel, 3, 1);
+	matrix_t *mag_m = arr_to_matrix(mag, 3, 1);
 
 	/* This used to calculate a rotation matrix but there is a bug where the y axis has the wrong
 	 * sign (What I was testing it was ~-57 deg when it should be ~57 deg). I have no clue why it
@@ -117,6 +118,15 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 		}
 	}
 
+	// free(accel_cpy);
+	// free(mag_cpy);
+	free_matrix(accel_m);
+	free_matrix(mag_m);
+	free_matrix(state_euler);
+	free_matrix(west);
+	free_matrix(north);
+	free_matrix(frame);
+
 	return imu->ekf.state;
 }
 
@@ -141,6 +151,18 @@ matrix_t *imu_update(imu_t *imu, float *gyro, float *accel, float *mag) {
 
 	// Normalize output.
 	imu->ekf.state = normalize_matrix(imu->ekf.state);
+
+	free(gyro_cpy);
+	free(accel_cpy);
+	free(mag_cpy);
+	free_matrix(accel_m);
+	free_matrix(mag_m);
+	free_matrix(meas);
+	free_matrix(state_pred);
+	free_matrix(state_pred_jacob);
+	free_matrix(obsv_model);
+	free_matrix(obsv_model_jacob);
+	free_matrix(proc_noise);
 
 	return imu->ekf.state;
 }
