@@ -5,8 +5,8 @@ project(Kinetic VERSION 0.1.0 LANGUAGES CXX C)
 include_directories(${CMAKE_SOURCE_DIR}/inc)
 
 # Kinetic library (core C code)
-add_library(kinetic STATIC src/kin_error.c src/kin_math.c src/kin_ekf.c src/kin_imu.c)
-target_include_directories(kinetic PUBLIC ${CMAKE_SOURCE_DIR}/inc)
+add_library(kinetic STATIC ${CMAKE_SOURCE_DIR}/src/kin_error.c ${CMAKE_SOURCE_DIR}/src/kin_math.c ${CMAKE_SOURCE_DIR}/kinetic/src/kin_ekf.c ${CMAKE_SOURCE_DIR}/kinetic/src/kin_imu.c)
+target_include_directories(kinetic PUBLIC ${CMAKE_SOURCE_DIR}/kinetic/inc)
 target_link_libraries(kinetic PRIVATE m)
 
 # Set compiler flags
@@ -43,14 +43,14 @@ endif()
 # TEST TARGETS
 #==============================================================================
 
-add_executable(tests tests/main.cpp)
+add_executable(tests ${CMAKE_SOURCE_DIR}/tests/main.cpp)
 target_include_directories(tests PRIVATE ${CMAKE_SOURCE_DIR}/tests/inc)
 target_link_libraries(tests PRIVATE kinetic)
 
 # Link sim.cpp with tests
-target_sources(tests PRIVATE tests/src/sim.cpp tests/src/plot.cpp tests/src/reference_ahrs.cpp)
+target_sources(tests PRIVATE ${CMAKE_SOURCE_DIR}/tests/src/sim.cpp ${CMAKE_SOURCE_DIR}/tests/src/plot.cpp ${CMAKE_SOURCE_DIR}/tests/src/reference_ahrs.cpp)
 
-add_executable(matrix tests/matrix.cpp)
+add_executable(matrix ${CMAKE_SOURCE_DIR}/tests/matrix.cpp)
 target_include_directories(matrix PRIVATE ${CMAKE_SOURCE_DIR}/tests/inc)
 target_link_libraries(matrix PRIVATE kinetic)
 
