@@ -254,7 +254,6 @@ static matrix_t *observe_model_jacobian(matrix_t *state_pred, matrix_t *g_ref, m
 
 	matrix_t *accel_model = observe_model_jacobian_helper(accel_ctr_vctr, g_ref, state_pred_real, state_pred_scalar);
 	matrix_t *mag_model = observe_model_jacobian_helper(mag_ctr_vctr, m_ref, state_pred_real, state_pred_scalar);
-	/*
 
 	matrix_t *stack = stack_matrix(accel_model, mag_model);
 
@@ -276,8 +275,9 @@ static matrix_t *observe_model_jacobian(matrix_t *state_pred, matrix_t *g_ref, m
 	free_matrix(accel_model);
 	free_matrix(mag_model);
 	return scale_matrix_free(stack, 2);
+	/*
 	*/
-	return init_matrix(6, 4);
+	// return init_matrix(6, 4);
 }
 
 static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref, matrix_t *real, float scalar) {
@@ -288,7 +288,7 @@ static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref,
 	float dot = dot_prod(real, ref);
 
 	matrix_t *ref_x_real_t = mul_matrix(ref, trans_matrix(real));
-	matrix_t *real_half= scale_matrix_free(ident_matrix(3), dot); // = (real * ref) * I_3 - ref * real^T
+	matrix_t *real_half = scale_matrix_free(ident_matrix(3), dot); // = (real * ref) * I_3 - ref * real^T
 	real_half = sub_matrix_free(real_half, ref_x_real_t);
 
 	matrix_t *model_left = add_matrix(skew_matrix, real_half);

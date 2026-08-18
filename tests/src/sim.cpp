@@ -227,6 +227,13 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 		}
 
 		count++;
+
+		free_matrix(prev_orientation);
+		free_matrix(gyro_m);
+		free_matrix(accel_m);
+		free_matrix(mag_m);
+
+		break;
 	}
 
 	error_report(steps);
@@ -234,6 +241,8 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 	if (Plot != NULL) {
 		Plot->plot("3 Axis Test");
 	}
+
+	free_matrix(orientation_euler);
 }
 
 void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep, plot_t *Plot) {
@@ -428,42 +437,42 @@ matrix_t *get_gyro(matrix_t *q1, matrix_t *q2, float dt) {
 }
 
 matrix_t *get_accel(matrix_t *orientation) {
+	float g_ref_a[] = {0, 0, 1};
+	matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, 1);
+
+	matrix_t *rot_matrix = quat_to_rot_matrix(orientation);
+	matrix_t *ret = mul_matrix_free(trans_matrix_free(rot_matrix), g_ref_m);
+
+	free_matrix(g_ref_m);
+	return ret;
+	/*
+	 */
 	/*
 	   float g_ref_a[] = {0, 0, 1};
 	   matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, 1);
 
-	   matrix_t *rot_matrix = quat_to_rot_matrix(orientation);
-	   matrix_t *ret = mul_matrix_free(trans_matrix_free(rot_matrix), g_ref_m);
-	   free_matrix(g_ref_m);
-	   free_matrix(rot_matrix);
-	   return ret;
+	   return mul_matrix(trans_matrix(quat_to_rot_matrix(orientation)), g_ref_m);
 	 */
-	float g_ref_a[] = {0, 0, 1};
-	matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, 1);
-	// matrix_t *m = quat_to_rot_matrix(orientation);
-
-	return mul_matrix(trans_matrix(quat_to_rot_matrix(orientation)), g_ref_m);
 }
 
 matrix_t *get_mag(matrix_t *orientation, float mag_dip) {
+	float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
+	matrix_t *m_ref_m = arr_to_matrix(m_ref_a, 3, 1);
+	m_ref_m = scale_matrix_free(m_ref_m, 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
+
+	matrix_t *rot_matrix = quat_to_rot_matrix(orientation);
+	matrix_t *ret = mul_matrix_free(trans_matrix_free(rot_matrix), m_ref_m);
+
+	free_matrix(m_ref_m);
+	return ret;
 	/*
-	   float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
-	   matrix_t *m_ref_m = arr_to_matrix(m_ref_a, 3, 1);
-	   matrix_t *ret = scale_matrix(m_ref_m, 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
-
-	   matrix_t *rot_matrix = quat_to_rot_matrix(orientation);
-	   ret = mul_matrix(trans_matrix(rot_matrix), m_ref_m);
-
-	   free_matrix(m_ref_m);
-	   free_matrix(rot_matrix);
-	   return ret;
 	 */
 
-	float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
-	matrix_t *m_ref_m = scale_matrix(arr_to_matrix(m_ref_a, 3, 1), 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
-
-	return mul_matrix(trans_matrix(quat_to_rot_matrix(orientation)), m_ref_m);
 	/*
+	   float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
+	   matrix_t *m_ref_m = scale_matrix(arr_to_matrix(m_ref_a, 3, 1), 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
+
+	   return mul_matrix(trans_matrix(quat_to_rot_matrix(orientation)), m_ref_m);
 	 */
 }
 
