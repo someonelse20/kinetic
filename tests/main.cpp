@@ -66,8 +66,8 @@ int main() {
 
 	// sim.one_axis_test(100);
 	// sim.one_axis_test(100, &Plot);
-	sim.all_axis_test(100);
-	// sim.all_axis_test(100, &Plot);
+	// sim.all_axis_test(100);
+	sim.all_axis_test(100, &Plot);
 	// sim.linear_interpolation(start_rot, end_rot, 1, 0.001);
 	// sim.linear_interpolation(start_rot, end_rot, 1, 0.01, &Plot);
 }

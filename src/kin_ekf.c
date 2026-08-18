@@ -23,9 +23,10 @@ uint8_t ekf_update(ekf_t *ekf, matrix_t *meas, matrix_t *state_pred, matrix_t *s
 	// state_pred_jacob = F_K :: Not calculated for same reason as ^X_k.
 
 	matrix_t *cov_pred; // ^P_k = F_k * P_k-1 *F_k^T + Q_k (proc_noise)
+	matrix_t *state_pred_jacob_trans = trans_matrix(state_pred_jacob);
 	cov_pred = mul_matrix(state_pred_jacob, prev_cov); 
-	cov_pred = mul_matrix(cov_pred, trans_matrix(state_pred_jacob));
-	cov_pred = add_matrix(cov_pred, proc_noise);
+	cov_pred = mul_matrix_free(cov_pred, state_pred_jacob_trans);
+	cov_pred = add_matrix_free(cov_pred, proc_noise);
 	/*
 	*/
 
@@ -34,12 +35,13 @@ uint8_t ekf_update(ekf_t *ekf, matrix_t *meas, matrix_t *state_pred, matrix_t *s
 	matrix_t *obsv_model_jacob_trans = trans_matrix(obsv_model_jacob); // H_k^T :: Variable used twice so no need to recompute.
 	matrix_t *meas_pred_cov; // S_k = H_k * ^P_k * H_k^T + R_k (meas_noise) :: Measurement predicted covariance. Seperate variable to make computation simpler.
 	meas_pred_cov = mul_matrix(obsv_model_jacob, cov_pred);
-	meas_pred_cov = mul_matrix(meas_pred_cov, obsv_model_jacob_trans);
-	meas_pred_cov = add_matrix(meas_pred_cov, meas_noise);
+	meas_pred_cov = mul_matrix_free(meas_pred_cov, obsv_model_jacob_trans);
+	meas_pred_cov = add_matrix_free(meas_pred_cov, meas_noise);
 
 	matrix_t *kalman_gain; // K_k = ^P_k * H_k^T * S_k^-1
+	matrix_t *meas_pred_cov_inv = inv_matrix(meas_pred_cov);
 	kalman_gain = mul_matrix(cov_pred, obsv_model_jacob_trans);
-	kalman_gain = mul_matrix(kalman_gain, inv_matrix(meas_pred_cov));
+	kalman_gain = mul_matrix_free(kalman_gain, meas_pred_cov_inv);
 	/*
 	*/
 
@@ -55,8 +57,12 @@ uint8_t ekf_update(ekf_t *ekf, matrix_t *meas, matrix_t *state_pred, matrix_t *s
 
 	matrix_t *covariance; // P_k = (I - K_k * H_k) * ^P_k
 	// TODO: Check if the dimentions of the identity matrix are the same of the kalman gain.
-	covariance = sub_matrix(ident_matrix(kalman_gain->rows), mul_matrix(kalman_gain, obsv_model_jacob));
-	covariance = mul_matrix(covariance, cov_pred);
+	matrix_t *kalman_x_obsv = mul_matrix(kalman_gain, obsv_model_jacob);
+	covariance = sub_matrix_free(ident_matrix(kalman_gain->rows), kalman_x_obsv);
+	covariance = mul_matrix_free(covariance, cov_pred);
+
+	free_matrix(ekf->state);
+	free_matrix(ekf->covariance);
 
 	ekf->state = state;
 	ekf->covariance = covariance;
@@ -64,10 +70,13 @@ uint8_t ekf_update(ekf_t *ekf, matrix_t *meas, matrix_t *state_pred, matrix_t *s
 	free_matrix(prev_state);
 	free_matrix(prev_cov);
 	free_matrix(cov_pred);
+	free_matrix(state_pred_jacob_trans);
 	free_matrix(obsv_model_jacob_trans);
 	free_matrix(meas_pred_cov);
+	free_matrix(meas_pred_cov_inv);
 	free_matrix(kalman_gain);
 	free_matrix(meas_residual);
+	free_matrix(kalman_x_obsv);
 	/*
 	*/
 

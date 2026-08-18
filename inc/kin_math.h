@@ -35,12 +35,18 @@ float *copy_arr(const float *arr, uint8_t size);
 void print_matrix(const matrix_t *matrix);
 void print_arr(const float *arr, uint8_t size);
 
+matrix_t *trans_matrix(const matrix_t *matrix);
 matrix_t *add_matrix(const matrix_t *a, const matrix_t *b);
 matrix_t *sub_matrix(const matrix_t *a, const matrix_t *b);
 matrix_t *mul_matrix(const matrix_t *a, const matrix_t *b);
 matrix_t *scale_matrix(const matrix_t *matrix, float scalar);
 
-matrix_t *trans_matrix(const matrix_t *matrix);
+matrix_t *trans_matrix_free(matrix_t *matrix);
+matrix_t *add_matrix_free(matrix_t *a, const matrix_t *b);
+matrix_t *sub_matrix_free(matrix_t *a, const matrix_t *b);
+matrix_t *mul_matrix_free(matrix_t *a, const matrix_t *b);
+matrix_t *scale_matrix_free(matrix_t *matrix, float scalar);
+
 matrix_t *ident_matrix(uint8_t size);
 
 float matrix_det(const matrix_t *matrix);

@@ -1,0 +1,24 @@
+{
+	ignore_sim_leaks
+	Memcheck:Leak
+	...
+	fun:get_mag
+}
+{
+	ignore_sim_cond
+	Memcheck:Cond
+	...
+	fun:get_mag
+}
+{
+	ignore_sim_addr
+	Memcheck:Addr8
+	...
+	fun:get_mag
+}
+{
+	ignore_sim_value
+	Memcheck:Value8
+	...
+	fun:get_mag
+}

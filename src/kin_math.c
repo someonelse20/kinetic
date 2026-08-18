@@ -133,11 +133,43 @@ matrix_t *mul_matrix(const matrix_t *a, const matrix_t *b) {
 }
 
 matrix_t *scale_matrix(const matrix_t *matrix, float scalar) {
-	matrix_t *result = init_matrix(matrix->rows, matrix->cols);
+	matrix_t *ret = init_matrix(matrix->rows, matrix->cols);
+
 	for (uint8_t i = 0; i < matrix->rows * matrix->cols; i++) {
-		result->data[i] = scalar * matrix->data[i];
+		ret->data[i] = scalar * matrix->data[i];
 	}
-	return result;
+
+	return ret;
+}
+
+matrix_t *trans_matrix_free(matrix_t *matrix) {
+	matrix_t *ret = trans_matrix(matrix);
+	free_matrix(matrix);
+	return ret;
+}
+
+matrix_t *add_matrix_free(matrix_t *a, const matrix_t *b) {
+	matrix_t *ret = add_matrix(a, b);
+	free_matrix(a);
+	return ret;
+}
+
+matrix_t *sub_matrix_free(matrix_t *a, const matrix_t *b) {
+	matrix_t *ret = sub_matrix(a, b);
+	free_matrix(a);
+	return ret;
+}
+
+matrix_t *mul_matrix_free(matrix_t *a, const matrix_t *b) {
+	matrix_t *ret = mul_matrix(a, b);
+	free_matrix(a);
+	return ret;
+}
+
+matrix_t *scale_matrix_free(matrix_t *matrix, float scalar) {
+	matrix_t *ret = scale_matrix(matrix, scalar);
+	free_matrix(matrix);
+	return ret;
 }
 
 matrix_t *trans_matrix(const matrix_t *matrix) {
@@ -218,7 +250,10 @@ float matrix_minor(const matrix_t *matrix, uint8_t row, uint8_t col) {
 		}
 	}
 
-	return matrix_det(minor_m);
+	float det = matrix_det(minor_m);
+
+	free_matrix(minor_m);
+	return det;
 }
 
 matrix_t *inv_quat(const matrix_t *matrix) {
@@ -257,25 +292,31 @@ matrix_t *inv_matrix(const matrix_t *matrix) {
 	// math.
 	if (det == 0.f) det = 0.000001; // NOTE: This isn't pretty but gets the job done.
 	// TODO: See if returning a matrix filled with zeros works as well.
+	
+	matrix_t *adj = ajt_matrix(matrix);
+	matrix_t *ret = scale_matrix_free(adj, 1.0 / det);
 
-	return scale_matrix(ajt_matrix(matrix), 1.0 / det);
+	return ret;
 }
 
 matrix_t *ajt_matrix(const matrix_t *matrix) {
 	if (matrix->cols != matrix->rows) error_handler(MATRIX_DIMENTION_ERROR);
 	if (matrix->cols < 2) error_handler(MATRIX_DIMENTION_ERROR);
 
-	matrix_t *ret = init_matrix(matrix->rows, matrix->cols);
+	matrix_t *ajt = init_matrix(matrix->rows, matrix->cols);
 	uint8_t size = matrix->rows;
 
 	for (uint8_t i = 0; i < size; i++) {
 		for (uint8_t j = 0; j < size; j++) {
-			ret->data[i * size + j] = pow(-1.0, i + j + 2) * matrix_minor(matrix, i, j);
+			ajt->data[i * size + j] = pow(-1.0, i + j + 2) * matrix_minor(matrix, i, j);
 			// ret->data[i * size + j] = matrix_minor(matrix, i, j);
 		}
 	}
 
-	return trans_matrix(ret);
+	matrix_t *ret = trans_matrix(ajt);
+
+	free_matrix(ajt);
+	return ret;
 }
 
 matrix_t *normalize_matrix(const matrix_t *matrix) {

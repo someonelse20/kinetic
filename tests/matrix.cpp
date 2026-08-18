@@ -8,13 +8,17 @@ using namespace std;
 
 
 int main() {
-	float a_arr[] = {1, 2, 3, 4};
-	float b_arr[] = {5, 6, 7, 8};
+	float a_arr[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
 
-	matrix_t *a = arr_to_matrix(a_arr, 4, 1);
-	matrix_t *b = arr_to_matrix(b_arr, 4, 1);
+	matrix_t *a = arr_to_matrix(a_arr, 3, 3);
 
-	// cout << dot_prod(a, b) << endl;
-	cout << sqrt(0) << endl;;
+	matrix_t *ajt = ajt_matrix(a);
+
+	print_matrix(a);
+	cout << endl;
+	print_matrix(ajt);
+
+	free_matrix(a);
+	free_matrix(ajt);
 }
 

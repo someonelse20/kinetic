@@ -150,9 +150,6 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 	matrix_t *start_accel = get_accel(orientation);
 	matrix_t *start_mag = get_mag(orientation, imu->mag_dip);
 
-	print_matrix(start_accel);
-	cout << endl;
-
 	for (int i = 0; i < num_of_algs; i++) {
 		ahrs_algs[i]->imu->dt = timestep;
 		ahrs_algs[i]->imu_init(ahrs_algs[i]->imu, start_accel->data, start_mag->data);
@@ -197,18 +194,18 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 			ahrs_algs[i]->imu_update(ahrs_algs[i]->imu, gyro, accel, mag);
 
 			/*
-			cout << "=========================" << endl;
-			cout << "simulation orientation" << endl;
-			cout << "=========================" << endl;
-			print_matrix(quat_to_euler(orientation));
-			cout << endl;
+			   cout << "=========================" << endl;
+			   cout << "simulation orientation" << endl;
+			   cout << "=========================" << endl;
+			   print_matrix(quat_to_euler(orientation));
+			   cout << endl;
 
-			cout << "=========================" << endl;
-			cout << "kinetic orientation" << endl;
-			cout << "=========================" << endl;
-			print_matrix(quat_to_euler(ahrs_algs[i]->imu->ekf.state));
-			cout << endl;
-			*/
+			   cout << "=========================" << endl;
+			   cout << "kinetic orientation" << endl;
+			   cout << "=========================" << endl;
+			   print_matrix(quat_to_euler(ahrs_algs[i]->imu->ekf.state));
+			   cout << endl;
+			 */
 
 			if (is_quat(ahrs_algs[i]->imu->ekf.state)) {
 				ahrs_algs[i]->error_buf[count] = get_error(orientation, ahrs_algs[i]->imu->ekf.state);
@@ -427,10 +424,20 @@ matrix_t *get_gyro(matrix_t *q1, matrix_t *q2, float dt) {
 	ret->data[Y] = q1->data[W] * q2->data[Y] + q1->data[X] * q2->data[Z] - q1->data[Y] * q2->data[W] - q1->data[Z] * q2->data[X];
 	ret->data[Z] = q1->data[W] * q2->data[Z] - q1->data[X] * q2->data[Y] + q1->data[Y] * q2->data[X] - q1->data[Z] * q2->data[W];
 
-	return scale_matrix(ret, 2 / dt);
+	return scale_matrix_free(ret, 2 / dt);
 }
 
 matrix_t *get_accel(matrix_t *orientation) {
+	/*
+	   float g_ref_a[] = {0, 0, 1};
+	   matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, 1);
+
+	   matrix_t *rot_matrix = quat_to_rot_matrix(orientation);
+	   matrix_t *ret = mul_matrix_free(trans_matrix_free(rot_matrix), g_ref_m);
+	   free_matrix(g_ref_m);
+	   free_matrix(rot_matrix);
+	   return ret;
+	 */
 	float g_ref_a[] = {0, 0, 1};
 	matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, 1);
 	// matrix_t *m = quat_to_rot_matrix(orientation);
@@ -439,10 +446,25 @@ matrix_t *get_accel(matrix_t *orientation) {
 }
 
 matrix_t *get_mag(matrix_t *orientation, float mag_dip) {
+	/*
+	   float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
+	   matrix_t *m_ref_m = arr_to_matrix(m_ref_a, 3, 1);
+	   matrix_t *ret = scale_matrix(m_ref_m, 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
+
+	   matrix_t *rot_matrix = quat_to_rot_matrix(orientation);
+	   ret = mul_matrix(trans_matrix(rot_matrix), m_ref_m);
+
+	   free_matrix(m_ref_m);
+	   free_matrix(rot_matrix);
+	   return ret;
+	 */
+
 	float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
 	matrix_t *m_ref_m = scale_matrix(arr_to_matrix(m_ref_a, 3, 1), 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
 
 	return mul_matrix(trans_matrix(quat_to_rot_matrix(orientation)), m_ref_m);
+	/*
+	 */
 }
 
 static float get_error(matrix_t *true_q, matrix_t *estm_q) {
@@ -452,13 +474,17 @@ static float get_error(matrix_t *true_q, matrix_t *estm_q) {
 	   return angle / (M_PI / 2);
 	 */
 	// Calculate error orientation
-	matrix_t *error_q = quat_prod(estm_q, inv_quat(true_q));
+	matrix_t *inv = inv_quat(true_q);
+	matrix_t *error_q = quat_prod(estm_q, inv);
 
 	// Calculate the angle between the orientations
 	float x2 = error_q->data[X] * error_q->data[X];
 	float y2 = error_q->data[Y] * error_q->data[Y];
 	float z2 = error_q->data[Z] * error_q->data[Z];
 	float angle = atan2(sqrt(x2 + y2 + z2), error_q->data[W]);
+
+	free_matrix(inv);
+	free_matrix(error_q);
 	return angle;
 
 	// Scale from [0 pi/2] to [0 1].
