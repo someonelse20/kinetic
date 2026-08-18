@@ -232,8 +232,6 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 		free_matrix(gyro_m);
 		free_matrix(accel_m);
 		free_matrix(mag_m);
-
-		break;
 	}
 
 	error_report(steps);
