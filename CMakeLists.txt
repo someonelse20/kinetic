@@ -54,3 +54,9 @@ add_executable(matrix ${CMAKE_SOURCE_DIR}/tests/matrix.cpp)
 target_include_directories(matrix PRIVATE ${CMAKE_SOURCE_DIR}/tests/inc)
 target_link_libraries(matrix PRIVATE kinetic)
 
+add_executable(dataset ${CMAKE_SOURCE_DIR}/tests/dataset.cpp)
+target_include_directories(dataset PRIVATE ${CMAKE_SOURCE_DIR}/tests/inc)
+target_link_libraries(dataset PRIVATE kinetic)
+
+target_sources(dataset PRIVATE ${CMAKE_SOURCE_DIR}/tests/src/sim.cpp ${CMAKE_SOURCE_DIR}/tests/src/plot.cpp ${CMAKE_SOURCE_DIR}/tests/src/reference_ahrs.cpp)
+
