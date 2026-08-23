@@ -9,6 +9,8 @@ extern "C" {
 
 uint8_t ekf_init(ekf_t *ekf, matrix_t *state, matrix_t *variance);
 
+uint8_t ekf_deinit(ekf_t *ekf);
+
 uint8_t ekf_update(ekf_t *ekf, matrix_t *meas, matrix_t *state_pred, matrix_t *state_pred_jacob, matrix_t *obsv_model, matrix_t *obsv_model_jacob, matrix_t *proc_noise, matrix_t *meas_noise);
 
 #ifdef __cplusplus

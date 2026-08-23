@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <unistd.h>
 
 #include "kin_types.h"
 #include "kin_math.h"
@@ -88,7 +89,7 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 	float g_ref_a[] = {0, 0, 1};
 	float m_ref_a[] = {cos(imu->mag_dip), 0, sin(imu->mag_dip)};
 	imu->g_ref = arr_to_matrix(g_ref_a, 3, 1);
-	imu->m_ref = scale_matrix(arr_to_matrix(m_ref_a, 3, 1), 1 / (sqrt(pow(cos(imu->mag_dip), 2) + pow(sin(imu->mag_dip), 2))));
+	imu->m_ref = scale_matrix_alloc(arr_to_matrix(m_ref_a, 3, 1), 1 / (sqrt(pow(cos(imu->mag_dip), 2) + pow(sin(imu->mag_dip), 2))));
 
 
 	// Use static noise for now.
@@ -130,6 +131,17 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 	return imu->ekf.state;
 }
 
+uint8_t imu_deinit(imu_t *imu) {
+	ekf_deinit(&imu->ekf);
+
+	free_matrix(imu->g_ref);
+	free_matrix(imu->m_ref);
+	free_matrix(imu->proc_noise);
+	free_matrix(imu->meas_noise);
+
+	return 0;
+}
+
 matrix_t *imu_update(imu_t *imu, float *gyro, float *accel, float *mag) {
 	float *gyro_cpy = copy_arr(gyro, 3);
 	float *accel_cpy = copy_arr(accel, 3);
@@ -148,7 +160,7 @@ matrix_t *imu_update(imu_t *imu, float *gyro, float *accel, float *mag) {
 	ekf_update(&imu->ekf, meas, state_pred, state_pred_jacob, obsv_model, obsv_model_jacob, proc_noise, imu->meas_noise);
 
 	// Normalize output.
-	imu->ekf.state = normalize_matrix(imu->ekf.state);
+	normalize_matrix(imu->ekf.state);
 
 	free(gyro_cpy);
 	free(accel_cpy);
@@ -162,8 +174,6 @@ matrix_t *imu_update(imu_t *imu, float *gyro, float *accel, float *mag) {
 	free_matrix(obsv_model_jacob);
 	free_matrix(proc_noise);
 
-	/*
-	*/
 	return imu->ekf.state;
 }
 
@@ -204,7 +214,7 @@ static matrix_t *process_noise(matrix_t *prev_state, float gyro_noise, float dt)
 	matrix_t *noise_m = arr_to_matrix(noise_data, 4, 3);
 	noise_m = scale_matrix_free(noise_m, dt/2);
 
-	matrix_t *noise_trans = trans_matrix(noise_m);
+	matrix_t *noise_trans = trans_matrix_alloc(noise_m);
 
 	ret = scale_matrix_free(noise_m, gyro_noise * gyro_noise);
 	ret = mul_matrix_free(ret, noise_trans);
@@ -219,8 +229,8 @@ static matrix_t *observe_model(matrix_t *state_pred, matrix_t *g_ref, matrix_t *
 	matrix_t *rot_matrix = quat_to_rot_matrix(state_pred);
 	matrix_t *rot_matrix_trans = trans_matrix_free(rot_matrix);
 
-	matrix_t *accel_model = mul_matrix(rot_matrix_trans, g_ref);
-	matrix_t *mag_model = mul_matrix(rot_matrix_trans, m_ref);
+	matrix_t *accel_model = mul_matrix_alloc(rot_matrix_trans, g_ref);
+	matrix_t *mag_model = mul_matrix_alloc(rot_matrix_trans, m_ref);
 
 	for (int i = 0; i < 6; i++) {
 		if (i < 3) {
@@ -236,6 +246,7 @@ static matrix_t *observe_model(matrix_t *state_pred, matrix_t *g_ref, matrix_t *
 	free_matrix(mag_model);
 	return ret;
 }
+
 static matrix_t *observe_model_jacobian(matrix_t *state_pred, matrix_t *g_ref, matrix_t *m_ref) {
 	/*
 	 * H(^Q_t) = 2 * [U_g [U_g + ^Q_w * G]x + (^Q_v * G)I_3 - G * ^Q_v^T]
@@ -283,15 +294,21 @@ static matrix_t *observe_model_jacobian(matrix_t *state_pred, matrix_t *g_ref, m
 static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref, matrix_t *real, float scalar) {
 	matrix_t *ret = init_matrix(3, 4);
 
-	matrix_t *skew_matrix = skew_symm_matrix(add_matrix(ctr_vtr, scale_matrix(ref, scalar))); // = [ctr_vtr + scalar * ref]x
+	matrix_t *ref_scale = scale_matrix_alloc(ref, scalar);
+
+	// NOTE: If buggy, add_matrix may not be communative.
+	matrix_t *skew_matrix = skew_symm_matrix(add_matrix_free(ref_scale, ctr_vtr)); // = [ctr_vtr + scalar * ref]x
 
 	float dot = dot_prod(real, ref);
 
-	matrix_t *ref_x_real_t = mul_matrix(ref, trans_matrix(real));
+	matrix_t *real_trans = trans_matrix_alloc(real);
+
+	matrix_t *ref_x_real_t = mul_matrix_alloc(ref, real_trans);
+
 	matrix_t *real_half = scale_matrix_free(ident_matrix(3), dot); // = (real * ref) * I_3 - ref * real^T
 	real_half = sub_matrix_free(real_half, ref_x_real_t);
 
-	matrix_t *model_left = add_matrix(skew_matrix, real_half);
+	matrix_t *model_left = add_matrix_free(skew_matrix, real_half);
 	/*
 	*/
 
@@ -314,7 +331,9 @@ static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref,
 		}
 	}
 
-	free_matrix(skew_matrix);
+	/*
+	*/
+	free_matrix(real_trans);
 	free_matrix(ref_x_real_t);
 	free_matrix(real_half);
 	free_matrix(model_left);

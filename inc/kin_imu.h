@@ -9,6 +9,8 @@ extern "C" {
 
 matrix_t *imu_init(imu_t *imu, float *accel, float *mag);
 
+uint8_t imu_deinit(imu_t *imu);
+
 matrix_t *imu_update(imu_t *imu, float *gyro, float *accel, float *mag);
 
 #ifdef __cplusplus

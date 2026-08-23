@@ -31,7 +31,7 @@ matrix_t *comp_imu_update(imu_t *imu, float *gyro, float *accel, float *mag) {
 	matrix_t *gyro_m = update_gyro(imu->ekf.state, gyro, imu->dt);
 	matrix_t *accel_mag_m = update_accel_mag(accel, mag);
 
-	imu->ekf.state = add_matrix(scale_matrix(gyro_m, gain), scale_matrix(accel_mag_m, 1 - gain));
+	imu->ekf.state = add_matrix_alloc(scale_matrix_alloc(gyro_m, gain), scale_matrix_alloc(accel_mag_m, 1 - gain));
 
 	return imu->ekf.state;
 }
@@ -40,7 +40,7 @@ matrix_t *comp_imu_update(imu_t *imu, float *gyro, float *accel, float *mag) {
 matrix_t *update_gyro(matrix_t *prev_state, float *gyro, float dt) {
 	matrix_t *ret = init_matrix(3, 1);
 
-	matrix_t *gyro_deg = scale_matrix(arr_to_matrix(gyro, 3, 1), 180 / M_PI);
+	matrix_t *gyro_deg = scale_matrix_alloc(arr_to_matrix(gyro, 3, 1), 180 / M_PI);
 
 	ret->data[X] = prev_state->data[X] + gyro_deg->data[X] * dt;
 	ret->data[Y] = prev_state->data[Y] + gyro_deg->data[Y] * dt;

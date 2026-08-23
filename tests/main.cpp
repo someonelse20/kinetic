@@ -1,8 +1,3 @@
-#include <cmath>
-#include <unistd.h>
-#include <math.h>
-
-#include "kin_types.h"
 #include "reference_ahrs.h"
 #include "kin_math.h"
 #include "kin_imu.h"
@@ -17,15 +12,15 @@ int main() {
 	imu_t imu;
 	// kinetic.mag_dip = 67 * (180 / M_PI);
 	imu.mag_dip = 0.000001;
+	/*
 	imu.gyro_noise = 0.3;
 	imu.accel_noise = 0.5;
 	imu.mag_noise = 0.8;
-	/*
 	*/
-	/*
 	imu.gyro_noise = 0.f;
 	imu.accel_noise = 0.f;
 	imu.mag_noise = 0.f;
+	/*
 	*/
 	/*
 	imu.gyro_noise = 1.0 * (180 / M_PI);

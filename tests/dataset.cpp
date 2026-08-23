@@ -1,10 +1,11 @@
 #include <iostream>
 #include <fstream>
 
+#include "kin_ekf.h"
 #include "kin_imu.h"
 #include "plot.h"
 
-#define PLOT
+// #define PLOT
 
 using namespace std;
 
@@ -47,6 +48,8 @@ int main() {
 		plot.add_point(imu.ekf.state, "EKF");
 		#endif
 	}
+
+	imu_deinit(&imu);
 
 	#ifdef PLOT
 	plot.plot("Data Recording Test");

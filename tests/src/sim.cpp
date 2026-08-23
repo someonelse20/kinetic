@@ -44,9 +44,9 @@ void sim_t::tick() {
 		gyro_q->data[i] = gyro_out[i];
 	}
 
-	matrix_t *rate_of_change_q = scale_matrix(quat_prod(orientation, gyro_q), 0.5);
-	orientation = add_matrix(orientation, rate_of_change_q);
-	orientation = normalize_matrix(orientation);
+	matrix_t *rate_of_change_q = scale_matrix_alloc(quat_prod(orientation, gyro_q), 0.5);
+	orientation = add_matrix_alloc(orientation, rate_of_change_q);
+	normalize_matrix(orientation);
 
 	matrix_t *accel_m = get_accel(orientation);
 	matrix_t *mag_m = get_mag(orientation, imu->mag_dip);
@@ -193,20 +193,6 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 		for (int i = 0; i < num_of_algs; i++) {
 			ahrs_algs[i]->imu_update(ahrs_algs[i]->imu, gyro, accel, mag);
 
-			/*
-			   cout << "=========================" << endl;
-			   cout << "simulation orientation" << endl;
-			   cout << "=========================" << endl;
-			   print_matrix(quat_to_euler(orientation));
-			   cout << endl;
-
-			   cout << "=========================" << endl;
-			   cout << "kinetic orientation" << endl;
-			   cout << "=========================" << endl;
-			   print_matrix(quat_to_euler(ahrs_algs[i]->imu->ekf.state));
-			   cout << endl;
-			 */
-
 			if (is_quat(ahrs_algs[i]->imu->ekf.state)) {
 				ahrs_algs[i]->error_buf[count] = get_error(orientation, ahrs_algs[i]->imu->ekf.state);
 			} else {
@@ -235,12 +221,14 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 	}
 
 	error_report(steps);
+	/*
+	*/
 
 	if (Plot != NULL) {
 		Plot->plot("3 Axis Test");
 	}
 
-	free_matrix(orientation_euler);
+	// free_matrix(orientation_euler);
 }
 
 void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep, plot_t *Plot) {
@@ -260,7 +248,7 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 		float norm_time = time / duration;
 
 		matrix_t *prev_orientation = copy_matrix(orientation);
-		orientation = add_matrix(start_rot, scale_matrix(sub_matrix(end_rot, start_rot), norm_time));
+		orientation = add_matrix_alloc(start_rot, scale_matrix_alloc(sub_matrix_alloc(end_rot, start_rot), norm_time));
 
 		matrix_t *gyro_m = get_gyro(prev_orientation, orientation, timestep);
 		matrix_t *accel_m = get_accel(orientation);
@@ -443,8 +431,6 @@ matrix_t *get_accel(matrix_t *orientation) {
 
 	free_matrix(g_ref_m);
 	return ret;
-	/*
-	 */
 	/*
 	   float g_ref_a[] = {0, 0, 1};
 	   matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, 1);
