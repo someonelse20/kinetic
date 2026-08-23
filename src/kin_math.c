@@ -259,19 +259,16 @@ float matrix_det(const matrix_t *matrix) { // This function is ai generated with
 }
 
 float matrix_norm(const matrix_t *matrix) {
-	/*
 	float norm = 0;
 	for (uint8_t i = 0; i < matrix->rows * matrix->cols; i++) {
 		norm += matrix->data[i] * matrix->data[i];
 	}
 	return sqrt(norm);
-	*/
-	return 1;
 }
 
 float matrix_minor(const matrix_t *matrix, uint8_t row, uint8_t col) {
 	if (matrix->cols != matrix->rows) error_handler(MATRIX_DIMENTION_ERROR);
-	if (matrix->cols < 2) error_handler(MATRIX_DIMENTION_ERROR);
+	if (matrix->rows < 2) error_handler(MATRIX_DIMENTION_ERROR);
 	uint8_t size = matrix->rows;
 
 	uint8_t index = 0;
@@ -328,7 +325,7 @@ matrix_t *inv_matrix(const matrix_t *matrix) {
 	// math.
 	if (det == 0.f) det = 0.000001; // NOTE: This isn't pretty but gets the job done.
 	// TODO: See if returning a matrix filled with zeros works as well.
-	
+
 	matrix_t *adj = ajt_matrix(matrix);
 	matrix_t *ret = scale_matrix_free(adj, 1.0 / det);
 
@@ -357,7 +354,6 @@ matrix_t *ajt_matrix(const matrix_t *matrix) {
 uint8_t normalize_matrix(matrix_t *matrix) {
 	float norm = matrix_norm(matrix);
 
-	/*
 	// Prevent divide by zero.
 	if (norm == 0.f) {
 		// Quaternions are a special case where a unit quaternion is {0, 0, 0, 1} not {0, 0, 0, 0}.
@@ -369,17 +365,18 @@ uint8_t normalize_matrix(matrix_t *matrix) {
 
 			return 1;
 		}
-		for (int i = 0; i < matrix->rows * matrix->cols; i ++) { // NOTE: When optimizing, this may need to be uint16 over uint8 because it could have max value of uint8 * uint8.
+		for (int i = 0; i < matrix->rows * matrix->cols; i++) {  // NOTE: When optimizing, this may need to be uint16 over uint8 because it could have max value of uint8 * uint8.
 			matrix->data[i] = 0.f;
 		}
 		return 1; // TODO: Change this when full error codes are implemented.
 	}
 
-	// NOTE: Copying may not be nessesary.
+	// NOTE: Copying may not be necessary.
 	matrix_t *matrix_cpy = copy_matrix(matrix);
 	scale_matrix(matrix_cpy, 1 / norm, matrix);
 	free_matrix(matrix_cpy);
-	*/
+	/*
+	 */
 
 	return 0;
 }
