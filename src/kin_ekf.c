@@ -70,7 +70,7 @@ uint8_t ekf_update(ekf_t *ekf, matrix_t *meas, matrix_t *state_pred, matrix_t *s
 	matrix_t *kalman_x_resid = mul_matrix_alloc(kalman_gain, meas_residual);
 
 	// add_matrix(state_pred, kalman_x_resid, ekf->state); // X_k = ^X_k + K_k * (Z_k - h(^X-k)) (not H_k)
-	ekf->state = add_matrix_alloc(state_pred, kalman_x_resid); // X_k = ^X_k + K_k * (Z_k - h(^X-k)) (not H_k)
+	add_matrix(state_pred, kalman_x_resid, ekf->state); // X_k = ^X_k + K_k * (Z_k - h(^X-k)) (not H_k)
 	/*
 	*/
 

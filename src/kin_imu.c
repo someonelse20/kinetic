@@ -88,8 +88,9 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 
 	float g_ref_a[] = {0, 0, 1};
 	float m_ref_a[] = {cos(imu->mag_dip), 0, sin(imu->mag_dip)};
+	matrix_t *m_ref_m = arr_to_matrix(m_ref_a, 3, 1);
 	imu->g_ref = arr_to_matrix(g_ref_a, 3, 1);
-	imu->m_ref = scale_matrix_alloc(arr_to_matrix(m_ref_a, 3, 1), 1 / (sqrt(pow(cos(imu->mag_dip), 2) + pow(sin(imu->mag_dip), 2))));
+	imu->m_ref = scale_matrix_alloc(m_ref_m, 1 / (sqrt(pow(cos(imu->mag_dip), 2) + pow(sin(imu->mag_dip), 2))));
 
 
 	// Use static noise for now.
@@ -119,14 +120,13 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 		}
 	}
 
-	// free(accel_cpy);
-	// free(mag_cpy);
 	free_matrix(accel_m);
 	free_matrix(mag_m);
 	free_matrix(state_euler);
 	free_matrix(west);
 	free_matrix(north);
 	free_matrix(frame);
+	free_matrix(m_ref_m);
 
 	return imu->ekf.state;
 }
@@ -295,9 +295,10 @@ static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref,
 	matrix_t *ret = init_matrix(3, 4);
 
 	matrix_t *ref_scale = scale_matrix_alloc(ref, scalar);
+	matrix_t *ref_scale_p_ctr = add_matrix_free(ref_scale, ctr_vtr);
 
 	// NOTE: If buggy, add_matrix may not be communative.
-	matrix_t *skew_matrix = skew_symm_matrix(add_matrix_free(ref_scale, ctr_vtr)); // = [ctr_vtr + scalar * ref]x
+	matrix_t *skew_matrix = skew_symm_matrix(ref_scale_p_ctr); // = [ctr_vtr + scalar * ref]x
 
 	float dot = dot_prod(real, ref);
 
@@ -333,6 +334,7 @@ static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref,
 
 	/*
 	*/
+	free_matrix(ref_scale_p_ctr);
 	free_matrix(real_trans);
 	free_matrix(ref_x_real_t);
 	free_matrix(real_half);
