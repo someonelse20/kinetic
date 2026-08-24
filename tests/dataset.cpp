@@ -1,11 +1,11 @@
 #include <iostream>
 #include <fstream>
 
-#include "kin_ekf.h"
 #include "kin_imu.h"
+#include "kin_math.h"
 #include "plot.h"
 
-// #define PLOT
+#define PLOT
 
 using namespace std;
 
@@ -16,7 +16,7 @@ typedef struct {
 } datapoint_t;
 
 const static string record_dir = "../tests/recordings/";
-const static string filename = "static.csv";
+const static string filename = "wiggle.csv";
 
 // Stores up to 1000 lines.
 datapoint_t datapoints_buf[1000];
@@ -41,8 +41,13 @@ int main() {
 	imu_init(&imu, datapoints_buf[0].accel, datapoints_buf[0].mag);
 
 	for (int i = 1; i < datapoints; i++) {
+		float gyro[3];
+		for (int j = 0; j < 3; j++) {
+			// gyro[j] = deg_to_rad(datapoints_buf[i].gyro[j]);
+			gyro[j] = datapoints_buf[i].gyro[j];
+		}
 		// cout << datapoints_buf[i].gyro[0] << "," << datapoints_buf[i].gyro[1] << "," << datapoints_buf[i].gyro[2] << endl;
-		imu_update(&imu, datapoints_buf[i].gyro, datapoints_buf[i].accel, datapoints_buf[i].mag);
+		imu_update(&imu, gyro, datapoints_buf[i].accel, datapoints_buf[i].mag);
 
 		#ifdef PLOT
 		plot.add_point(imu.ekf.state, "EKF");
