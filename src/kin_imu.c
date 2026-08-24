@@ -8,6 +8,11 @@
 #include "kin_ekf.h"
 #include "kin_imu.h"
 
+/*
+static uint8_t calibrate_gyro_accel(matrix_t *value, matrix_t *alignment, matrix_t *sensitivity, matrix_t *bias);
+static uint8_t calibrate_mag(matrix_t *value, matrix_t *soft_iorn, matrix_t *hard_iorn);
+*/
+
 static matrix_t *state_prediction(matrix_t *prev_state, float *gyro, float dt);
 static matrix_t *state_prediction_jacobian(float *gyro, float dt);
 static matrix_t *process_noise(matrix_t *prev_state, float gyro_noise, float dt);
@@ -175,6 +180,48 @@ matrix_t *imu_update(imu_t *imu, float *gyro, float *accel, float *mag) {
 	free_matrix(proc_noise);
 
 	return imu->ekf.state;
+}
+
+uint8_t calibrate_gyro_accel(matrix_t *value, matrix_t *alignment, matrix_t *sensitivity, matrix_t *bias) {
+	matrix_t *ret;
+
+	matrix_t *sensitivity_inv = fill_matrix(3, 3, 0.f);
+	sensitivity_inv->data[0] = 1 / sensitivity->data[X];
+	sensitivity_inv->data[4] = 1 / sensitivity->data[Y];
+	sensitivity_inv->data[8] = 1 / sensitivity->data[Z];
+
+	matrix_t *bias_sub = sub_matrix_alloc(value, bias);
+
+	/*
+	print_matrix(sensitivity_inv);
+	printf("\n");
+	*/
+
+	ret = mul_matrix_alloc(alignment, sensitivity_inv);
+	ret = mul_matrix_free(ret, bias_sub);
+
+	/*
+	ret = sub_matrix_alloc(value, bias);
+	ret = mul_matrix_free(ret, sensitivity_inv);
+	ret = mul_matrix_free(ret, alignment);
+	*/
+
+	move_matrix(ret, value);
+
+	free_matrix(ret);
+	free_matrix(sensitivity_inv);
+	free_matrix(bias_sub);
+	return 0;
+}
+
+uint8_t calibrate_mag(matrix_t *value, matrix_t *soft_iorn, matrix_t *hard_iorn) {
+	matrix_t *ret = mul_matrix_alloc(soft_iorn, value);
+	ret = sub_matrix_free(ret, hard_iorn);
+
+	move_matrix(ret, value);
+
+	free_matrix(ret);
+	return 0;
 }
 
 static matrix_t *state_prediction(matrix_t *prev_state, float *gyro, float dt) {
