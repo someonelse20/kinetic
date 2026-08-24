@@ -70,7 +70,7 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 	matrix_t *north = cross_prod(west, accel_m);
 	matrix_t *frame = fill_matrix(3, 1, 0.f);
 	frame->data[X] = 1.f;
-	state_euler->data[Z] = -atan2(dot_prod(west, frame), dot_prod(north, frame));
+	state_euler->data[Z] = atan2(dot_prod(west, frame), dot_prod(north, frame));
 
 	imu->ekf.state = euler_to_quat(state_euler);
 
