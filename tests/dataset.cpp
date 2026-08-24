@@ -16,7 +16,7 @@ typedef struct {
 } datapoint_t;
 
 const static string record_dir = "../tests/recordings/";
-const static string filename = "wiggle.csv";
+const static string filename = "x_rot.csv";
 
 // Stores up to 1000 lines.
 datapoint_t datapoints_buf[1000];
@@ -36,7 +36,9 @@ int main() {
 	imu.gyro_noise = 0.3;
 	imu.accel_noise = 0.5;
 	imu.mag_noise = 0.8;
-	imu.dt = 0.01;
+	// imu.dt = 0.01;
+	imu.dt = 0.0717;
+	// imu.dt = 0.071693;
 
 	imu_init(&imu, datapoints_buf[0].accel, datapoints_buf[0].mag);
 
