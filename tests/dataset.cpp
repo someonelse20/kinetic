@@ -17,16 +17,23 @@ typedef struct {
 } datapoint_t;
 
 const static string record_dir = "../tests/recordings/";
-const static string filename = "static.csv";
+const static string filename = "phone.csv";
+const static string ref_filename = "phone_orientation.csv";
 
-// Stores up to 1000 lines.
-datapoint_t datapoints_buf[1000];
+// Stores up to 2000 lines.
+datapoint_t datapoints_buf[2000];
 int datapoints = 0;
 
+matrix_t *ref_datapoints_buf[3000];
+int ref_datapoints = 0;
+
 static void read_file();
+static void read_refrence_file();
+static void free_ref_datapoints_buf();
 
 int main() {
 	read_file();
+	read_refrence_file();
 
 	#ifdef PLOT
 	plot_t plot;
@@ -73,19 +80,28 @@ int main() {
 
 	for (int i = 1; i < datapoints; i++) {
 		matrix_t *gyro_m = arr_to_matrix(datapoints_buf[i].gyro, 3, 1);
-		calibrate_gyro_accel(gyro_m, gyro_alignment, gyro_sensitivity, gyro_bias);
-		cout << gyro_m->data[X] << ", " << gyro_m->data[Y] << ", " << gyro_m->data[Z] << endl;
+		// calibrate_gyro_accel(gyro_m, gyro_alignment, gyro_sensitivity, gyro_bias);
+		// cout << gyro_m->data[X] << ", " << gyro_m->data[Y] << ", " << gyro_m->data[Z] << endl;
 
 		float gyro[3];
+		float mag[3];
 		for (int j = 0; j < 3; j++) {
-			// gyro[j] = deg_to_rad(gyro_m->data[j]);
-			gyro[j] = gyro_m->data[j];
+			gyro[j] = deg_to_rad(gyro_m->data[j]);
+			// gyro[j] = gyro_m->data[j];
+			// mag[j] = mag_m->data[j];
+			mag[j] = datapoints_buf[i].mag[j];
 		}
 		// cout << datapoints_buf[i].gyro[0] << "," << datapoints_buf[i].gyro[1] << "," << datapoints_buf[i].gyro[2] << endl;
-		imu_update(&imu, gyro, datapoints_buf[i].accel, datapoints_buf[i].mag);
+		imu_update(&imu, gyro, datapoints_buf[i].accel, mag);
+
+		/*
+		print_matrix(imu.ekf.state);
+		cout << endl;
+		*/
 
 		#ifdef PLOT
 		plot.add_point(quat_to_euler(imu.ekf.state), "EKF");
+		plot.add_point(ref_datapoints_buf[i]);
 		#endif
 	}
 
@@ -139,5 +155,51 @@ static void read_file() {
 	datapoints = line_count;
 
 	file.close();
+}
+
+static void read_refrence_file() {
+	ifstream file(record_dir + ref_filename);
+
+	string line;
+	int line_count = 0;
+	int nums_index = 0;
+	int line_index = 0;
+	while (getline(file, line)) {
+		string nums_str[9];
+
+		nums_index = 0;
+		line_index = 0;
+
+		for (auto &ch : line) {
+			if (ch == ',') {
+				nums_index++;
+				line_index = 0;
+			} else {
+				if (line_index < 10) {
+					nums_str[nums_index][line_index] = ch;
+					line_index++;
+				}
+			}
+		}
+
+		float datapoint[3];
+
+		for (int i = 0; i < 3; i++) {
+			datapoint[i] = atof(nums_str[i].c_str());
+		}
+
+		// cout << line_count << endl;
+		ref_datapoints_buf[line_count] = arr_to_matrix(datapoint, 3, 1);
+
+		line_count++;
+	}
+
+	ref_datapoints = line_count;
+
+	file.close();
+}
+
+static void free_ref_datapoints_buf() {
+
 }
 

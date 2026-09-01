@@ -155,6 +155,9 @@ matrix_t *imu_update(imu_t *imu, float *gyro, float *accel, float *mag) {
 	matrix_t *accel_m = arr_to_matrix(accel_cpy, 3, 1);
 	matrix_t *mag_m = arr_to_matrix(mag_cpy, 3, 1);
 
+	normalize_matrix(accel_m);
+	normalize_matrix(mag_m);
+
 	matrix_t *meas = stack_matrix(accel_m, mag_m);
 	matrix_t *state_pred = state_prediction(imu->ekf.state, gyro_cpy, imu->dt);
 	matrix_t *state_pred_jacob = state_prediction_jacobian(gyro_cpy, imu->dt);

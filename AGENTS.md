@@ -8,6 +8,7 @@ C/C++ sensor fusion library implementing EKF (extended Kalman filter) for IMU da
 mkdir -p build && cd build && cmake ..
 cd .. && ./build/tests      # Run linear interpolation test
 cd .. && ./build/matrix     # Run matrix operations test
+cd .. && ./build/dataset    # Run dataset test
 ```
 
 Build artifacts go to `build/`; omit from version control.
@@ -23,8 +24,12 @@ Build artifacts go to `build/`; omit from version control.
 **Reference frames**:
 - `accel_ref`: Always [0, 0, 1] (gravity in NED)
 - `mag_ref`: Depends on magnetic dip angle, computed as `[cos(dip), 0, sin(dip)]`
-- `g_ref`: Always [0, 0, 1] (gravity direction)
-- `m_ref`: Depends on magnetic dip angle, normalized
+- `g_ref`: Always [0, 0, 1] (gravity direction, stored in imu_t)
+- `m_ref`: Normalized magnetic reference, computed as `m_ref_a / sqrt(cos²(dip) + sin²(dip))`
+
+**Measurement model**:
+- Accelerometer reading: `rot_matrix_trans * g_ref`
+- Magnetometer reading: `rot_matrix_trans * m_ref`
 
 ## Testing
 
