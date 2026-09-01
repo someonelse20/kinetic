@@ -67,6 +67,9 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 	imu->ekf.state = rot_matrix_to_quat(rot_matrix);
 	*/
 
+	normalize_matrix(accel_m);
+	normalize_matrix(mag_m);
+
 	matrix_t *state_euler = init_matrix(3, 1);
 	state_euler->data[X] = atan2(accel[Y], accel[Z]);
 	state_euler->data[Y] = atan2(-accel[X], sqrt(accel[Y] * accel[Y] + accel[Z] * accel[Z]));

@@ -1,3 +1,4 @@
+#include <functional>
 #include <iostream>
 #include <fstream>
 
@@ -78,6 +79,13 @@ int main() {
 
 	imu_init(&imu, datapoints_buf[0].accel, datapoints_buf[0].mag);
 
+	cout << "========== Init Kinetic State ==========" << endl;
+	print_matrix(quat_to_euler(imu.ekf.state));
+	cout << endl;
+
+	cout << "========== Init Refrence State ==========" << endl;
+	print_matrix(ref_datapoints_buf[0]);
+
 	for (int i = 1; i < datapoints; i++) {
 		matrix_t *gyro_m = arr_to_matrix(datapoints_buf[i].gyro, 3, 1);
 		// calibrate_gyro_accel(gyro_m, gyro_alignment, gyro_sensitivity, gyro_bias);
@@ -95,9 +103,9 @@ int main() {
 		imu_update(&imu, gyro, datapoints_buf[i].accel, mag);
 
 		/*
-		print_matrix(imu.ekf.state);
-		cout << endl;
-		*/
+		   print_matrix(imu.ekf.state);
+		   cout << endl;
+		 */
 
 		#ifdef PLOT
 		plot.add_point(quat_to_euler(imu.ekf.state), "EKF");
