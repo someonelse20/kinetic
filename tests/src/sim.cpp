@@ -155,6 +155,7 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 		ahrs_algs[i]->imu_init(ahrs_algs[i]->imu, start_accel->data, start_mag->data);
 		ahrs_algs[i]->error_buf = (float *)malloc(steps * sizeof(float) + 10); // Add 10 for good measure.
 
+		/*
 		cout << "=========================" << endl;
 		cout << "init simulation orientation" << endl;
 		cout << "=========================" << endl;
@@ -166,6 +167,7 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 		cout << "=========================" << endl;
 		print_matrix(quat_to_euler(ahrs_algs[i]->imu->ekf.state));
 		cout << endl;
+		*/
 	}
 
 	int count = 0;

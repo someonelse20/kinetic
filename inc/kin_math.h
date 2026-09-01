@@ -76,6 +76,8 @@ float dot_prod(const matrix_t *a, const matrix_t *b);
 matrix_t *cross_prod(const matrix_t *a, const matrix_t *b);
 matrix_t *quat_prod(const matrix_t *a, const matrix_t *b);
 matrix_t *quat_conjugate(const matrix_t *matrix);
+uint8_t *enu_to_ned(matrix_t *v_enu);
+uint8_t *ned_to_enu(matrix_t *v_ned);
 
 int sgn(float x);
 float rad_to_deg(float rad);

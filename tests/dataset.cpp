@@ -1,6 +1,7 @@
 #include <functional>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 
 #include "kin_imu.h"
 #include "kin_math.h"
@@ -31,6 +32,8 @@ int ref_datapoints = 0;
 static void read_file();
 static void read_refrence_file();
 static void free_ref_datapoints_buf();
+static matrix_t *get_accel(matrix_t *orientation);
+static matrix_t *get_mag(matrix_t *orientation, float mag_dip);
 
 int main() {
 	read_file();
@@ -41,7 +44,8 @@ int main() {
 	#endif
 
 	imu_t imu;
-	imu.mag_dip = deg_to_rad(54.7);
+	// imu.mag_dip = deg_to_rad(54.7);
+	imu.mag_dip = 54.7;
 	// imu.mag_dip = 0.000001;
 	imu.gyro_noise = 0.3;
 	imu.accel_noise = 0.5;
@@ -79,17 +83,23 @@ int main() {
 
 	imu_init(&imu, datapoints_buf[0].accel, datapoints_buf[0].mag);
 
+	/*
 	cout << "========== Init Kinetic State ==========" << endl;
 	print_matrix(quat_to_euler(imu.ekf.state));
 	cout << endl;
 
 	cout << "========== Init Refrence State ==========" << endl;
 	print_matrix(ref_datapoints_buf[0]);
+	*/
 
 	for (int i = 1; i < datapoints; i++) {
 		matrix_t *gyro_m = arr_to_matrix(datapoints_buf[i].gyro, 3, 1);
 		// calibrate_gyro_accel(gyro_m, gyro_alignment, gyro_sensitivity, gyro_bias);
 		// cout << gyro_m->data[X] << ", " << gyro_m->data[Y] << ", " << gyro_m->data[Z] << endl;
+		matrix_t *accel_m = arr_to_matrix(datapoints_buf[i].accel, 3, 1);
+		matrix_t *mag_m = arr_to_matrix(datapoints_buf[i].mag, 3, 1);
+		enu_to_ned(accel_m);
+		// enu_to_ned(mag_m);
 
 		float gyro[3];
 		float mag[3];
@@ -100,16 +110,39 @@ int main() {
 			mag[j] = datapoints_buf[i].mag[j];
 		}
 		// cout << datapoints_buf[i].gyro[0] << "," << datapoints_buf[i].gyro[1] << "," << datapoints_buf[i].gyro[2] << endl;
-		imu_update(&imu, gyro, datapoints_buf[i].accel, mag);
+		imu_update(&imu, gyro, accel_m->data, mag_m->data);
+
+		matrix_t *refrence = copy_matrix(ref_datapoints_buf[i]);
+		// enu_to_ned(refrence);
+
+		cout << endl << "========== Kinetic State ==========" << endl;
+		print_matrix(quat_to_euler(imu.ekf.state));
+
+		cout << endl << "========== True State ==========" << endl;
+		print_matrix(refrence);
 
 		/*
-		   print_matrix(imu.ekf.state);
-		   cout << endl;
-		 */
+		cout << endl << "========== True Accel ==========" << endl;
+		normalize_matrix(accel_m);
+		print_matrix(accel_m);
+
+		cout << endl << "========== Expected accel ==========" << endl;
+		print_matrix(get_accel(euler_to_quat(refrence)));
+		*/
+
+		/*
+		cout << endl << "========== True Mag ==========" << endl;
+		matrix_t *mag_m = arr_to_matrix(mag, 3, 1);
+		normalize_matrix(mag_m);
+		print_matrix(mag_m);
+
+		cout << endl << "========== Expected Mag ==========" << endl;
+		print_matrix(get_mag(euler_to_quat(ref_datapoints_buf[i]), imu.mag_dip));
+		*/
 
 		#ifdef PLOT
 		plot.add_point(quat_to_euler(imu.ekf.state), "EKF");
-		plot.add_point(ref_datapoints_buf[i]);
+		plot.add_point(refrence);
 		#endif
 	}
 
@@ -209,5 +242,43 @@ static void read_refrence_file() {
 
 static void free_ref_datapoints_buf() {
 
+}
+
+static matrix_t *get_accel(matrix_t *orientation) {
+	float g_ref_a[] = {0.f, 0.f, 1.f};
+	matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, 1);
+
+	matrix_t *rot_matrix = quat_to_rot_matrix(orientation);
+	matrix_t *ret = mul_matrix_free(trans_matrix_free(rot_matrix), g_ref_m);
+
+	free_matrix(g_ref_m);
+	return ret;
+	/*
+	   float g_ref_a[] = {0, 0, 1};
+	   matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, 1);
+
+	   return mul_matrix(trans_matrix(quat_to_rot_matrix(orientation)), g_ref_m);
+	 */
+}
+
+static matrix_t *get_mag(matrix_t *orientation, float mag_dip) {
+	float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
+	matrix_t *m_ref_m = arr_to_matrix(m_ref_a, 3, 1);
+	m_ref_m = scale_matrix_free(m_ref_m, 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
+
+	matrix_t *rot_matrix = quat_to_rot_matrix(orientation);
+	matrix_t *ret = mul_matrix_free(trans_matrix_free(rot_matrix), m_ref_m);
+
+	free_matrix(m_ref_m);
+	return ret;
+	/*
+	 */
+
+	/*
+	   float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
+	   matrix_t *m_ref_m = scale_matrix(arr_to_matrix(m_ref_a, 3, 1), 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
+
+	   return mul_matrix(trans_matrix(quat_to_rot_matrix(orientation)), m_ref_m);
+	 */
 }
 

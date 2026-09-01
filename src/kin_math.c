@@ -576,6 +576,34 @@ matrix_t *quat_conjugate(const matrix_t *matrix) {
 	return ret;
 }
 
+uint8_t *enu_to_ned(matrix_t *v_enu) {
+	if (!is_vector(v_enu)) error_handler(MATRIX_DIMENTION_ERROR);
+
+	matrix_t *v_ned = init_matrix(3, 1);
+	v_ned->data[X] = -v_enu->data[Y];
+	v_ned->data[Y] =  v_enu->data[X];
+	v_ned->data[Z] = -v_enu->data[Z];
+
+	move_matrix(v_ned, v_enu);
+
+	free_matrix(v_ned);
+	return 0;
+}
+
+uint8_t *ned_to_enu(matrix_t *v_ned) {
+	if (!is_vector(v_ned)) error_handler(MATRIX_DIMENTION_ERROR);
+
+	matrix_t *v_enu = init_matrix(3, 1);
+	v_enu->data[X] = -v_ned->data[Y];
+	v_enu->data[Y] =  v_ned->data[X];
+	v_enu->data[Z] = -v_ned->data[Z];
+
+	move_matrix(v_ned, v_ned);
+
+	free_matrix(v_ned);
+	return 0;
+}
+
 int sgn(float x) {
 	if (x > 0) {
 		return 1;
