@@ -63,33 +63,17 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 
 	matrix_t *state_euler = init_matrix(3, 1);
 	if (imu->enu) {
-		/*
 		state_euler->data[X] = -atan2(accel[Y], -accel[Z]);
-		state_euler->data[Y] = -atan2(-accel[X], sqrt(accel[Y] * accel[Y] + accel[Z] * accel[Z]));
-
-		// imu->ekf.state = euler_to_quat(state_euler);
+		state_euler->data[Y] = atan2(accel[X], sqrt(accel[Y] * accel[Y] + accel[Z] * accel[Z]));
 
 		matrix_t *west = cross_prod(accel_m, mag_m);
 		matrix_t *north = cross_prod(west, accel_m);
 		matrix_t *frame = fill_matrix(3, 1, 0.f);
 		frame->data[X] = 1.f;
-		state_euler->data[Z] = atan2(dot_prod(west, frame), dot_prod(north, frame));
-		 */
-		state_euler->data[X] = atan2(accel[Y], accel[Z]);
-		state_euler->data[Y] = atan2(-accel[X], sqrt(accel[Y] * accel[Y] + accel[Z] * accel[Z]));
-
-		// imu->ekf.state = euler_to_quat(state_euler);
-
-		matrix_t *west = cross_prod(accel_m, mag_m);
-		matrix_t *north = cross_prod(west, accel_m);
-		matrix_t *frame = fill_matrix(3, 1, 0.f);
-		frame->data[X] = 1.f;
-		state_euler->data[Z] = atan2(dot_prod(west, frame), dot_prod(north, frame));
+		state_euler->data[Z] = atan2(dot_prod(north, frame), dot_prod(west, frame));
 	} else {
 		state_euler->data[X] = atan2(accel[Y], accel[Z]);
 		state_euler->data[Y] = atan2(-accel[X], sqrt(accel[Y] * accel[Y] + accel[Z] * accel[Z]));
-
-		// imu->ekf.state = euler_to_quat(state_euler);
 
 		matrix_t *west = cross_prod(accel_m, mag_m);
 		matrix_t *north = cross_prod(west, accel_m);

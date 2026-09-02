@@ -135,9 +135,9 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 	float timestep = step_size;
 	imu->dt = timestep;
 
-	float x_count = 0.f + 0.2;
-	float y_count = M_PI / 2.f + 0.2;
-	float z_count = M_PI + 0.2;
+	float x_count = 0.f;
+	float y_count = M_PI / 2.f;
+	float z_count = M_PI;
 
 	matrix_t *orientation_euler = init_matrix(3, 1);
 	orientation_euler->data[X] = sin(x_count);
