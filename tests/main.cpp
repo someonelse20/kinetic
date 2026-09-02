@@ -4,13 +4,15 @@
 #include "plot.h"
 #include "sim.h"
 
+#include <iostream>
+
 using namespace std;
 
 int main() {
 	// cout << "hello world!" << endl;
 
 	imu_t imu;
-	// kinetic.mag_dip = 67 * (180 / M_PI);
+	imu.enu = true;
 	imu.mag_dip = 0.000001;
 	/*
 	imu.gyro_noise = 0.3;

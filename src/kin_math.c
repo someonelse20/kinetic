@@ -598,9 +598,9 @@ uint8_t *ned_to_enu(matrix_t *v_ned) {
 	v_enu->data[Y] =  v_ned->data[X];
 	v_enu->data[Z] = -v_ned->data[Z];
 
-	move_matrix(v_ned, v_ned);
+	move_matrix(v_enu, v_ned);
 
-	free_matrix(v_ned);
+	free_matrix(v_enu);
 	return 0;
 }
 

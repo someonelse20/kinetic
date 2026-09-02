@@ -18,7 +18,7 @@ typedef struct {
 	float mag[3];
 } datapoint_t;
 
-const static string record_dir = "../tests/recordings/";
+const static string record_dir = "tests/recordings/";
 const static string filename = "phone.csv";
 const static string ref_filename = "phone_orientation.csv";
 
@@ -44,15 +44,19 @@ int main() {
 	#endif
 
 	imu_t imu;
-	// imu.mag_dip = deg_to_rad(54.7);
-	imu.mag_dip = 54.7;
-	// imu.mag_dip = 0.000001;
+	imu.mag_dip = deg_to_rad(54.7);
 	imu.gyro_noise = 0.3;
 	imu.accel_noise = 0.5;
 	imu.mag_noise = 0.8;
-	// imu.dt = 0.01;
 	imu.dt = 0.0717;
-	// imu.dt = 0.071693;
+
+	// Print mag reference frame for debugging
+	float m_ref_a[] = {cos(imu.mag_dip), 0, sin(imu.mag_dip)};
+	matrix_t *m_ref_m = arr_to_matrix(m_ref_a, 3, 1);
+	m_ref_m = scale_matrix_free(m_ref_m, 1 / (sqrt(pow(cos(imu.mag_dip), 2) + pow(sin(imu.mag_dip), 2))));
+	
+	cout << "========== Mag Reference Frame (NED) ==========" << endl;
+	print_matrix(m_ref_m);
 
 	float gyro_bias_a[] = {
 		/*
@@ -83,14 +87,32 @@ int main() {
 
 	imu_init(&imu, datapoints_buf[0].accel, datapoints_buf[0].mag);
 
-	/*
 	cout << "========== Init Kinetic State ==========" << endl;
 	print_matrix(quat_to_euler(imu.ekf.state));
-	cout << endl;
 
-	cout << "========== Init Refrence State ==========" << endl;
-	print_matrix(ref_datapoints_buf[0]);
-	*/
+	// Normalize init values before computing state
+	{
+		matrix_t *init_accel = arr_to_matrix(datapoints_buf[0].accel, 3, 1);
+		matrix_t *init_mag = arr_to_matrix(datapoints_buf[0].mag, 3, 1);
+		normalize_matrix(init_accel);
+		normalize_matrix(init_mag);
+		
+		imu_t temp_imu;
+		temp_imu.mag_dip = imu.mag_dip;
+		temp_imu.dt = imu.dt;
+		temp_imu.gyro_noise = imu.gyro_noise;
+		temp_imu.accel_noise = imu.accel_noise;
+		temp_imu.mag_noise = imu.mag_noise;
+		
+		imu_init(&temp_imu, init_accel->data, init_mag->data);
+		imu.ekf.state = temp_imu.ekf.state;
+		
+		free_matrix(init_accel);
+		free_matrix(init_mag);
+	}
+
+	cout << "========== Init Kinetic State ==========" << endl;
+	print_matrix(quat_to_euler(imu.ekf.state));
 
 	for (int i = 1; i < datapoints; i++) {
 		matrix_t *gyro_m = arr_to_matrix(datapoints_buf[i].gyro, 3, 1);

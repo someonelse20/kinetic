@@ -38,6 +38,8 @@ typedef struct {
 	float mag_dec;
 	float dt;
 
+	bool enu : true;
+
 	ekf_t ekf;
 
 	matrix_t *m_ref;

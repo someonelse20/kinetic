@@ -135,9 +135,9 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 	float timestep = step_size;
 	imu->dt = timestep;
 
-	float x_count = 0.f;
-	float y_count = M_PI / 2.f;
-	float z_count = M_PI;
+	float x_count = 0.f + 0.2;
+	float y_count = M_PI / 2.f + 0.2;
+	float z_count = M_PI + 0.2;
 
 	matrix_t *orientation_euler = init_matrix(3, 1);
 	orientation_euler->data[X] = sin(x_count);
@@ -150,12 +150,17 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 	matrix_t *start_accel = get_accel(orientation);
 	matrix_t *start_mag = get_mag(orientation, imu->mag_dip);
 
+	/*
+	print_matrix(start_accel);
+	cout << endl;
+	print_matrix(start_mag);
+	*/
+
 	for (int i = 0; i < num_of_algs; i++) {
 		ahrs_algs[i]->imu->dt = timestep;
 		ahrs_algs[i]->imu_init(ahrs_algs[i]->imu, start_accel->data, start_mag->data);
 		ahrs_algs[i]->error_buf = (float *)malloc(steps * sizeof(float) + 10); // Add 10 for good measure.
 
-		/*
 		cout << "=========================" << endl;
 		cout << "init simulation orientation" << endl;
 		cout << "=========================" << endl;
@@ -167,6 +172,7 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 		cout << "=========================" << endl;
 		print_matrix(quat_to_euler(ahrs_algs[i]->imu->ekf.state));
 		cout << endl;
+		/*
 		*/
 	}
 
@@ -243,6 +249,18 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 		ahrs_algs[i]->imu->dt = timestep;
 		ahrs_algs[i]->imu_init(ahrs_algs[i]->imu, start_accel->data, start_mag->data);
 		ahrs_algs[i]->error_buf = (float *)malloc(ceil(duration / timestep) * sizeof(float) + 10); // Add 10 for good measure.
+		
+		cout << "=========================" << endl;
+		cout << "init simulation orientation" << endl;
+		cout << "=========================" << endl;
+		print_matrix(quat_to_euler(orientation));
+		cout << endl;
+
+		cout << "=========================" << endl;
+		cout << "init kinetic orientation" << endl;
+		cout << "=========================" << endl;
+		print_matrix(quat_to_euler(ahrs_algs[i]->imu->ekf.state));
+		cout << endl;
 	}
 
 	int count = 0;
@@ -398,6 +416,7 @@ void sim_t::add_ahrs(matrix_t *(*imu_init)(imu_t *imu, float *accel, float *mag)
 	new_ahrs->imu->mag_dip = imu->mag_dip;
 	new_ahrs->imu->mag_dec = imu->mag_dec;
 	new_ahrs->imu->dt = imu->dt;
+	new_ahrs->imu->enu = imu->enu;
 
 	ahrs_algs[num_of_algs] = new_ahrs;
 
@@ -425,7 +444,8 @@ matrix_t *get_gyro(matrix_t *q1, matrix_t *q2, float dt) {
 }
 
 matrix_t *get_accel(matrix_t *orientation) {
-	float g_ref_a[] = {0, 0, 1};
+	// float g_ref_a[] = {0, 0, 1};
+	float g_ref_a[] = {0, 0, -1};
 	matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, 1);
 
 	matrix_t *rot_matrix = quat_to_rot_matrix(orientation);
@@ -442,7 +462,8 @@ matrix_t *get_accel(matrix_t *orientation) {
 }
 
 matrix_t *get_mag(matrix_t *orientation, float mag_dip) {
-	float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
+	// float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
+	float m_ref_a[] = {0, cos(mag_dip), -sin(mag_dip)};
 	matrix_t *m_ref_m = arr_to_matrix(m_ref_a, 3, 1);
 	m_ref_m = scale_matrix_free(m_ref_m, 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
 
