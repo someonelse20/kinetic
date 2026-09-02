@@ -49,7 +49,7 @@ int main() {
 	imu.accel_noise = 0.5;
 	imu.mag_noise = 0.8;
 	imu.dt = 0.0717;
-	imu.enu = false;
+	imu.enu = true;
 
 	float gyro_bias_a[] = {
 		/*
@@ -86,6 +86,9 @@ int main() {
 
 	cout << endl << "========== Init Refrence State ==========" << endl;
 	print_matrix(ref_datapoints_buf[0]);
+
+	cout << endl;
+	print_matrix(imu.g_ref);
 
 	for (int i = 1; i < datapoints; i++) {
 		matrix_t *gyro_m = arr_to_matrix(datapoints_buf[i].gyro, 3, 1);
