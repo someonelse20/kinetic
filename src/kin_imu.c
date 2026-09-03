@@ -61,27 +61,49 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 	normalize_matrix(accel_m);
 	normalize_matrix(mag_m);
 
-	matrix_t *state_euler = init_matrix(3, 1);
+	matrix_t *state_euler = fill_matrix(3, 1, 0.f);
 	if (imu->enu) {
-		state_euler->data[X] = -atan2(accel[Y], -accel[Z]);
-		state_euler->data[Y] = atan2(accel[X], sqrt(accel[Y] * accel[Y] + accel[Z] * accel[Z]));
+		state_euler->data[X] = atan2(accel_m->data[Y], accel_m->data[Z]);
+		state_euler->data[Y] = -atan2(accel_m->data[X], sqrt(accel_m->data[Y] * accel_m->data[Y] + accel_m->data[Z] * accel_m->data[Z]));
 
-		matrix_t *west = cross_prod(accel_m, mag_m);
-		matrix_t *north = cross_prod(west, accel_m);
-		matrix_t *frame = fill_matrix(3, 1, 0.f);
-		frame->data[X] = 1.f;
-		state_euler->data[Z] = atan2(dot_prod(north, frame), dot_prod(west, frame));
+		/*
+		   matrix_t *west = cross_prod(accel_m, mag_m);
+		   matrix_t *north = cross_prod(west, accel_m);
+		   matrix_t *frame = fill_matrix(3, 1, 0.f);
+		   frame->data[X] = 1.f;
+		   state_euler->data[Z] = atan2(dot_prod(north, frame), dot_prod(west, frame));
+		 */
+		// Replace with euler_to_rot_matrix function
+		matrix_t *state_quat = euler_to_quat(state_euler);
+		matrix_t *rot_matrix = quat_to_rot_matrix(state_quat);
+		matrix_t *mag_comp = mul_matrix_alloc(rot_matrix, mag_m);
+		state_euler->data[Z] = atan2(mag_comp->data[X], mag_comp->data[Y]);
+
+		free_matrix(state_quat);
+		free_matrix(rot_matrix);
+		free_matrix(mag_comp);
 	} else {
-		state_euler->data[X] = atan2(accel[Y], accel[Z]);
-		state_euler->data[Y] = atan2(-accel[X], sqrt(accel[Y] * accel[Y] + accel[Z] * accel[Z]));
+		state_euler->data[X] = atan2(accel_m->data[Y], accel_m->data[Z]);
+		state_euler->data[Y] = atan2(-accel_m->data[X], sqrt(accel_m->data[Y] * accel_m->data[Y] + accel_m->data[Z] * accel_m->data[Z]));
 
-		matrix_t *west = cross_prod(accel_m, mag_m);
-		matrix_t *north = cross_prod(west, accel_m);
-		matrix_t *frame = fill_matrix(3, 1, 0.f);
-		frame->data[X] = 1.f;
-		state_euler->data[Z] = atan2(dot_prod(west, frame), dot_prod(north, frame));
+		/*
+		   matrix_t *west = cross_prod(accel_m, mag_m);
+		   matrix_t *north = cross_prod(west, accel_m);
+		   matrix_t *frame = fill_matrix(3, 1, 0.f);
+		   frame->data[X] = 1.f;
+		   state_euler->data[Z] = atan2(dot_prod(west, frame), dot_prod(north, frame));
+		 */
+		// Dont forget to initialize
+		matrix_t *mag_comp = copy_matrix(mag_m);
+		state_euler->data[Z] = atan2(mag_comp->data[X], mag_comp->data[Y]);
+		print_matrix(mag_comp);
+		printf("\n");
 	}
 
+	/*
+	print_matrix(scale_matrix_alloc(state_euler, 180 / M_PI));
+	printf("\n");
+	*/
 
 	imu->ekf.state = euler_to_quat(state_euler);
 
@@ -89,7 +111,6 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 
 	imu->ekf.covariance = ident_matrix(4);
 
-	// NED reference frame
 	// Factor in magnetic dip for m_ref
 	if (imu->mag_dip == 0.f) {
 		printf("Invalid mag dip. When setting mag dip to zero weird things happen.\n");
@@ -141,14 +162,14 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 		}
 	}
 
+	free_matrix(accel_m);
+	free_matrix(mag_m);
+	free_matrix(state_euler);
+	free_matrix(m_ref_m);
 	/*
-	   free_matrix(accel_m);
-	   free_matrix(mag_m);
-	   free_matrix(state_euler);
 	   free_matrix(west);
 	   free_matrix(north);
 	   free_matrix(frame);
-	   free_matrix(m_ref_m);
 	 */
 
 	return imu->ekf.state;
