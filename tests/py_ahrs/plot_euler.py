@@ -71,7 +71,7 @@ def quaternion_to_euler(q):
         q: Quaternion [x, y, z, w] or shape (N, 4)
 
     Returns:
-        Euler angles in radians (roll, pitch, yaw)
+        Euler angles in degrees (roll, pitch, yaw)
     """
     # From AHRS documentation
     # q = [x, y, z, w]
@@ -81,7 +81,7 @@ def quaternion_to_euler(q):
     roll = np.arctan2(2 * (w * x + y * z), w * w + x * x - y * y - z * z)
 
     # Pitch (y-axis rotation)
-    # Clamp to avoid numerical issues with arctan2
+    # Clamp to avoid numerical issues with arcsin
     pitch_arg = 2 * (w * y - z * x)
     pitch_arg = np.clip(pitch_arg, -1.0, 1.0)
     pitch = np.arcsin(pitch_arg)
@@ -89,7 +89,8 @@ def quaternion_to_euler(q):
     # Yaw (z-axis rotation)
     yaw = np.arctan2(2 * (w * z + x * y), w * w - x * x - y * y + z * z)
 
-    return roll, pitch, yaw
+    # Convert to degrees
+    return np.degrees(roll), np.degrees(pitch), np.degrees(yaw)
 
 
 def main(filename=None):
@@ -97,7 +98,7 @@ def main(filename=None):
     num_samples = acc_data.shape[0]
 
     ekf = EKF(
-        gyr=gyro_data, acc=acc_data, mag=mag_data, magnetic_ref=54.7, frequency=100
+        gyr=gyro_data, acc=acc_data, mag=mag_data, magnetic_ref=54.7, frequency=14
     )
 
     # Convert quaternions to Euler angles
@@ -118,7 +119,7 @@ def main(filename=None):
     plt.subplot(3, 1, 1)
     plt.plot(range(num_samples), rolls, label="Roll", linewidth=1)
     plt.xlabel("Sample")
-    plt.ylabel("Roll (rad)")
+    plt.ylabel("Roll (deg)")
     plt.title("Euler Angles - Roll")
     plt.grid(True, alpha=0.3)
     plt.legend(loc="upper right")
@@ -127,7 +128,7 @@ def main(filename=None):
     plt.subplot(3, 1, 2)
     plt.plot(range(num_samples), pitches, label="Pitch", linewidth=1)
     plt.xlabel("Sample")
-    plt.ylabel("Pitch (rad)")
+    plt.ylabel("Pitch (deg)")
     plt.title("Euler Angles - Pitch")
     plt.grid(True, alpha=0.3)
     plt.legend(loc="upper right")
@@ -136,7 +137,7 @@ def main(filename=None):
     plt.subplot(3, 1, 3)
     plt.plot(range(num_samples), yaws, label="Yaw", linewidth=1)
     plt.xlabel("Sample")
-    plt.ylabel("Yaw (rad)")
+    plt.ylabel("Yaw (deg)")
     plt.title("Euler Angles - Yaw")
     plt.grid(True, alpha=0.3)
     plt.legend(loc="upper right")
