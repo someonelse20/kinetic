@@ -88,6 +88,7 @@ def main(filename=None):
     for t in range(1, num_samples):
         gyro = np.array([gyro_data[t, 0], gyro_data[t, 1], gyro_data[t, 2]])
         acc = np.array([acc_data[t, 0], acc_data[t, 1], acc_data[t, 2]])
+        mag = np.array([mag_data[t, 0], mag_data[t, 1], mag_data[t, 2]])
         Q[t] = ekf.update(Q[t - 1], gyro, acc)
         print(Q[t])
 
