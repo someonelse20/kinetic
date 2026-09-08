@@ -29,11 +29,23 @@ int datapoints = 0;
 matrix_t *ref_datapoints_buf[3000];
 int ref_datapoints = 0;
 
+matrix_t *gyro_bias;
+matrix_t *gyro_sensitivity;
+matrix_t *gyro_alignment;
+
+matrix_t *accel_bias;
+matrix_t *accel_sensitivity;
+matrix_t *accel_alignment;
+
+matrix_t *mag_soft;
+matrix_t *mag_hard;
+
 static void read_file();
 static void read_refrence_file();
 static void free_ref_datapoints_buf();
 static matrix_t *get_accel(matrix_t *orientation);
 static matrix_t *get_mag(matrix_t *orientation, float mag_dip);
+static void init_calibrate();
 
 int main() {
 	read_file();
@@ -46,48 +58,28 @@ int main() {
 	imu_t imu;
 	imu.mag_dip = deg_to_rad(54.7);
 	// imu.mag_dip = 54.7;
-	imu.gyro_noise = 1.3;
-	imu.accel_noise = 1.5;
-	imu.mag_noise = 1.8;
+	imu.gyro_noise = 0.3;
+	imu.accel_noise = 0.5;
+	imu.mag_noise = 0.8;
 	imu.dt = 0.0717;
 	imu.enu = true;
 
-	float gyro_bias_a[] = {
-		/*
-		   3.5890706303030306,
-		   0.19436924,
-		   3.469256772121212
-		 */
-		3.4,
-		-0.9,
-		0.05
-	};
-
-	float gyro_sensitivity_a[] = {
-		0.8409686965306123,
-		0.8787611643169447,
-		0.875307229757525
-		/*
-		 */
-	};
-
-	/*
-	   matrix_t *gyro_bias = arr_to_matrix(gyro_bias_a, 3, 1);
-	   matrix_t *gyro_sensitivity = arr_to_matrix(gyro_sensitivity_a, 3, 1);
-	   matrix_t *gyro_alignment = ident_matrix(3);
-
-	   matrix_t *gyro_bias = fill_matrix(3, 1, 0.f);
-	   matrix_t *gyro_sensitivity = fill_matrix(3, 1, 1.f);
-	 */
+	init_calibrate();
 
 	imu_init(&imu, datapoints_buf[0].accel, datapoints_buf[0].mag);
 
 	for (int i = 1; i < datapoints; i++) {
 		matrix_t *gyro_m = arr_to_matrix(datapoints_buf[i].gyro, 3, 1);
-		gyro_m = scale_matrix_free(gyro_m, M_PI / 180.f);
-		// calibrate_gyro_accel(gyro_m, gyro_alignment, gyro_sensitivity, gyro_bias);
+		calibrate_gyro_accel(gyro_m, gyro_alignment, gyro_sensitivity, gyro_bias);
+		gyro_m = scale_matrix_free(gyro_m, M_PI / 180.f); // Convert deg to rad
+
 		matrix_t *accel_m = arr_to_matrix(datapoints_buf[i].accel, 3, 1);
+		calibrate_gyro_accel(accel_m, accel_alignment, accel_sensitivity, accel_bias);
+
 		matrix_t *mag_m = arr_to_matrix(datapoints_buf[i].mag, 3, 1);
+		// calibrate_mag(mag_m, mag_soft, mag_hard);
+		print_matrix(mag_m);
+		cout << endl;
 
 		imu_update(&imu, gyro_m->data, accel_m->data, mag_m->data);
 
@@ -237,5 +229,59 @@ static matrix_t *get_mag(matrix_t *orientation, float mag_dip) {
 
 	   return mul_matrix(trans_matrix(quat_to_rot_matrix(orientation)), m_ref_m);
 	 */
+}
+
+static void init_calibrate() {
+	float gyro_bias_a[] = {
+		/*
+		   3.5890706303030306,
+		   0.19436924,
+		   3.469256772121212
+		 */
+		3.4,
+		-0.9,
+		0.05
+	};
+	float gyro_sensitivity_a[] = {
+		0.8409686965306123,
+		0.8787611643169447,
+		0.875307229757525
+	};
+
+	gyro_bias = arr_to_matrix(gyro_bias_a, 3, 1);
+	gyro_sensitivity = arr_to_matrix(gyro_sensitivity_a, 3, 1);
+	gyro_alignment = ident_matrix(3);
+
+	float accel_bias_a[] = {
+		-0.040304066244505055,
+		0.012145009763834091,
+		-0.020375994878022052
+	};
+	float accel_sensitivity_a[] = {
+		1.0042334979147869,
+		0.9989622287903828,
+		0.9922854196674324
+	};
+
+	accel_bias = arr_to_matrix(accel_bias_a, 3, 1);
+	accel_sensitivity = arr_to_matrix(accel_sensitivity_a, 3, 1);
+	accel_alignment = ident_matrix(3);
+
+	float mag_hard_a[] = {
+		-0.006861611750061027,
+		-0.12102793555455506,
+		0.15825171776299457
+	};
+	mag_hard = arr_to_matrix(mag_hard_a, 3, 1);
+	mag_soft = init_matrix(3, 3);
+	mag_soft->data[0] =  0.9086342253012888;
+	mag_soft->data[1] = -0.05343720507799265;
+	mag_soft->data[2] =  0.020723382944521116;
+	mag_soft->data[3] = -0.11297897931140848;
+	mag_soft->data[4] = -0.9166493526143541;
+	mag_soft->data[5] =  0.021175404142658706;
+	mag_soft->data[6] =  0.06994572871686948;
+	mag_soft->data[7] = -0.013085854423488164;
+	mag_soft->data[8] = -0.9178207634280149;
 }
 
