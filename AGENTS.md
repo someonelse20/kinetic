@@ -63,3 +63,31 @@ Two primary test modes:
 
 - Gnuplot optional for SVG generation in plotting module
 - Link with `-lm` for math library
+
+## Calibration
+
+**Directory**: `calibrate/`
+
+**Data format**: JSONL with schema line pattern:
+```json
+{"_schema": {"version": "1.0", "sensor_id": "IMU_1", "recording_type": "accel_ref_positive_z", "reference_force": "1g"}}
+{"accel_x": 9.81, "accel_y": 0.0, "accel_z": 9.81}
+```
+
+**Measurement types** (`recording_type`):
+- `general_wiggle`: General movement/shaking test
+- `gyro_ref_positive_x/y/z`: Gyro reference on each axis (positive rotation)
+- `gyro_ref_negative_x/y/z`: Gyro reference on each axis (negative rotation)
+- `accel_ref_positive_x/y/z`: Accel reference on each axis (positive force)
+- `accel_ref_negative_x/y/z`: Accel reference on each axis (negative force)
+
+**Files**:
+- `serial_reader.py`: Serial stream to JSONL converter with auto-detection
+- `calibrate.py`: CLI tool grouping files and invoking algorithms
+- `cal_accel.py` / `cal_gyro.py`: Algorithm stubs (accept [[pos_refs], [neg_refs]])
+- `read_file.py`: JSONL loader with `read_jsonl()`
+
+**Workflow**:
+1. Record reference data: `python serial_reader.py --port /dev/ttyS0 --duration 10 --meta recording_type=accel_ref_positive_z --meta reference_force=1g`
+2. Run calibration: `python calibrate.py --algo accel --verbose`
+3. Grouping is automatic via `recording_type` metadata
