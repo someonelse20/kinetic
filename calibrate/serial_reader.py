@@ -22,6 +22,35 @@ except ImportError:
     sys.exit(1)
 
 
+# Standardized measurement types
+MEASUREMENT_TYPES = {
+    "general": "General movement/shaking test",
+    "gyro_ref_positive_x": "Gyro positive reference on X axis",
+    "gyro_ref_negative_x": "Gyro negative reference on X axis",
+    "gyro_ref_positive_y": "Gyro positive reference on Y axis",
+    "gyro_ref_negative_y": "Gyro negative reference on Y axis",
+    "gyro_ref_positive_z": "Gyro positive reference on Z axis",
+    "gyro_ref_negative_z": "Gyro negative reference on Z axis",
+    "accel_ref_positive_x": "Accel positive reference on X axis (e.g., level)",
+    "accel_ref_negative_x": "Accel negative reference on X axis (e.g., inverted)",
+    "accel_ref_positive_y": "Accel positive reference on Y axis",
+    "accel_ref_negative_y": "Accel negative reference on Y axis",
+    "accel_ref_positive_z": "Accel positive reference on Z axis (1g)",
+    "accel_ref_negative_z": "Accel negative reference on Z axis (-1g)",
+}
+
+# Default metadata with standardized measurement types
+DEFAULT_METADATA: Dict[str, Any] = {
+    "sensor_id": "unknown",
+    "sample_rate_hz": 100,
+    "unit_accel": "g",
+    "unit_gyro": "deg/s",
+    "unit_mag": "gauss",
+    "recording_type": "general",
+    "reference_force": 0,
+}
+
+
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
@@ -94,12 +123,14 @@ def list_serial_ports() -> List[Dict[str, Any]]:
     """List all available serial ports."""
     ports = []
     for port in serial.tools.list_ports.comports():
-        ports.append({
-            "dev": port.device,
-            "description": port.description,
-            "manufacturer": port.manufacturer,
-            "product": port.product,
-        })
+        ports.append(
+            {
+                "dev": port.device,
+                "description": port.description,
+                "manufacturer": port.manufacturer,
+                "product": port.product,
+            }
+        )
     return ports
 
 
@@ -189,6 +220,30 @@ def write_jsonl(filepath: str, records: List[Dict[str, Any]]) -> None:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
+def build_metadata(
+    args: argparse.Namespace, reference_force: Optional[str] = None
+) -> Dict[str, Any]:
+    """Build metadata from arguments, including reference force if specified."""
+    # Start with defaults
+    metadata: Dict[str, Any] = DEFAULT_METADATA.copy()
+
+    # Apply user-provided metadata
+    for key_value in args.metadata or []:
+        if "=" in key_value:
+            key, value = key_value.split("=", 1)
+            metadata[key.strip()] = value.strip()
+
+    # Override recording_type if explicitly set, otherwise use default
+    if "recording_type" not in metadata:
+        metadata["recording_type"] = DEFAULT_METADATA["recording_type"]
+
+    # If reference_force is specified, it overrides any existing force value
+    if reference_force:
+        metadata["reference_force"] = reference_force
+
+    return metadata
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     """Main entry point."""
     args = parse_args(argv)
@@ -200,9 +255,9 @@ def main(argv: Optional[List[str]] = None) -> int:
             print("Available serial ports:")
             for port in ports:
                 print(f"  {port['dev']}: {port['description']}")
-                if port['manufacturer']:
+                if port["manufacturer"]:
                     print(f"    Manufacturer: {port['manufacturer']}")
-                if port['product']:
+                if port["product"]:
                     print(f"    Product: {port['product']}")
             return 0
         else:
@@ -218,17 +273,17 @@ def main(argv: Optional[List[str]] = None) -> int:
     if args.dry_run:
         print(f"Testing connection to {args.port} at {args.baud} baud...")
         try:
-            ser = serial.Serial(args.port, args.baud, timeout=args.timeout)
+            set = serial.Serial(args.port, args.baud, timeout=args.timeout)
             time.sleep(0.5)
-            if ser.in_waiting > 0:
-                data = ser.readline().decode("utf-8", errors="ignore").strip()
+            if set.in_waiting > 0:
+                data = set.readline().decode("utf-8", errors="ignore").strip()
                 if data:
                     print(f"  Connection OK. Sample data: {data[:80]}...")
                 else:
                     print("  Connection OK (no data received).")
             else:
                 print("  Connection OK (empty).")
-            ser.close()
+            set.close()
             return 0
         except serial.SerialException as e:
             print(f"Connection error: {e}")
@@ -237,12 +292,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     # Open serial port
     print(f"Opening serial port {args.port} at {args.baud} baud...")
     try:
-        ser = serial.Serial(
+        set = serial.Serial(
             args.port,
             args.baud,
             timeout=args.timeout,
             bytesize=8,
-            parity='N',
+            parity="N",
             stopbits=1,
         )
     except serial.SerialException as e:
@@ -252,21 +307,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     if args.verbose:
         print(f"Port opened successfully. Ready to read data.")
 
-    # Build metadata with updated defaults
-    metadata: Dict[str, Any] = {
-        "sensor_id": "unknown",
-        "sample_rate_hz": 100,
-        "unit_accel": "g",
-        "unit_gyro": "deg/s",
-        "unit_mag": "gauss",
-        "recording_type": "measurement",
-    }
-
-    # Apply user-provided metadata
-    for key_value in args.metadata or []:
-        if "=" in key_value:
-            key, value = key_value.split("=", 1)
-            metadata[key.strip()] = value.strip()
+    # Build metadata - reference_force can be passed separately for calibration references
+    metadata = build_metadata(args)
 
     # Recording state
     batch: List[Dict[str, Any]] = []
@@ -285,9 +327,9 @@ def main(argv: Optional[List[str]] = None) -> int:
                     break
 
             # Read available data
-            if ser.in_waiting > 0:
+            if set.in_waiting > 0:
                 # Read all available data at once
-                data = ser.read(ser.in_waiting).decode("utf-8", errors="ignore")
+                data = set.read(set.in_waiting).decode("utf-8", errors="ignore")
 
                 # Split into lines
                 lines = data.split("\n")
@@ -317,7 +359,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         if args.verbose:
             print("\nRecording interrupted by user (Ctrl+C).")
     finally:
-        ser.close()
+        set.close()
 
     # Write remaining batch
     if batch:
@@ -330,6 +372,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     print(f"  Total records: {total_records}")
     print(f"  Parse errors: {errors}")
     print(f"  Output file: {args.output}")
+    print(f"  Metadata: {json.dumps(metadata, indent=2)}")
 
     if errors > 0:
         print(f"\nWarning: {errors} records could not be parsed.")

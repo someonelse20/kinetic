@@ -3,6 +3,13 @@ calibrate/calibrate.py - CLI tool for sensor calibration.
 
 Groups calibration files by metadata and invokes calibration algorithms.
 Minimal input: specify data directory, auto-detect reference vs measurement files.
+
+Measurement types:
+    - general_wiggle: General movement/shaking test
+    - gyro_ref_positive_x/y/z: Gyro reference on each axis (positive rotation)
+    - gyro_ref_negative_x/y/z: Gyro reference on each axis (negative rotation)
+    - accel_ref_positive_x/y/z: Accel reference on each axis (positive force)
+    - accel_ref_negative_x/y/z: Accel reference on each axis (negative force)
 """
 
 import argparse
@@ -99,7 +106,10 @@ def group_files_by_type(
             else:
                 file_type = ""
 
-            if file_type in ("reference", "ref", "positive"):
+            # Reference files: gyro_ref_* or accel_ref_*
+            if file_type and file_type.startswith(("gyro_ref", "accel_ref")):
+                ref_files.append(filepath)
+            elif file_type in ("reference", "ref", "positive"):
                 ref_files.append(filepath)
             elif file_type in ("measurement", "meas", "data"):
                 meas_files.append(filepath)
@@ -156,27 +166,43 @@ def extract_reference_arrays(
                         print(f"  Loaded ref from metadata: {filepath.name}")
                     continue
 
-            # Method 2: Extract from data records (expecting specific axis fields)
-            # For accelerometer calibration, we expect accel_x, accel_y, accel_z
-            # Reference data should have clear positive/negative values
+            # Method 2: Extract from data records and metadata
+            # Get measurement type and reference force from metadata
+            meta = schema.get("_schema", {}) if schema else {}
+            file_type = meta.get("recording_type", "")
+            reference_force = meta.get("reference_force")
 
             # Collect all values for each axis
-            axes = {"x": [], "y": [], "z": []}
+            axes = {"gyro": [], "accel": [], "mag": []}
             for rec in data:
-                for axis in ("x", "y", "z"):
-                    key = f"accel_{axis}"
-                    if key in rec and isinstance(rec[key], (int, float)):
-                        axes[axis].append(float(rec[key]))
+                for sensor in ("gyro", "accel", "mag"):
+                    for axis in ("x", "y", "z"):
+                        key = f"{sensor}_{axis}"
+                        if key in rec and isinstance(rec[key], (int, float)):
+                            axes[sensor].append(float(rec[key]))
 
             # If we have axis data, create reference arrays
-            if all(len(axes[a]) > 0 for a in axes):
-                # Take mean of each axis as the reference value
-                pos = np.array([axes[a][-1] for a in ("x", "y", "z")], dtype=np.float64)
-                neg = np.array([axes[a][0] for a in ("x", "y", "z")], dtype=np.float64)
-                positive_refs.append(pos)
-                negative_refs.append(neg)
+            # Reference force is stored in metadata, use it as the reference value
+            if any(len(axes[s]) > 0 for s in ("gyro", "accel", "mag")):
+                # Use the last sample as positive (end of recording) and first as negative (start)
+                # For reference recordings, these should correspond to the known reference force
+                pos_gyro = np.array([axes["gyro"][a][-1] for a in ("x", "y", "z")], dtype=np.float64)
+                neg_gyro = np.array([axes["gyro"][a][0] for a in ("x", "y", "z")], dtype=np.float64)
+                pos_accel = np.array([axes["accel"][a][-1] for a in ("x", "y", "z")], dtype=np.float64)
+                neg_accel = np.array([axes["accel"][a][0] for a in ("x", "y", "z")], dtype=np.float64)
+
+                # Include magnetometer if available
+                if axes["mag"] and all(len(axes["mag"][a]) > 0 for a in ("x", "y", "z")):
+                    pos_mag = np.array([axes["mag"][a][-1] for a in ("x", "y", "z")], dtype=np.float64)
+                    neg_mag = np.array([axes["mag"][a][0] for a in ("x", "y", "z")], dtype=np.float64)
+                else:
+                    pos_mag = np.zeros(3, dtype=np.float64)
+                    neg_mag = np.zeros(3, dtype=np.float64)
+
+                positive_refs.append([pos_gyro, pos_accel, pos_mag])
+                negative_refs.append([neg_gyro, neg_accel, neg_mag])
                 if verbose:
-                    print(f"  Extracted ref from data: {filepath.name}")
+                    print(f"  Extracted ref from {filepath.name} (type={file_type}, force={reference_force})")
 
         except Exception as e:
             if verbose:
@@ -220,7 +246,7 @@ def run_calibration(sensor_type: str, verbose: bool) -> Optional[Dict[str, Any]]
 
         if not ref_files:
             print(
-                "No reference files found. Please add files with recording_type='reference' in metadata."
+                "No reference files found. Please add files with recording_type=gyro_ref_* or accel_ref_* in metadata."
             )
             return None
 
@@ -232,7 +258,7 @@ def run_calibration(sensor_type: str, verbose: bool) -> Optional[Dict[str, Any]]
 
         if not positive_refs or not negative_refs:
             print(
-                "Could not extract reference arrays. Check file metadata for 'positive_ref' and 'negative_ref'."
+                "Could not extract reference arrays. Check file metadata for recording_type and reference_force."
             )
             return None
 
