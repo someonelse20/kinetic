@@ -1,82 +1,80 @@
 """
-calibrate/cal_accel.py - Accelerometer calibration stubs.
-
-Placeholder functions for accelerometer calibration algorithm.
-To be implemented with actual calibration logic.
+Accelerometer calibration implementation per calibration_formulas.md.
 
 Input format:
-  - positive_ref: 1xn array (n = number of samples)
-  - negative_ref: 1xn array (n = number of samples)
-Output format:
-  - bias: 1x3 array [bias_x, bias_y, bias_z]
-  - sensitivity: 1x3 array [sens_x, sens_y, sens_z]
-  - alignment: 3x3 matrix
+- pos_refs: list of numpy arrays from +1g reference files (e.g., ax+, ay+, az+)
+- neg_refs: list of numpy arrays from -1g reference files (e.g., ax-, ay-, az-)
+
+Output:
+- bias: 1x3 numpy array (mean output at zero-g)
+- sensitivity: 1x3 numpy array (output per g)
 """
 
 import numpy as np
-from typing import Tuple, Union
-
-RefArray = Union[np.ndarray, list]
-CalArray = Union[np.ndarray, list]
 
 
-def cal_bias(positive_ref: RefArray, negative_ref: RefArray) -> CalArray:
+def read_data(file):
+    """Read combined IMU data file, extract accel readings only."""
+    accel_data = []
+    with open(file, 'r') as f:
+        for line in f:
+            if 'accel:' in line:
+                nums = line.replace('accel:', '').split(',')
+                accel_data.append([float(n) for n in nums])
+    return np.array(accel_data) if accel_data else np.array([])
+
+
+def bias_calibration(pos_refs, neg_refs):
     """
-    Compute accelerometer bias calibration.
+    Eq 6.5.2 / 6.8: b_a = (u_+g + u_-g) / 2
 
-    Args:
-        positive_ref: 1xn array of positive reference values
-        negative_ref: 1xn array of negative reference values
-
-    Returns:
-        1x3 array: Bias correction values [bias_x, bias_y, bias_z]
+    For each axis, average the outputs at +1g and -1g references. The mean of
+    these two opposites converges to the true zero-g bias.
     """
-    # TODO: Implement bias calibration algorithm
-    return np.array([0.0, 0.0, 0.0])
+    # Compute mean per axis for positive refs
+    pos_means = np.zeros((len(pos_refs), 3))
+    for idx, pos_ref in enumerate(pos_refs):
+        pos_means[idx] = np.mean(pos_ref, axis=0)
+    
+    # Compute mean per axis for negative refs
+    neg_means = np.zeros((len(neg_refs), 3))
+    for idx, neg_ref in enumerate(neg_refs):
+        neg_means[idx] = np.mean(neg_ref, axis=0)
+    
+    # Average across all positive refs (for each axis)
+    avg_plus = np.mean(pos_means, axis=0)
+    # Average across all negative refs (for each axis)
+    avg_minus = np.mean(neg_means, axis=0)
+    
+    # Eq 6.8: (u_+g + u_-g) / 2
+    bias = (avg_plus + avg_minus) / 2.0
+
+    return bias
 
 
-def cal_sensitivity(positive_ref: RefArray, negative_ref: RefArray) -> CalArray:
+def sensitivity_calibration(pos_refs, neg_refs, g_ref=1.0):
     """
-    Compute accelerometer sensitivity calibration.
+    Eq 6.5.2 / 6.9: s_a = (|u_+g| + |u_-g|) / (2 * g)
 
-    Args:
-        positive_ref: 1xn array of positive reference values
-        negative_ref: 1xn array of negative reference values
-
-    Returns:
-        1x3 array: Sensitivity scaling values [sens_x, sens_y, sens_z]
+    For each axis, average the outputs at +1g and -1g, take absolute values,
+    sum them, and divide by 2 * reference gravity.
     """
-    # TODO: Implement sensitivity calibration algorithm
-    return np.array([1.0, 1.0, 1.0])
+    # Compute mean per axis for positive refs
+    pos_means = np.zeros((len(pos_refs), 3))
+    for idx, pos_ref in enumerate(pos_refs):
+        pos_means[idx] = np.mean(pos_ref, axis=0)
+    
+    # Compute mean per axis for negative refs
+    neg_means = np.zeros((len(neg_refs), 3))
+    for idx, neg_ref in enumerate(neg_refs):
+        neg_means[idx] = np.mean(neg_ref, axis=0)
+    
+    # Average across all positive refs (for each axis)
+    avg_plus = np.mean(pos_means, axis=0)
+    # Average across all negative refs (for each axis)
+    avg_minus = np.mean(neg_means, axis=0)
+    
+    # Eq 6.5.2: use absolute values of both polarities
+    sensitivity = (np.abs(avg_plus) + np.abs(avg_minus)) / (2 * g_ref)
 
-
-def cal_alignment(positive_ref: RefArray, negative_ref: RefArray) -> CalArray:
-    """
-    Compute accelerometer axis alignment matrix.
-
-    Args:
-        positive_ref: 1xn array of positive reference values
-        negative_ref: 1xn array of negative reference values
-
-    Returns:
-        3x3 array: Alignment transformation matrix
-    """
-    # TODO: Implement alignment calibration algorithm
-    return np.eye(3)
-
-
-def cal_all(positive_ref: RefArray, negative_ref: RefArray) -> Tuple[CalArray, CalArray, CalArray]:
-    """
-    Compute all accelerometer calibration parameters.
-
-    Args:
-        positive_ref: 1xn array of positive reference values
-        negative_ref: 1xn array of negative reference values
-
-    Returns:
-        Tuple of (bias_array, sensitivity_array, alignment_matrix)
-    """
-    bias = cal_bias(positive_ref, negative_ref)
-    sens = cal_sensitivity(positive_ref, negative_ref)
-    align = cal_alignment(positive_ref, negative_ref)
-    return bias, sens, align
+    return sensitivity

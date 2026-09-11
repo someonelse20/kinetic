@@ -1,82 +1,66 @@
 """
-calibrate/cal_gyro.py - Gyroscope calibration stubs.
-
-Placeholder functions for gyroscope calibration algorithm.
-To be implemented with actual calibration logic.
+Gyroscope calibration implementation per calibration_formulas.md.
 
 Input format:
-  - positive_ref: 1xn array (n = number of samples)
-  - negative_ref: 1xn array (n = number of samples)
-Output format:
-  - bias: 1x3 array [bias_x, bias_y, bias_z]
-  - sensitivity: 1x3 array [sens_x, sens_y, sens_z]
-  - alignment: 3x3 matrix
+- pos_refs: list of numpy arrays from +rotation reference files (e.g., gx+, gy+, gz+)
+- neg_refs: list of numpy arrays from -rotation reference files (e.g., gx-, gy-, gz-)
+
+Output:
+- bias: 1x3 numpy array (mean output at zero rate)
+- sensitivity: 1x3 numpy array (output per unit angular velocity)
 """
 
 import numpy as np
-from typing import Tuple, Union
-
-RefArray = Union[np.ndarray, list]
-CalArray = Union[np.ndarray, list]
 
 
-def cal_bias(positive_ref: RefArray, negative_ref: RefArray) -> CalArray:
+def read_data(file):
+    """Read combined IMU data file, extract gyro readings only."""
+    gyro_data = []
+    with open(file, 'r') as f:
+        for line in f:
+            if 'gyro:' in line:
+                nums = line.replace('gyro:', '').split(',')
+                gyro_data.append([float(n) for n in nums])
+    return np.array(gyro_data) if gyro_data else np.array([])
+
+
+def bias_calibration(pos_refs, neg_refs):
     """
-    Compute gyroscope bias calibration.
+    Eq 6.4.1: b_ω = mean(u_ω) while stationary.
 
-    Args:
-        positive_ref: 1xn array of positive reference values
-        negative_ref: 1xn array of negative reference values
-
-    Returns:
-        1x3 array: Bias correction values [bias_x, bias_y, bias_z]
+    For gyro, we average the zero-rate outputs from both positive and negative
+    reference positions. Since both are at ω ≈ 0, their average converges to
+    the true bias.
     """
-    # TODO: Implement gyroscope bias calibration algorithm
-    return np.array([0.0, 0.0, 0.0])
+    # Stack all reference measurements into a single array
+    all_zero = np.vstack(pos_refs + neg_refs)
+
+    # Compute mean across all samples (Eq 6.4.1)
+    bias = np.mean(all_zero, axis=0)
+
+    return bias
 
 
-def cal_sensitivity(positive_ref: RefArray, negative_ref: RefArray) -> CalArray:
+def sensitivity_calibration(pos_refs, neg_refs, omega_ref=200.0):
     """
-    Compute gyroscope sensitivity calibration.
+    Eq 6.4.3 / 6.4: s_ω = (|u_+ω| + |u_-ω|) / (2 * ω)
 
-    Args:
-        positive_ref: 1xn array of positive reference values
-        negative_ref: 1xn array of negative reference values
-
-    Returns:
-        1x3 array: Sensitivity scaling values [sens_x, sens_y, sens_z]
+    For each axis, average the outputs at +ω and -ω, take absolute values,
+    sum them, and divide by 2 * reference angular velocity.
     """
-    # TODO: Implement gyroscope sensitivity calibration algorithm
-    return np.array([1.0, 1.0, 1.0])
+    # Stack positive refs separately from negative refs
+    pos_all = np.vstack(pos_refs)
+    neg_all = np.vstack(neg_refs)
 
+    # For each axis (0, 1, 2), compute sensitivity
+    sensitivity = np.zeros(3)
+    for i in range(3):
+        # Average across positive refs only
+        avg_plus = np.mean(pos_all[:, i])
+        # Average across negative refs only
+        avg_minus = np.mean(neg_all[:, i])
 
-def cal_alignment(positive_ref: RefArray, negative_ref: RefArray) -> CalArray:
-    """
-    Compute gyroscope axis alignment matrix.
+        # Eq 6.4.3: use absolute values of both polarities
+        sensitivity[i] = (np.abs(avg_plus) + np.abs(avg_minus)) / (2 * omega_ref)
 
-    Args:
-        positive_ref: 1xn array of positive reference values
-        negative_ref: 1xn array of negative reference values
-
-    Returns:
-        3x3 array: Alignment transformation matrix
-    """
-    # TODO: Implement gyroscope alignment calibration algorithm
-    return np.eye(3)
-
-
-def cal_all(positive_ref: RefArray, negative_ref: RefArray) -> Tuple[CalArray, CalArray, CalArray]:
-    """
-    Compute all gyroscope calibration parameters.
-
-    Args:
-        positive_ref: 1xn array of positive reference values
-        negative_ref: 1xn array of negative reference values
-
-    Returns:
-        Tuple of (bias_array, sensitivity_array, alignment_matrix)
-    """
-    bias = cal_bias(positive_ref, negative_ref)
-    sens = cal_sensitivity(positive_ref, negative_ref)
-    align = cal_alignment(positive_ref, negative_ref)
-    return bias, sens, align
+    return sensitivity
