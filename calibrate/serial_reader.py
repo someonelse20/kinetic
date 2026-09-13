@@ -88,11 +88,18 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         help="Output JSONL file path.",
     )
     parser.add_argument(
+        "--file",
+        type=str,
+        default=None,
+        help="Input CSV file path (comma-separated format). Mutually exclusive with --port.",
+    )
+    parser.add_argument(
         "--meta",
+        nargs=2,
+        metavar=("KEY", "VALUE"),
         action="append",
         dest="metadata",
         default=[],
-        metavar="KEY=VALUE",
         help="Add metadata key=value pair (can be specified multiple times).",
     )
     parser.add_argument(
@@ -213,11 +220,29 @@ def parse_serial_line(line: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-def write_jsonl(filepath: str, records: List[Dict[str, Any]]) -> None:
-    """Write records to JSONL file."""
-    with open(filepath, "w", encoding="utf-8") as f:
-        for record in records:
-            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+def write_jsonl(filepath: str, records: List[Dict[str, Any]], metadata: Optional[Dict[str, Any]] = None) -> None:
+    """
+    Write records to JSONL file with metadata as first line.
+    
+    Args:
+        filepath: Output file path
+        records: List of sensor records
+        metadata: Optional metadata dict to write as first line
+    """
+    # Write metadata first if provided
+    if metadata:
+        with open(filepath, "w", encoding="utf-8") as f:
+            # Write metadata as schema-like line
+            f.write(json.dumps({"_schema": metadata}, ensure_ascii=False) + "\n")
+            
+            # Then write records
+            for record in records:
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    else:
+        # Legacy behavior: no metadata header
+        with open(filepath, "w", encoding="utf-8") as f:
+            for record in records:
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
 def build_metadata(
@@ -226,28 +251,70 @@ def build_metadata(
     """Build metadata from arguments, including reference force if specified."""
     # Start with defaults
     metadata: Dict[str, Any] = DEFAULT_METADATA.copy()
-
-    # Apply user-provided metadata
+    
+    # Apply user-provided metadata (now tuples of (key, value))
     for key_value in args.metadata or []:
-        if "=" in key_value:
-            key, value = key_value.split("=", 1)
-            metadata[key.strip()] = value.strip()
-
+        key, value = key_value
+        metadata[key] = value
+    
     # Override recording_type if explicitly set, otherwise use default
     if "recording_type" not in metadata:
         metadata["recording_type"] = DEFAULT_METADATA["recording_type"]
-
+    
     # If reference_force is specified, it overrides any existing force value
     if reference_force:
         metadata["reference_force"] = reference_force
-
+    
     return metadata
+
+
+def read_file_input(filepath: str) -> List[Dict[str, Any]]:
+    """
+    Read comma-separated file and parse into structured records.
+    
+    Expected format (comma-separated):
+        - timestamp, gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z, mag_x, mag_y, mag_z (10 fields)
+        - gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z, mag_x, mag_y, mag_z (9 fields)
+        - gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z (6 fields)
+    
+    Args:
+        filepath: Path to the CSV file
+        
+    Returns:
+        List of parsed record dicts
+        
+    Raises:
+        FileNotFoundError: If file doesn't exist
+        ValueError: If file format is invalid
+    """
+    records = []
+    total_lines = 0
+    parse_errors = 0
+    
+    with open(filepath, "r", encoding="utf-8") as f:
+        for line_num, line in enumerate(f, 1):
+            # Skip empty lines and comments
+            if not line.strip() or line.strip().startswith("#"):
+                continue
+            
+            total_lines += 1
+            record = parse_serial_line(line.strip())
+            
+            if record is not None:
+                records.append(record)
+            else:
+                parse_errors += 1
+                
+    if parse_errors > 0:
+        print(f"Warning: {parse_errors} lines could not be parsed out of {total_lines} total")
+    
+    return records
 
 
 def main(argv: Optional[List[str]] = None) -> int:
     """Main entry point."""
     args = parse_args(argv)
-
+    
     # Handle --list-ports
     if args.list_ports:
         ports = list_serial_ports()
@@ -263,12 +330,34 @@ def main(argv: Optional[List[str]] = None) -> int:
         else:
             print("No serial ports found.")
             return 0
-
+    
     # Check if serial is available
     if serial is None:
         print("Error: pyserial not installed. Run: pip install pyserial")
         return 1
-
+    
+    # Handle file input mode (mutually exclusive with serial port)
+    if args.file is not None:
+        # Validate file exists
+        import os
+        if not os.path.isfile(args.file):
+            print(f"Error: File not found: {args.file}")
+            return 1
+        
+        print(f"Reading from file: {args.file}")
+        
+        # Read all records from file
+        records = read_file_input(args.file)
+        
+        # Build metadata for output
+        metadata = build_metadata(args)
+        
+        # Write with metadata header
+        write_jsonl(args.output, records, metadata)
+        
+        print(f"Successfully wrote {len(records)} records to {args.output}")
+        return 0
+    
     # Test connection in dry-run mode
     if args.dry_run:
         print(f"Testing connection to {args.port} at {args.baud} baud...")
@@ -366,7 +455,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         write_jsonl(args.output, batch)
         if args.verbose:
             print(f"Wrote {len(batch)} remaining records to {args.output}")
-
+    
+    # Write metadata header at the end (to be read as first line on next run)
+    metadata = build_metadata(args)
+    write_jsonl(args.output, [], metadata)
+    
     # Print summary
     print("\nRecording complete.")
     print(f"  Total records: {total_records}")
