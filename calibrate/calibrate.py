@@ -20,6 +20,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from read_file import read_jsonl
 
+import cal_accel
+import cal_gyro
+
 
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     """Parse command line arguments."""
@@ -34,11 +37,18 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         help="Directory containing calibration JSONL files.",
     )
     parser.add_argument(
-        "--algo",
+        "--sensor",
         type=str,
-        choices=["accel", "gyro"],
-        default="accel",
-        help="Sensor type to calibrate (accel or gyro).",
+        choices=["accel", "gyro", "all"],
+        default="all",
+        help="Sensor(s) to calibrate (accel, gyro, or all).",
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        choices=["bias", "sensitivity", "alignment", "all"],
+        default="all",
+        help="Calibration output to compute (bias, sensitivity, alignment, or all).",
     )
     parser.add_argument(
         "--verbose",
@@ -51,33 +61,6 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         help="List files to process without running calibration.",
     )
     return parser.parse_args(argv)
-
-
-def load_calibration_functions(sensor_type: str):
-    """
-    Import calibration functions from appropriate module.
-
-    Args:
-        sensor_type: 'accel' or 'gyro'
-
-    Returns:
-        Tuple of (cal_all_func, bias_func, sensitivity_func, alignment_func)
-    """
-    if sensor_type == "accel":
-        from cal_accel import (
-            cal_all as cal_all_func,
-            cal_bias as bias_func,
-            cal_sensitivity as sens_func,
-            cal_alignment as align_func,
-        )
-    else:
-        from cal_gyro import (
-            cal_all as cal_all_func,
-            cal_bias as bias_func,
-            cal_sensitivity as sens_func,
-            cal_alignment as align_func,
-        )
-    return cal_all_func, bias_func, sens_func, align_func
 
 
 def group_files_by_type(
@@ -126,7 +109,9 @@ def group_files_by_type(
                 meas_files.append(filepath)
 
     if verbose:
-        print(f"Grouped: {len(ref_files)} reference file(s), {len(meas_files)} measurement file(s)")
+        print(
+            f"Grouped: {len(ref_files)} reference file(s), {len(meas_files)} measurement file(s)"
+        )
 
     return ref_files, meas_files
 
@@ -186,15 +171,29 @@ def extract_reference_arrays(
             if any(len(axes[s]) > 0 for s in ("gyro", "accel", "mag")):
                 # Use the last sample as positive (end of recording) and first as negative (start)
                 # For reference recordings, these should correspond to the known reference force
-                pos_gyro = np.array([axes["gyro"][a][-1] for a in ("x", "y", "z")], dtype=np.float64)
-                neg_gyro = np.array([axes["gyro"][a][0] for a in ("x", "y", "z")], dtype=np.float64)
-                pos_accel = np.array([axes["accel"][a][-1] for a in ("x", "y", "z")], dtype=np.float64)
-                neg_accel = np.array([axes["accel"][a][0] for a in ("x", "y", "z")], dtype=np.float64)
+                pos_gyro = np.array(
+                    [axes["gyro"][a][-1] for a in ("x", "y", "z")], dtype=np.float64
+                )
+                neg_gyro = np.array(
+                    [axes["gyro"][a][0] for a in ("x", "y", "z")], dtype=np.float64
+                )
+                pos_accel = np.array(
+                    [axes["accel"][a][-1] for a in ("x", "y", "z")], dtype=np.float64
+                )
+                neg_accel = np.array(
+                    [axes["accel"][a][0] for a in ("x", "y", "z")], dtype=np.float64
+                )
 
                 # Include magnetometer if available
-                if axes["mag"] and all(len(axes["mag"][a]) > 0 for a in ("x", "y", "z")):
-                    pos_mag = np.array([axes["mag"][a][-1] for a in ("x", "y", "z")], dtype=np.float64)
-                    neg_mag = np.array([axes["mag"][a][0] for a in ("x", "y", "z")], dtype=np.float64)
+                if axes["mag"] and all(
+                    len(axes["mag"][a]) > 0 for a in ("x", "y", "z")
+                ):
+                    pos_mag = np.array(
+                        [axes["mag"][a][-1] for a in ("x", "y", "z")], dtype=np.float64
+                    )
+                    neg_mag = np.array(
+                        [axes["mag"][a][0] for a in ("x", "y", "z")], dtype=np.float64
+                    )
                 else:
                     pos_mag = np.zeros(3, dtype=np.float64)
                     neg_mag = np.zeros(3, dtype=np.float64)
@@ -202,36 +201,97 @@ def extract_reference_arrays(
                 positive_refs.append([pos_gyro, pos_accel, pos_mag])
                 negative_refs.append([neg_gyro, neg_accel, neg_mag])
                 if verbose:
-                    print(f"  Extracted ref from {filepath.name} (type={file_type}, force={reference_force})")
+                    print(
+                        f"  Extracted ref from {filepath.name} (type={file_type}, force={reference_force})"
+                    )
 
         except Exception as e:
             if verbose:
                 print(f"Warning: Could not extract ref from {filepath}: {e}")
 
     if verbose:
-        print(f"Collected: {len(positive_refs)} positive refs, {len(negative_refs)} negative refs")
+        print(
+            f"Collected: {len(positive_refs)} positive refs, {len(negative_refs)} negative refs"
+        )
 
     return positive_refs, negative_refs
 
 
-def run_calibration(sensor_type: str, verbose: bool) -> Optional[Dict[str, Any]]:
+def run_calibration(args, verbose: bool) -> Optional[Dict[str, Any]]:
     """
-    Run the full calibration pipeline.
+    Run calibration pipeline outputs.
 
-    Returns calibration result dict or None on error.
+    Args:
+        verbose: Whether to print progress
     """
     try:
-        # Load calibration functions
-        (
-            cal_all_func,
-            bias_func,
-            sens_func,
-            align_func,
-        ) = load_calibration_functions(sensor_type)
+        # Determine which modules/functions to use based on sensor selection
+        if args.sensor == "accel":
+            import cal_accel
+            bias_func = cal_accel.bias_calibration
+            sens_func = cal_accel.sensitivity_calibration
+            align_func = lambda pos, neg: None  # stub - not implemented in cal_accel
+            sensor_name = "accel"
+        elif args.sensor == "gyro":
+            import cal_gyro
+            bias_func = cal_gyro.bias_calibration
+            sens_func = cal_gyro.sensitivity_calibration
+            align_func = lambda pos, neg: None  # stub - not implemented in cal_gyro
+            sensor_name = "gyro"
+        else:  # all
+            import cal_accel
+            bias_func_accel = cal_accel.bias_calibration
+            sens_func_accel = cal_accel.sensitivity_calibration
+            
+            import cal_gyro
+            bias_func_gyro = cal_gyro.bias_calibration
+            sens_func_gyro = cal_gyro.sensitivity_calibration
+            
+            # Run both sensors
+            ref_files, meas_files = group_files_by_type(jsonl_files, verbose)
+            positive_refs, negative_refs = extract_reference_arrays(ref_files, verbose)
+            
+            if not positive_refs or not negative_refs:
+                print(
+                    "Could not extract reference arrays. Check file metadata for recording_type and reference_force."
+                )
+                return None
+            
+            # Compute for accel
+            if args.output in ("bias", "all"):
+                bias = bias_func_accel(positive_refs, negative_refs)
+                result["accel_bias"] = bias.tolist() if hasattr(bias, "tolist") else bias
+                if verbose:
+                    print(f"  [accel] Bias: {bias}")
+            
+            if args.output in ("sensitivity", "all"):
+                sens = sens_func_accel(positive_refs, negative_refs)
+                result["accel_sensitivity"] = sens.tolist() if hasattr(sens, "tolist") else sens
+                if verbose:
+                    print(f"  [accel] Sensitivity: {sens}")
+            
+            # Compute for gyro
+            if args.output in ("bias", "all"):
+                bias = bias_func_gyro(positive_refs, negative_refs)
+                result["gyro_bias"] = bias.tolist() if hasattr(bias, "tolist") else bias
+                if verbose:
+                    print(f"  [gyro] Bias: {bias}")
+            
+            if args.output in ("sensitivity", "all"):
+                sens = sens_func_gyro(positive_refs, negative_refs)
+                result["gyro_sensitivity"] = sens.tolist() if hasattr(sens, "tolist") else sens
+                if verbose:
+                    print(f"  [gyro] Sensitivity: {sens}")
+            
+            if verbose:
+                print("Calibration complete:")
+            return result
 
-        # Find and group files
+        # Single sensor path (accel or gyro)
         calibrate_dir = Path(__file__).resolve().parent
-        jsonl_files = list(calibrate_dir.glob("*.jsonl")) + list(calibrate_dir.glob("*.JSONL"))
+        jsonl_files = list(calibrate_dir.glob("*.jsonl")) + list(
+            calibrate_dir.glob("*.JSONL")
+        )
 
         if not jsonl_files:
             print(f"No JSONL files found in {calibrate_dir}")
@@ -246,7 +306,7 @@ def run_calibration(sensor_type: str, verbose: bool) -> Optional[Dict[str, Any]]
 
         if not ref_files:
             print(
-                "No reference files found. Please add files with recording_type=gyro_ref_* or accel_ref_* in metadata."
+                f"No reference files found for {sensor_name}. Please add files with recording_type=gyro_ref_* or accel_ref_* in metadata."
             )
             return None
 
@@ -262,28 +322,31 @@ def run_calibration(sensor_type: str, verbose: bool) -> Optional[Dict[str, Any]]
             )
             return None
 
-        # Run calibration
-        bias, sensitivity, alignment = cal_all_func(positive_refs, negative_refs)
-
-        result = {
-            "sensor_type": sensor_type,
-            "bias": bias.tolist() if hasattr(bias, "tolist") else bias,
-            "sensitivity": (
-                sensitivity.tolist() if hasattr(sensitivity, "tolist") else sensitivity
-            ),
-            "alignment": (
-                alignment.tolist() if hasattr(alignment, "tolist") else alignment
-            ),
+        result: Dict[str, Any] = {
+            "sensor": sensor_name,
             "reference_files": [str(f) for f in ref_files],
             "measurement_files": [str(f) for f in meas_files],
         }
 
+        if args.output in ("bias", "all"):
+            bias = bias_func(positive_refs, negative_refs)
+            result["bias"] = bias.tolist() if hasattr(bias, "tolist") else bias
+            if verbose:
+                print(f"  Bias: {bias}")
+
+        if args.output in ("sensitivity", "all"):
+            sensitivity = sens_func(positive_refs, negative_refs)
+            result["sensitivity"] = sensitivity.tolist() if hasattr(sensitivity, "tolist") else sensitivity
+            if verbose:
+                print(f"  Sensitivity: {sensitivity}")
+
+        if args.output in ("alignment", "all"):
+            # Alignment not implemented in calibration modules
+            if verbose:
+                print("  Alignment: not implemented (stub)")
+
         if verbose:
             print("Calibration complete:")
-            print(f"  Bias: {bias}")
-            print(f"  Sensitivity: {sensitivity}")
-            print("  Alignment:")
-            print(alignment)
 
         return result
 
@@ -301,10 +364,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parse_args(argv)
 
     if args.dry_run:
-        print(f"Dry run: would calibrate {args.algo} sensors in {args.data_dir}")
+        print(f"Dry run: would calibrate in {args.data_dir}")
         return 0
 
-    result = run_calibration(args.algo, args.verbose)
+    result = run_calibration(args, args.verbose)
 
     if result:
         print("\nResults saved to stdout (pipe to file if needed)")
