@@ -84,14 +84,14 @@ def parse_jsonl(data):
 def run_calibration(args, verbose: bool):
     calibration = {
         "gyro": {
-            "bias": [],
-            "sensitivity": [],
-            "alignment": [],
+            "bias": [0, 0, 0],
+            "sensitivity": [1, 1, 1],
+            "alignment": [[1, 1, 1], [1, 1, 1], [1, 1, 1]],
         },
         "accel": {
-            "bias": [],
-            "sensitivity": [],
-            "alignment": [],
+            "bias": [0, 0, 0],
+            "sensitivity": [1, 1, 1],
+            "alignment": [[1, 1, 1], [1, 1, 1], [1, 1, 1]],
         },
         "mag": {
             "hard_iorn": [],
@@ -110,9 +110,12 @@ def run_calibration(args, verbose: bool):
 
     for ref_file in jsonl_files:
         schema, data = read_jsonl(str(ref_file))
-        recording_type = ""
+        reference_schema = None
         if schema and data:
-            recording_type = schema.get("recording_type")
+            reference_schema = schema.get("reference")
+            if not reference_schema:
+                print("could not parse file ", ref_file)
+                return calibration
         else:
             print("could not parse file ", ref_file)
             return calibration
@@ -123,49 +126,66 @@ def run_calibration(args, verbose: bool):
             "y": {"pos": [[]], "neg": [[]]},
             "z": {"pos": [[]], "neg": [[]]},
         }
-        references = {
-            "gyro": {"pos": [[]], "neg": [[]]},
-            "accel": {"pos": [[]], "neg": [[]]},
-            "mag": {"pos": [[]], "neg": [[]]},
+        accel_refs = {
+            "x": {"pos": [[]], "neg": [[]]},
+            "y": {"pos": [[]], "neg": [[]]},
+            "z": {"pos": [[]], "neg": [[]]},
         }
-        ref_force = schema.get("reference_force")
-
-        if ref_force == None:
-            print("error in metadata: format no reference force found")
-            return calibration
 
         # TODO: Add check for if the reference force is the same across files.
-        if "gyro" in str(recording_type):
+        if reference_schema.get("sensor") == "gyro":
             # Look for static file for gyro bias calibration (gyro ref with 0 force)
-            if ref_force == 0:
-                calibration["gyro"]["bias"] = cal_gyro.bias_calibration(
-                    axes["gyro"]
-                ).tolist()
-            elif ref_force > 0:
-                references["gyro"]["pos"] = axes["gyro"]
+            if reference_schema.get("force") == 0:
+                for i in range(3):
+                    calibration["gyro"]["bias"][i] = cal_gyro.bias_calibration(
+                        axes["gyro"][i]
+                    ).tolist()
+            elif reference_schema.get("force") > 0:
+                gyro_refs[reference_schema.get("axis")]["pos"] = axes["gyro"]
             else:
-                references["gyro"]["neg"] = axes["gyro"]
-        elif "accel" in str(recording_type):
+                gyro_refs[reference_schema.get("axis")]["neg"] = axes["gyro"]
+        elif reference_schema.get("sensor") == "accel":
             # Look for static file for gyro bias calibration while checking if already calculated (accel ref)
-            if ref_force == 0 and calibration["gyro"]["bias"] == []:
-                calibration["gyro"]["bias"] = cal_gyro.bias_calibration(
-                    axes["gyro"]
-                ).tolist()
-            elif ref_force > 0:
-                references["accel"]["pos"] = axes["accel"]
+            if reference_schema.get("force") == 0 and calibration["gyro"]["bias"] == [
+                0,
+                0,
+                0,
+            ]:
+                for i in range(3):
+                    calibration["gyro"]["bias"] = cal_gyro.bias_calibration(
+                        axes["gyro"][i]
+                    ).tolist()
+            elif reference_schema.get("force") > 0:
+                accel_refs[reference_schema.get("axis")]["pos"] = axes["accel"]
             else:
-                references["accel"]["neg"] = axes["accel"]
+                accel_refs[reference_schema.get("axis")]["neg"] = axes["accel"]
 
         # Run gyro and accel sensitivity calibration if positive and negative reference files are found.
-        if references["gyro"]["pos"] != [[]] and references["gyro"]["neg"] != [[]]:
-            calibration["gyro"]["sensitivity"] = cal_gyro.sensitivity_calibration(
-                references["gyro"]["pos"], references["gyro"]["pos"]
-            ).tolist()
+        axes_index = ("x", "y", "z")
+        for i in range(3):
+            if gyro_refs[axes_index[i]]["pos"] != [[]] and gyro_refs[axes_index[i]][
+                "neg"
+            ] != [[]]:
+                calibration["gyro"]["sensitivity"][i] = (
+                    cal_gyro.sensitivity_calibration(
+                        gyro_refs[axes_index[i]]["pos"],
+                        gyro_refs[axes_index[i]]["neg"],
+                    ).tolist()
+                )
 
-        if references["accel"]["pos"] != [[]] and references["accel"]["neg"] != [[]]:
-            calibration["accel"]["sensitivity"] = cal_accel.sensitivity_calibration(
-                references["accel"]["pos"], references["accel"]["pos"]
-            ).tolist()
+            if accel_refs[axes_index[i]]["pos"] != [[]] and accel_refs[axes_index[i]][
+                "neg"
+            ] != [[]]:
+                calibration["accel"]["bias"][i] = cal_accel.bias_calibration(
+                    accel_refs[axes_index[i]]["pos"],
+                    accel_refs[axes_index[i]]["neg"],
+                ).tolist()
+                calibration["accel"]["sensitivity"][i] = (
+                    cal_accel.sensitivity_calibration(
+                        accel_refs[axes_index[i]]["pos"],
+                        accel_refs[axes_index[i]]["neg"],
+                    ).tolist()
+                )
 
     return calibration
 
@@ -181,6 +201,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     result = run_calibration(args, args.verbose)
 
     if result:
+        print(result)
+
+    if result and False:
         print("\nResults saved to stdout (pipe to file if needed)")
         print(json.dumps(result, indent=2))
         return 0
