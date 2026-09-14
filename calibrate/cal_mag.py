@@ -2,11 +2,9 @@
 Magnetometer calibration implementation per calibration_formulas.md.
 
 Input format:
-- pos_refs: list of [xs, ys, zs] arrays from positive magnetic field datasets
-- neg_refs: list of [xs, ys, zs] arrays from negative magnetic field datasets
-- ellipsoid_data: list of [xs, ys, zs] arrays for ellipsoid fitting datasets
-
-Each sub-list contains all measurements for one axis across all samples.
+- pos_refs: list of numpy arrays from positive magnetic field references (e.g., mx+, my+, mz+)
+- neg_refs: list of numpy arrays from negative magnetic field references (e.g., mx-, my-, mz-)
+- ellipsoid_data: list of numpy arrays for ellipsoid fitting (m1, m2, m3, m4, m5)
 
 Output:
 - offset: 1x3 numpy array (hard-iron bias)
@@ -32,28 +30,25 @@ def read_data(file):
 def offset_calibration(pos_refs, neg_refs, magnetic_field=0.520411):
     """
     Calibration Method 1: Offset (hard-iron only).
-
+    
     Removes constant magnetic offset. Simplest calibration.
     """
-    # pos_refs and neg_refs are lists of [xs, ys, zs] arrays
-    h_measured = np.zeros(3)
-    for axis in range(3):
-        # Stack all values for this axis across all refs
-        all_refs = np.vstack(pos_refs[axis] + neg_refs[axis])
-        # Mean for this axis
-        h_measured[axis] = np.mean(all_refs)
+    # Stack all reference measurements
+    all_refs = np.vstack(pos_refs + neg_refs)
 
+    # Compute mean magnetic field offset
+    h_measured = np.mean(all_refs, axis=0)
+
+    # Return the offset to subtract from raw measurements
     return h_measured
 
 
 def ellipsoid_calibration(ellipsoid_data, magnetic_field=0.520411):
     """
     Calibration Method 2: Ellipsoid (soft-iron only).
-
+    
     Fits an ellipsoid to magnetometer measurements to correct scaling and
     cross-axis coupling.
-
-    ellipsoid_data: list of [xs, ys, zs] arrays, one per ellipsoid dataset
     """
     # Stack all ellipsoid calibration data
     dataset = np.vstack(ellipsoid_data)
@@ -115,55 +110,50 @@ def ellipsoid_calibration(ellipsoid_data, magnetic_field=0.520411):
 
     # Scale ellipsoid to match reference magnetic field (Eq 6.17)
     # Use each eigenvalue for its corresponding axis
-    soft_iron = evecs.T @ np.diag([magnetic_field / radii[0],
+    soft_iorn = evecs.T @ np.diag([magnetic_field / radii[0],
                                    magnetic_field / radii[1],
                                    magnetic_field / radii[2]]) @ evecs
 
     # Compute hard-iron bias as offset of ellipsoid center
-    hard_iron = soft_iron @ center
+    hard_iorn = soft_iorn @ center
 
-    return soft_iron, np.array([hard_iron[0][0], hard_iron[1][0], hard_iron[2][0]])
+    return soft_iorn, np.array([hard_iorn[0][0], hard_iorn[1][0], hard_iorn[2][0]])
 
 
-def alignment_calibration(pos_refs, neg_refs, ellipsoid_data=None):
+def alignment_calibration(pos_refs, neg_refs, ellipsoid_files=None):
     """
     Calibration Method 3: Alignment (full calibration).
-
+    
     Complete calibration with hard-iron bias, soft-iron scaling/coupling,
     and axis alignment.
-
-    pos_refs, neg_refs: lists of [xs, ys, zs] arrays for +/- magnetic references
-    ellipsoid_data: list of [xs, ys, zs] arrays for ellipsoid fit (optional)
     """
-    if ellipsoid_data is None:
-        # Default to offset calibration only
-        soft_iron, hard_iron = offset_calibration(pos_refs, neg_refs)
-    else:
-        # Use ellipsoid fit for soft-iron parameters
-        soft_iron, hard_iron = ellipsoid_calibration(ellipsoid_data)
+    if ellipsoid_files is None:
+        ellipsoid_files = ["m1", "m2", "m3", "m4", "m5"]
+
+    # Get initial soft-iron and hard-iron parameters from ellipsoid fit
+    init_soft_iorn, init_hard_iorn = ellipsoid_calibration(
+        [read_data(os.path.join(drone_cal_dir, f)) for f in ellipsoid_files],
+        magnetic_field=0.520411
+    )
 
     # Process each axis separately
     v = np.array([])
 
     for axis in range(3):
-        cal_points = np.array([])
-        if cal_points.size == 0:
-            # Use offset calibration as base for each axis
-            pos_all = np.vstack(pos_refs[axis])
-            neg_all = np.vstack(neg_refs[axis])
-            all_refs = np.vstack([pos_all, neg_all])
-            cal_points = calibrate(all_refs, soft_iron, hard_iron)
+        dataset = np.array([])
+        if dataset.size == 0:
+            dataset = calibrate(read_data(os.path.join(drone_cal_dir, pos_refs[axis])),
+                               init_soft_iorn, init_hard_iorn)
         else:
-            # Stack all ref points for this axis
-            pos_all = np.vstack(pos_refs[axis])
-            neg_all = np.vstack(neg_refs[axis])
-            all_refs = np.vstack([pos_all, neg_all])
-            cal_points = calibrate(all_refs, soft_iron, hard_iron)
+            dataset = np.append(dataset,
+                               calibrate(read_data(os.path.join(drone_cal_dir, pos_refs[axis])),
+                                        init_soft_iorn, init_hard_iorn),
+                               axis=0)
 
         # Store calibrated values for this axis
-        x = cal_points[:, 0]
-        y = cal_points[:, 1]
-        z = cal_points[:, 2]
+        x = dataset[:, 0]
+        y = dataset[:, 1]
+        z = dataset[:, 2]
 
         M = np.column_stack([x, y, z])
 
@@ -180,22 +170,22 @@ def alignment_calibration(pos_refs, neg_refs, ellipsoid_data=None):
                   v[2] / la.norm(v[2])])
 
     # Transform soft-iron and hard-iron parameters into aligned frame
-    S = R.transpose() @ soft_iron
-    H = R.transpose() @ hard_iron
+    S = R.transpose() @ init_soft_iorn
+    H = R.transpose() @ init_hard_iorn
 
     return S, H
 
 
-def calibrate(points, soft_iron, hard_iron):
+def calibrate(points, soft_iorn, hard_iorn):
     """Apply soft-iron and hard-iron calibration to raw measurements."""
     return_list = np.array([])
 
     for i in range(len(points)):
         if return_list.size == 0:
-            return_list = np.array([np.dot(soft_iron, points[i]) - hard_iron])
+            return_list = np.array([np.dot(soft_iorn, points[i]) - hard_iorn])
         else:
             return_list = np.append(return_list,
-                                   [np.dot(soft_iron, points[i]) - hard_iron],
+                                   [np.dot(soft_iorn, points[i]) - hard_iorn],
                                    axis=0)
 
     return return_list
