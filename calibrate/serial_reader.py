@@ -186,30 +186,25 @@ def parse_serial_line(line: str) -> Optional[Dict[str, Any]]:
             mag = [float(parts[6]), float(parts[7]), float(parts[8])]
             has_timestamp = False
 
-        elif len(parts) == 6:
-            # Format: gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z
-            gyro = [float(parts[0]), float(parts[1]), float(parts[2])]
-            accel = [float(parts[3]), float(parts[4]), float(parts[5])]
+        elif len(parts) == 7:
+            # Format: timestamp, gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z
+            timestamp = float(parts[0]) if parts[0] else None
+            gyro = [float(parts[1]), float(parts[2]), float(parts[3])]
+            accel = [float(parts[4]), float(parts[5]), float(parts[6])]
             mag = [0.0, 0.0, 0.0]  # No magnetometer data
-            has_timestamp = False
+            has_timestamp = timestamp is not None
 
         else:
             return None
 
         record = {
-            "gyro_x": gyro[0],
-            "gyro_y": gyro[1],
-            "gyro_z": gyro[2],
-            "accel_x": accel[0],
-            "accel_y": accel[1],
-            "accel_z": accel[2],
-            "mag_x": mag[0],
-            "mag_y": mag[1],
-            "mag_z": mag[2],
+            "gyro": gyro,
+            "accel": accel,
+            "mag": mag,
         }
 
         if has_timestamp:
-            record["timestamp_ms"] = timestamp
+            record["timestamp_ms"] = timestamp  # type: ignore[assignment]
 
         return record
 
