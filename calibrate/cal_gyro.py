@@ -24,16 +24,15 @@ def read_data(file):
     return np.array(gyro_data) if gyro_data else np.array([])
 
 
-def bias_calibration(pos_refs, neg_refs):
+def bias_calibration(refs):
     """
     Eq 6.4.1: b_ω = mean(u_ω) while stationary.
 
-    For gyro, we average the zero-rate outputs from both positive and negative
-    reference positions. Since both are at ω ≈ 0, their average converges to
-    the true bias.
+    For gyro, average the zero-rate outputs from a single static reference
+    position. Since ω ≈ 0, this converges to the true bias.
     """
-    # Stack all reference measurements into a single array
-    all_zero = np.vstack(pos_refs + neg_refs)
+    # Stack all measurements into a single array
+    all_zero = np.vstack(refs)
 
     # Compute mean across all samples (Eq 6.4.1)
     bias = np.mean(all_zero, axis=0)

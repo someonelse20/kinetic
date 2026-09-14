@@ -84,8 +84,7 @@ def group_files_by_type(
             schema, data = read_jsonl(str(filepath))
             # Check metadata in data records for recording_type or data_type
             if data and schema:
-                meta = schema.get("_schema", {})
-                file_type = meta.get("recording_type", meta.get("data_type", ""))
+                file_type = schema.get("recording_type")
             else:
                 file_type = ""
 
@@ -228,61 +227,115 @@ def run_calibration(args, verbose: bool) -> Optional[Dict[str, Any]]:
         # Determine which modules/functions to use based on sensor selection
         if args.sensor == "accel":
             import cal_accel
+
             bias_func = cal_accel.bias_calibration
             sens_func = cal_accel.sensitivity_calibration
             align_func = lambda pos, neg: None  # stub - not implemented in cal_accel
             sensor_name = "accel"
         elif args.sensor == "gyro":
             import cal_gyro
-            bias_func = cal_gyro.bias_calibration
-            sens_func = cal_gyro.sensitivity_calibration
-            align_func = lambda pos, neg: None  # stub - not implemented in cal_gyro
-            sensor_name = "gyro"
+
+            # For gyro bias-only calibration, we only need a single reference set
+            calibrate_dir = Path(__file__).resolve().parent
+            jsonl_files = list(calibrate_dir.glob("*.jsonl")) + list(
+                calibrate_dir.glob("*.JSONL")
+            )
+
+            if not jsonl_files:
+                print(f"No JSONL files found in {calibrate_dir}")
+                return None
+
+            if args.dry_run:
+                print(f"Would process {len(jsonl_files)} file(s)")
+                return None
+
+            # Group files
+            ref_files, meas_files = group_files_by_type(jsonl_files, verbose)
+
+            if not ref_files:
+                print(
+                    f"No reference files found for gyro. Please add files with recording_type=gyro_ref_* in metadata."
+                )
+                return None
+
+            if verbose:
+                print(f"Reference files: {[f.name for f in ref_files]}")
+
+            # Extract reference arrays (only positive refs for gyro bias)
+            positive_refs, _ = extract_reference_arrays(ref_files, verbose)
+
+            if not positive_refs:
+                print(
+                    "Could not extract reference arrays. Check file metadata for recording_type and reference_force."
+                )
+                return None
+
+            result: Dict[str, Any] = {
+                "sensor": "gyro",
+                "reference_files": [str(f) for f in ref_files],
+                "measurement_files": [str(f) for f in meas_files],
+            }
+
+            if args.output in ("bias", "all"):
+                bias = cal_gyro.bias_calibration(positive_refs)
+                result["bias"] = bias.tolist() if hasattr(bias, "tolist") else bias
+                if verbose:
+                    print(f"  Bias: {bias}")
+
+            if args.output in ("sensitivity", "all"):
+                # Sensitivity calibration not enabled for single-ref mode
+                if verbose:
+                    print("  Sensitivity: skipped (requires positive + negative refs)")
+
+            if verbose:
+                print("Calibration complete:")
+
+            return result
         else:  # all
             import cal_accel
-            bias_func_accel = cal_accel.bias_calibration
-            sens_func_accel = cal_accel.sensitivity_calibration
-            
             import cal_gyro
-            bias_func_gyro = cal_gyro.bias_calibration
-            sens_func_gyro = cal_gyro.sensitivity_calibration
-            
-            # Run both sensors
+
             ref_files, meas_files = group_files_by_type(jsonl_files, verbose)
             positive_refs, negative_refs = extract_reference_arrays(ref_files, verbose)
-            
+
             if not positive_refs or not negative_refs:
                 print(
                     "Could not extract reference arrays. Check file metadata for recording_type and reference_force."
                 )
                 return None
-            
+
             # Compute for accel
             if args.output in ("bias", "all"):
-                bias = bias_func_accel(positive_refs, negative_refs)
-                result["accel_bias"] = bias.tolist() if hasattr(bias, "tolist") else bias
+                bias = cal_accel.bias_calibration(positive_refs, negative_refs)
+                result["accel_bias"] = (
+                    bias.tolist() if hasattr(bias, "tolist") else bias
+                )
                 if verbose:
                     print(f"  [accel] Bias: {bias}")
-            
+
             if args.output in ("sensitivity", "all"):
-                sens = sens_func_accel(positive_refs, negative_refs)
-                result["accel_sensitivity"] = sens.tolist() if hasattr(sens, "tolist") else sens
+                sens = cal_accel.sensitivity_calibration(positive_refs, negative_refs)
+                result["accel_sensitivity"] = (
+                    sens.tolist() if hasattr(sens, "tolist") else sens
+                )
                 if verbose:
                     print(f"  [accel] Sensitivity: {sens}")
-            
-            # Compute for gyro
+
+            # Compute for gyro - single ref for bias
             if args.output in ("bias", "all"):
-                bias = bias_func_gyro(positive_refs, negative_refs)
+                bias = cal_gyro.bias_calibration(positive_refs)
                 result["gyro_bias"] = bias.tolist() if hasattr(bias, "tolist") else bias
                 if verbose:
                     print(f"  [gyro] Bias: {bias}")
-            
+
             if args.output in ("sensitivity", "all"):
-                sens = sens_func_gyro(positive_refs, negative_refs)
-                result["gyro_sensitivity"] = sens.tolist() if hasattr(sens, "tolist") else sens
+                sens = cal_gyro.sensitivity_calibration(positive_refs, negative_refs)
+                result["gyro_sensitivity"] = (
+                    sens.tolist() if hasattr(sens, "tolist") else sens
+                )
                 if verbose:
                     print(f"  [gyro] Sensitivity: {sens}")
-            
+
             if verbose:
                 print("Calibration complete:")
             return result
@@ -313,10 +366,10 @@ def run_calibration(args, verbose: bool) -> Optional[Dict[str, Any]]:
         if verbose:
             print(f"Reference files: {[f.name for f in ref_files]}")
 
-        # Extract reference arrays
-        positive_refs, negative_refs = extract_reference_arrays(ref_files, verbose)
+        # Extract reference arrays (only positive refs for gyro bias)
+        positive_refs, _ = extract_reference_arrays(ref_files, verbose)
 
-        if not positive_refs or not negative_refs:
+        if not positive_refs:
             print(
                 "Could not extract reference arrays. Check file metadata for recording_type and reference_force."
             )
@@ -329,21 +382,15 @@ def run_calibration(args, verbose: bool) -> Optional[Dict[str, Any]]:
         }
 
         if args.output in ("bias", "all"):
-            bias = bias_func(positive_refs, negative_refs)
+            bias = bias_func(positive_refs)
             result["bias"] = bias.tolist() if hasattr(bias, "tolist") else bias
             if verbose:
                 print(f"  Bias: {bias}")
 
         if args.output in ("sensitivity", "all"):
-            sensitivity = sens_func(positive_refs, negative_refs)
-            result["sensitivity"] = sensitivity.tolist() if hasattr(sensitivity, "tolist") else sensitivity
+            # Sensitivity calibration not enabled for single-ref mode
             if verbose:
-                print(f"  Sensitivity: {sensitivity}")
-
-        if args.output in ("alignment", "all"):
-            # Alignment not implemented in calibration modules
-            if verbose:
-                print("  Alignment: not implemented (stub)")
+                print("  Sensitivity: skipped (requires positive + negative refs)")
 
         if verbose:
             print("Calibration complete:")
