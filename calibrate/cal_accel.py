@@ -2,8 +2,10 @@
 Accelerometer calibration implementation per calibration_formulas.md.
 
 Input format:
-- pos_refs: list of numpy arrays from +1g reference files (e.g., ax+, ay+, az+)
-- neg_refs: list of numpy arrays from -1g reference files (e.g., ax-, ay-, az-)
+- pos_refs: list of [xs, ys, zs] arrays from +1g reference datasets
+- neg_refs: list of [xs, ys, zs] arrays from -1g reference datasets
+
+Each sub-list contains all measurements for one axis across all samples.
 
 Output:
 - bias: 1x3 numpy array (mean output at zero-g)
@@ -31,23 +33,21 @@ def bias_calibration(pos_refs, neg_refs):
     For each axis, average the outputs at +1g and -1g references. The mean of
     these two opposites converges to the true zero-g bias.
     """
-    # Compute mean per axis for positive refs
-    pos_means = np.zeros((len(pos_refs), 3))
-    for idx, pos_ref in enumerate(pos_refs):
-        pos_means[idx] = np.mean(pos_ref, axis=0)
-    
-    # Compute mean per axis for negative refs
-    neg_means = np.zeros((len(neg_refs), 3))
-    for idx, neg_ref in enumerate(neg_refs):
-        neg_means[idx] = np.mean(neg_ref, axis=0)
-    
-    # Average across all positive refs (for each axis)
-    avg_plus = np.mean(pos_means, axis=0)
-    # Average across all negative refs (for each axis)
-    avg_minus = np.mean(neg_means, axis=0)
-    
-    # Eq 6.8: (u_+g + u_-g) / 2
-    bias = (avg_plus + avg_minus) / 2.0
+    # pos_refs and neg_refs are lists of [xs, ys, zs] arrays
+    bias = np.zeros(3)
+    for axis in range(3):
+        # Get all positive ref values for this axis
+        pos_all = np.vstack(pos_refs[axis])
+        # Get all negative ref values for this axis
+        neg_all = np.vstack(neg_refs[axis])
+
+        # Average across positive refs for this axis
+        avg_plus = np.mean(pos_all)
+        # Average across negative refs for this axis
+        avg_minus = np.mean(neg_all)
+
+        # Eq 6.8: (u_+g + u_-g) / 2
+        bias[axis] = (avg_plus + avg_minus) / 2.0
 
     return bias
 
@@ -59,22 +59,18 @@ def sensitivity_calibration(pos_refs, neg_refs, g_ref=1.0):
     For each axis, average the outputs at +1g and -1g, take absolute values,
     sum them, and divide by 2 * reference gravity.
     """
-    # Compute mean per axis for positive refs
-    pos_means = np.zeros((len(pos_refs), 3))
-    for idx, pos_ref in enumerate(pos_refs):
-        pos_means[idx] = np.mean(pos_ref, axis=0)
-    
-    # Compute mean per axis for negative refs
-    neg_means = np.zeros((len(neg_refs), 3))
-    for idx, neg_ref in enumerate(neg_refs):
-        neg_means[idx] = np.mean(neg_ref, axis=0)
-    
-    # Average across all positive refs (for each axis)
-    avg_plus = np.mean(pos_means, axis=0)
-    # Average across all negative refs (for each axis)
-    avg_minus = np.mean(neg_means, axis=0)
-    
-    # Eq 6.5.2: use absolute values of both polarities
-    sensitivity = (np.abs(avg_plus) + np.abs(avg_minus)) / (2 * g_ref)
+    sensitivity = np.zeros(3)
+    for axis in range(3):
+        # Get all positive ref values for this axis
+        pos_all = np.vstack(pos_refs[axis])
+        # Get all negative ref values for this axis
+        neg_all = np.vstack(neg_refs[axis])
+
+        # Average across positive and negative refs for this axis
+        avg_plus = np.mean(pos_all)
+        avg_minus = np.mean(neg_all)
+
+        # Eq 6.5.2: use absolute values of both polarities
+        sensitivity[axis] = (np.abs(avg_plus) + np.abs(avg_minus)) / (2 * g_ref)
 
     return sensitivity
