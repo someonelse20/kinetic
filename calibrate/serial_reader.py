@@ -47,7 +47,7 @@ DEFAULT_METADATA: Dict[str, Any] = {
     "unit_gyro": "deg/s",
     "unit_mag": "gauss",
     "recording_type": "general",
-    "reference_force": 0,
+    "reference": {"sensor": None, "axis": None, "force": 0.0},
 }
 
 
@@ -241,9 +241,9 @@ def write_jsonl(filepath: str, records: List[Dict[str, Any]], metadata: Optional
 
 
 def build_metadata(
-    args: argparse.Namespace, reference_force: Optional[str] = None
+    args: argparse.Namespace, reference: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """Build metadata from arguments, including reference force if specified."""
+    """Build metadata from arguments, including reference dict if specified."""
     # Start with defaults
     metadata: Dict[str, Any] = DEFAULT_METADATA.copy()
     
@@ -256,9 +256,9 @@ def build_metadata(
     if "recording_type" not in metadata:
         metadata["recording_type"] = DEFAULT_METADATA["recording_type"]
     
-    # If reference_force is specified, it overrides any existing force value
-    if reference_force:
-        metadata["reference_force"] = reference_force
+    # If reference dict is specified, it overrides any existing reference value
+    if reference:
+        metadata["reference"] = reference
     
     return metadata
 
