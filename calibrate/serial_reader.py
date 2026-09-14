@@ -46,7 +46,6 @@ DEFAULT_METADATA: Dict[str, Any] = {
     "unit_accel": "g",
     "unit_gyro": "deg/s",
     "unit_mag": "gauss",
-    "recording_type": "general",
     "reference": {"sensor": None, "axis": None, "force": 0.0},
 }
 
@@ -251,10 +250,6 @@ def build_metadata(
     for key_value in args.metadata or []:
         key, value = key_value
         metadata[key] = value
-    
-    # Override recording_type if explicitly set, otherwise use default
-    if "recording_type" not in metadata:
-        metadata["recording_type"] = DEFAULT_METADATA["recording_type"]
     
     # If reference dict is specified, it overrides any existing reference value
     if reference:

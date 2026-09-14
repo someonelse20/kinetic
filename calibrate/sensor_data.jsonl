@@ -1,4 +1,4 @@
-{"_schema": {"sensor_id": "LSM9DS1", "sample_rate_hz": 14, "unit_accel": "g", "unit_gyro": "deg/s", "unit_mag": "gauss", "recording_type": "gyro_ref", "reference_force": 0}}
+{"_schema": {"sensor_id": "unknown", "sample_rate_hz": 100, "unit_accel": "g", "unit_gyro": "deg/s", "unit_mag": "gauss", "reference": {"sensor": "gyro", "axis": null, "force": 0.0}}}
 {"gyro": [3.4475, -0.8575, 0.1575], "accel": [-0.059292, 0.009516, 0.970876], "mag": [-0.10449, 0.01677, 1.71097]}
 {"gyro": [3.3075, -0.9975, 0.0875], "accel": [-0.061488, 0.009516, 0.975268], "mag": [-0.21844, 0.01677, 1.72774]}
 {"gyro": [3.3775, -0.945, 0.21], "accel": [-0.061732, 0.008784, 0.973316], "mag": [-0.11567, 0.01548, 1.71527]}
