@@ -65,23 +65,109 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def sort_files(jsonl_files: List[Path], verbose: bool):
-    files = {}
-    for filepath in jsonl_files:
-        schema, data = read_jsonl(str(filepath))
-        recording_type = ""
-
-        if data and schema:
-            recording_type = schema.get("recording_type")
-            files[recording_type] = filepath
-        else:
-            print("could not parse recording type")
-
-    return files
+def parse_jsonl(data):
+    axes = {
+        "gyro": [[], [], []],
+        "accel": [[], [], []],
+        "mag": [[], [], []],
+    }
+    axes_index = ("x", "y", "z")
+    for rec in data:
+        for sensor in ("gyro", "accel", "mag"):
+            for i in range(3):
+                key = f"{sensor}"
+                if key in rec:
+                    axes[sensor][i].append(float(rec[key][i]))
+    return axes
 
 
 def run_calibration(args, verbose: bool):
-    pass
+    calibration = {
+        "gyro": {
+            "bias": [],
+            "sensitivity": [],
+            "alignment": [],
+        },
+        "accel": {
+            "bias": [],
+            "sensitivity": [],
+            "alignment": [],
+        },
+        "mag": {
+            "hard_iorn": [],
+            "soft_iorn": [],
+        },
+    }
+
+    calibrate_dir = Path(__file__).resolve().parent
+    jsonl_files = list(calibrate_dir.glob("*.jsonl")) + list(
+        calibrate_dir.glob("*.JSONL")
+    )
+
+    if not jsonl_files:
+        print(f"No JSONL files found in {calibrate_dir}")
+        return None
+
+    for ref_file in jsonl_files:
+        schema, data = read_jsonl(str(ref_file))
+        recording_type = ""
+        if schema and data:
+            recording_type = schema.get("recording_type")
+        else:
+            print("could not parse file ", ref_file)
+            return calibration
+
+        axes = parse_jsonl(data)
+        gyro_refs = {
+            "x": {"pos": [[]], "neg": [[]]},
+            "y": {"pos": [[]], "neg": [[]]},
+            "z": {"pos": [[]], "neg": [[]]},
+        }
+        references = {
+            "gyro": {"pos": [[]], "neg": [[]]},
+            "accel": {"pos": [[]], "neg": [[]]},
+            "mag": {"pos": [[]], "neg": [[]]},
+        }
+        ref_force = schema.get("reference_force")
+
+        if ref_force == None:
+            print("error in metadata: format no reference force found")
+            return calibration
+
+        # TODO: Add check for if the reference force is the same across files.
+        if "gyro" in str(recording_type):
+            # Look for static file for gyro bias calibration (gyro ref with 0 force)
+            if ref_force == 0:
+                calibration["gyro"]["bias"] = cal_gyro.bias_calibration(
+                    axes["gyro"]
+                ).tolist()
+            elif ref_force > 0:
+                references["gyro"]["pos"] = axes["gyro"]
+            else:
+                references["gyro"]["neg"] = axes["gyro"]
+        elif "accel" in str(recording_type):
+            # Look for static file for gyro bias calibration while checking if already calculated (accel ref)
+            if ref_force == 0 and calibration["gyro"]["bias"] == []:
+                calibration["gyro"]["bias"] = cal_gyro.bias_calibration(
+                    axes["gyro"]
+                ).tolist()
+            elif ref_force > 0:
+                references["accel"]["pos"] = axes["accel"]
+            else:
+                references["accel"]["neg"] = axes["accel"]
+
+        # Run gyro and accel sensitivity calibration if positive and negative reference files are found.
+        if references["gyro"]["pos"] != [[]] and references["gyro"]["neg"] != [[]]:
+            calibration["gyro"]["sensitivity"] = cal_gyro.sensitivity_calibration(
+                references["gyro"]["pos"], references["gyro"]["pos"]
+            ).tolist()
+
+        if references["accel"]["pos"] != [[]] and references["accel"]["neg"] != [[]]:
+            calibration["accel"]["sensitivity"] = cal_accel.sensitivity_calibration(
+                references["accel"]["pos"], references["accel"]["pos"]
+            ).tolist()
+
+    return calibration
 
 
 def main(argv: Optional[List[str]] = None) -> int:
