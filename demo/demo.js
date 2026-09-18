@@ -143,14 +143,18 @@
             0
         ];
         
-        state.quaternion = normalizeQuaternion([
+        const newQ = [
             q[0] + dq[0],
             q[1] + dq[1],
             q[2] + dq[2],
             q[3]
-        ]);
+        ];
+        
+        state.quaternion = normalizeQuaternion(newQ);
         
         state.rotationMatrix = qToRotationMatrix(state.quaternion);
+        
+        return eulerFromQuaternion(state.quaternion);
     }
 
     function eulerFromQuaternion(q) {
@@ -397,13 +401,14 @@
         setStatus(`Loaded ${data.length} data points. Running EKF...`, 'info');
     });
 
-    // Animation Loop
+    // Animation Loop - processes one measurement per frame
     function animate() {
         if (!state.running) {
             requestAnimationFrame(animate);
             return;
         }
         
+        // Process next measurement if available
         if (state.dataIndex < state.measuredData.length) {
             const measurement = state.measuredData[state.dataIndex];
             state.time = measurement.time;
@@ -411,16 +416,15 @@
             predict(0.1);
             update(measurement);
             
+            // Store for chart
             state.estimatedData.push({ time: state.time, yaw: eulerFromQuaternion(state.quaternion)[2] });
-            state.trueData.push({ time: state.time, yaw: measurement.trueYaw });
+            if (state.trueData.length === state.dataIndex) {
+                state.trueData.push({ time: state.time, yaw: measurement.trueYaw });
+            }
             
             state.dataIndex++;
-        } else if (state.paused) {
-            // Paused, wait for resume
-            requestAnimationFrame(animate);
-            return;
         } else {
-            state.running = false;
+            // Finished all data - keep running for live/demo mode
         }
         
         updateDisplay();
