@@ -13,6 +13,7 @@
         covarR: new Array(3 * 3).fill(0),
         time: 0,
         running: false,
+        paused: false,
         dataIndex: 0,
         measuredData: [],
         trueData: [],
@@ -288,7 +289,7 @@
         document.getElementById('btn-stop').disabled = true;
         document.getElementById('btn-reset').disabled = true;
         
-        setStatus('Loading sample data...', 'info');
+        setStatus('Running EKF...', 'info');
     });
 
     document.getElementById('btn-live').addEventListener('click', () => {
@@ -304,9 +305,27 @@
     });
 
     document.getElementById('btn-stop').addEventListener('click', () => {
-        state.running = false;
-        setStatus('Demo paused', 'info');
+        if (!state.running) return;
+        
+        state.paused = true;
+        document.getElementById('btn-sample').disabled = true;
+        document.getElementById('btn-live').disabled = true;
         document.getElementById('btn-stop').disabled = true;
+        document.getElementById('btn-reset').disabled = true;
+        
+        setStatus('Paused', 'info');
+    });
+    
+    document.getElementById('btn-resume').addEventListener('click', () => {
+        if (!state.paused) return;
+        
+        state.paused = false;
+        document.getElementById('btn-sample').disabled = true;
+        document.getElementById('btn-live').disabled = true;
+        document.getElementById('btn-stop').disabled = false;
+        document.getElementById('btn-reset').disabled = true;
+        
+        setStatus('Running', 'info');
     });
 
     document.getElementById('btn-reset').addEventListener('click', () => {
@@ -385,22 +404,21 @@
             return;
         }
         
-        // Simulate sensor updates
         if (state.dataIndex < state.measuredData.length) {
             const measurement = state.measuredData[state.dataIndex];
             state.time = measurement.time;
             
-            // Predict
             predict(0.1);
-            
-            // Update
             update(measurement);
             
-            // Store
             state.estimatedData.push({ time: state.time, yaw: eulerFromQuaternion(state.quaternion)[2] });
             state.trueData.push({ time: state.time, yaw: measurement.trueYaw });
             
             state.dataIndex++;
+        } else if (state.paused) {
+            // Paused, wait for resume
+            requestAnimationFrame(animate);
+            return;
         } else {
             state.running = false;
         }
