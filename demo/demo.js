@@ -294,7 +294,12 @@
     document.getElementById('btn-live').addEventListener('click', () => {
         if (!state.running) {
             // Start live demo from current state
-            setStatus('Live demo started', 'info');
+            state.running = true;
+            document.getElementById('btn-sample').disabled = true;
+            document.getElementById('btn-live').disabled = true;
+            document.getElementById('btn-stop').disabled = false;
+            document.getElementById('btn-reset').disabled = true;
+            setStatus('Live demo running', 'info');
         }
     });
 
@@ -403,8 +408,9 @@
         updateDisplay();
         requestAnimationFrame(animate);
     }
-
-    // Initialize
+    
+    // Initialize - start animation loop immediately
+    requestAnimationFrame(animate);
     setStatus('Ready. Click "Load Sample Data" to begin.', 'info');
 })();
 
