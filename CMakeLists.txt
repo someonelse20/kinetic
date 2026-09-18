@@ -4,8 +4,8 @@ project(Kinetic VERSION 0.1.0 LANGUAGES CXX C)
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/inc)
 
-# Kinetic library (core C code)
-add_library(kinetic STATIC ${CMAKE_SOURCE_DIR}/src/kin_error.c ${CMAKE_SOURCE_DIR}/src/kin_math.c ${CMAKE_SOURCE_DIR}/src/kin_ekf.c ${CMAKE_SOURCE_DIR}/src/kin_imu.c)
+# Kinetic library (core C code) - build as shared library for Python ctypes
+add_library(kinetic SHARED ${CMAKE_SOURCE_DIR}/src/kin_error.c ${CMAKE_SOURCE_DIR}/src/kin_math.c ${CMAKE_SOURCE_DIR}/src/kin_ekf.c ${CMAKE_SOURCE_DIR}/src/kin_imu.c)
 target_include_directories(kinetic PUBLIC ${CMAKE_SOURCE_DIR}/kinetic/inc)
 target_link_libraries(kinetic PRIVATE m)
 
