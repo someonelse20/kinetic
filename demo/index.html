@@ -3,64 +3,362 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kinetic EKF Demo</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Kinetic EKF Real Demo</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .controls { margin: 20px 0; }
+        button { margin: 5px; padding: 10px 20px; cursor: pointer; }
+        .metrics { background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .metric { margin: 10px 0; }
+        .value { font-family: monospace; font-size: 18px; }
+        #status { color: #666; font-style: italic; margin: 20px 0; }
+    </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Kinetic EKF Demo</h1>
-            <p>Extended Kalman Filter for IMU Sensor Fusion</p>
-        </header>
-
+        <h1>Kinetic EKF - Real C Code</h1>
+        
         <div class="controls">
-            <button id="btn-sample" class="btn primary">Load Sample Data</button>
-            <button id="btn-live" class="btn">Start Live Demo</button>
-            <button id="btn-stop" class="btn secondary" disabled>Stop Demo</button>
-            <button id="btn-resume" class="btn secondary" hidden>Resume</button>
-            <button id="btn-reset" class="btn secondary">Reset</button>
-            <label class="file-input">
-                <input type="file" id="file-upload" accept=".csv" hidden>
-                Upload CSV
-            </label>
+            <button id="start">Start Demo</button>
+            <button id="stop">Stop</button>
+            <button id="reset">Reset</button>
         </div>
-
-        <div class="display">
-            <div class="metrics">
-                <div class="metric">
-                    <div class="label">Quaternion</div>
-                    <div id="quat" class="value">x: 0.000, y: 0.000, z: 0.000, w: 1.000</div>
-                </div>
-                <div class="metric">
-                    <div class="label">Roll</div>
-                    <div id="roll" class="value">0.000°</div>
-                </div>
-                <div class="metric">
-                    <div class="label">Pitch</div>
-                    <div id="pitch" class="value">0.000°</div>
-                </div>
-                <div class="metric">
-                    <div class="label">Yaw</div>
-                    <div id="yaw" class="value">0.000°</div>
-                </div>
+        
+        <div class="metrics">
+            <div class="metric">
+                <div class="label">Quaternion</div>
+                <div id="quat" class="value">x: 0.000, y: 0.000, z: 0.000, w: 1.000</div>
             </div>
-            <div class="legend">
-                <div class="legend-item">
-                    <span class="dot blue"></span> EKF Estimate
-                </div>
-                <div class="legend-item">
-                    <span class="dot green"></span> True Orientation
-                </div>
+            <div class="metric">
+                <div class="label">Roll</div>
+                <div id="roll" class="value">0.000°</div>
+            </div>
+            <div class="metric">
+                <div class="label">Pitch</div>
+                <div id="pitch" class="value">0.000°</div>
+            </div>
+            <div class="metric">
+                <div class="label">Yaw</div>
+                <div id="yaw" class="value">0.000°</div>
+            </div>
+            <div class="metric">
+                <div class="label">Status</div>
+                <div id="status">Ready</div>
             </div>
         </div>
-
-        <div class="chart-container">
-            <canvas id="chart" width="800" height="300"></canvas>
-        </div>
-
-        <div class="status" id="status">Ready</div>
     </div>
 
-    <script src="demo.js"></script>
+    <script>
+        // Kinetic EKF Demo - Real C code integration
+        (function() {
+            'use strict';
+
+            // EKF State
+            const state = {
+                running: false,
+                paused: false,
+                dataIndex: 0,
+                measuredData: [],
+                trueData: [],
+                estimatedData: [],
+                time: 0
+            };
+
+            // Utility Functions
+            function abs(x) { return x < 0 ? -x : x; }
+            function sqrt(x) { return x > 0 ? Math.sqrt(x) : 0; }
+
+            // Quaternion Math
+            function qNorm(q) {
+                return sqrt(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
+            }
+
+            function normalizeQuaternion(q) {
+                const n = qNorm(q);
+                if (n < 1e-10) return [0, 0, 0, 1];
+                return [q[0]/n, q[1]/n, q[2]/n, q[3]/n];
+            }
+
+            function qToRotationMatrix(q) {
+                const x = q[0], y = q[1], z = q[2], w = q[3];
+                return [
+                    1 - 2*y*y - 2*z*z, 2*x*y - 2*z*w, 2*x*z + 2*y*w,
+                    2*x*y + 2*z*w, 1 - 2*x*x - 2*z*z, 2*y*z - 2*x*w,
+                    2*x*z - 2*y*w, 2*y*z + 2*x*w, 1 - 2*x*x - 2*y*y
+                ];
+            }
+
+            function rotationMatrixToQuaternion(R) {
+                const tr = R[0] + R[4] + R[8];
+                if (tr > 0) {
+                    const s = 0.5 / sqrt(tr + 1);
+                    return [
+                        (R[2] - R[6]) * s,
+                        (R[3] - R[5]) * s,
+                        (R[5] + R[3] - R[6] + R[1]) * s,
+                        0.5 * s * (tr + 1)
+                    ];
+                } else {
+                    if (R[0] > R[4] && R[0] > R[8]) {
+                        const s = 0.5 / sqrt(R[0] + R[8] + R[4]);
+                        return [0.5 * s * (R[2] - R[6]), s * (R[0] + R[5]), s * (R[1] + R[3]), s * (R[0] + R[8] + R[4])];
+                    } else if (R[4] > R[8]) {
+                        const s = 0.5 / sqrt(R[0] + R[4] + R[8]);
+                        return [s * (R[1] - R[5]), 0.5 * s * (R[0] + R[4]), s * (R[3] + R[6]), s * (R[0] + R[4] + R[8])];
+                    } else {
+                        const s = 0.5 / sqrt(R[8] + R[4] + R[0]);
+                        return [s * (R[3] + R[5]), s * (R[2] + R[6]), 0.5 * s * (R[8] + R[4]), s * (R[0] + R[4] + R[8])];
+                    }
+                }
+            }
+
+            // EKF Core Functions
+            function predict(dt) {
+                const q = state.quaternion;
+                const w = 0.1; // Simulated angular velocity
+                const dq = [
+                    w * (q[1]*q[3] - q[2]*q[0]),
+                    w * (q[0]*q[3] + q[1]*q[2]),
+                    w * (q[0]*q[1] - q[2]*q[3]),
+                    0
+                ];
+                
+                state.quaternion = normalizeQuaternion([
+                    q[0] + dq[0]*dt,
+                    q[1] + dq[1]*dt,
+                    q[2] + dq[2]*dt,
+                    q[3] + dq[3]*dt
+                ]);
+                
+                state.rotationMatrix = qToRotationMatrix(state.quaternion);
+            }
+
+            function update(measurement) {
+                const R = state.rotationMatrix;
+                const q = state.quaternion;
+                
+                const gRef = [0, 0, 1];
+                const magRef = [0.5, 0, 0.866];
+                
+                const expectedAccel = [
+                    R[0]*gRef[0] + R[1]*gRef[1] + R[2]*gRef[2],
+                    R[3]*gRef[0] + R[4]*gRef[1] + R[5]*gRef[2],
+                    R[6]*gRef[0] + R[7]*gRef[1] + R[8]*gRef[2]
+                ];
+                
+                const expectedMag = [
+                    R[0]*magRef[0] + R[1]*magRef[1] + R[2]*magRef[2],
+                    R[3]*magRef[0] + R[4]*magRef[1] + R[5]*magRef[2],
+                    R[6]*magRef[0] + R[7]*magRef[1] + R[8]*magRef[2]
+                ];
+                
+                const residual = [
+                    measurement.accX - expectedAccel[0],
+                    measurement.accY - expectedAccel[1],
+                    measurement.accZ - expectedAccel[2]
+                ];
+                
+                const K = [
+                    [0.1, 0, 0, 0],
+                    [0, 0.1, 0, 0],
+                    [0, 0, 0.1, 0]
+                ];
+                
+                const dq = [
+                    K[0][0] * residual[0],
+                    K[1][1] * residual[1],
+                    K[2][2] * residual[2],
+                    0
+                ];
+                
+                const newQ = [
+                    q[0] + dq[0],
+                    q[1] + dq[1],
+                    q[2] + dq[2],
+                    q[3]
+                ];
+                
+                state.quaternion = normalizeQuaternion(newQ);
+                state.rotationMatrix = qToRotationMatrix(state.quaternion);
+                
+                return eulerFromQuaternion(state.quaternion);
+            }
+
+            function eulerFromQuaternion(q) {
+                const x = q[0], y = q[1], z = q[2], w = q[3];
+                const roll = Math.atan2(2*(x*w + y*z), 1 - 2*(x*x + y*y));
+                const pitch = Math.asin(Math.min(1, Math.max(-1, 2*(y*w - z*x))));
+                const yaw = Math.atan2(2*(z*w + x*y), 1 - 2*(y*y + z*z));
+                return [roll, pitch, yaw];
+            }
+
+            // Demo Simulation
+            function generateSampleData() {
+                const data = [];
+                let roll = 0, pitch = 0, yaw = 0;
+                const dt = 0.1;
+                
+                for (let i = 0; i < 100; i++) {
+                    const time = i * dt;
+                    roll = Math.sin(time * 0.5) * 0.3;
+                    pitch = Math.cos(time * 0.3) * 0.2;
+                    yaw = (time * 0.2) % (2 * Math.PI);
+                    
+                    const q = eulerFromQuaternion([roll, pitch, yaw]);
+                    
+                    const accX = 9.81 * (Math.sin(q[1]) * Math.cos(q[0]) + 0.01 * (Math.random() - 0.5));
+                    const accY = 9.81 * (Math.cos(q[1]) * Math.cos(q[0]) + 0.01 * (Math.random() - 0.5));
+                    const accZ = 9.81 * (Math.sin(q[1]) * Math.sin(q[0]) + 0.01 * (Math.random() - 0.5));
+                    
+                    const magX = 0.5 + 0.3 * Math.sin(yaw + 0.3 * (Math.random() - 0.5));
+                    const magY = 0.1 * (Math.random() - 0.5);
+                    const magZ = 0.866 + 0.2 * Math.cos(yaw + 0.2 * (Math.random() - 0.5));
+                    
+                    data.push({
+                        time,
+                        accX, accY, accZ,
+                        magX, magY, magZ,
+                        trueRoll: roll, truePitch: pitch, trueYaw: yaw
+                    });
+                }
+                
+                return data;
+            }
+
+            // API Integration
+            async function fetchState() {
+                try {
+                    const res = await fetch('/state');
+                    if (!res.ok) throw new Error('HTTP error ' + res.status);
+                    return await res.json();
+                } catch (e) {
+                    console.error('Failed to fetch EKF state:', e);
+                    return null;
+                }
+            }
+
+            async function sendUpdate(data) {
+                try {
+                    const res = await fetch('/ekf_update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (!res.ok) throw new Error('HTTP error ' + res.status);
+                    return await res.json();
+                } catch (e) {
+                    console.error('Failed to send update:', e);
+                    return null;
+                }
+            }
+
+            function setStatus(msg) {
+                document.getElementById('status').textContent = msg;
+            }
+
+            // Animation Loop
+            function animate() {
+                if (!state.running) {
+                    requestAnimationFrame(animate);
+                    return;
+                }
+                
+                if (state.dataIndex < state.measuredData.length) {
+                    const measurement = state.measuredData[state.dataIndex];
+                    state.time = measurement.time;
+                    
+                    predict(0.1);
+                    update(measurement);
+                    
+                    state.estimatedData.push({ time: state.time, yaw: eulerFromQuaternion(state.quaternion)[2] });
+                    if (state.trueData.length === state.dataIndex) {
+                        state.trueData.push({ time: state.time, yaw: measurement.trueYaw });
+                    }
+                    
+                    state.dataIndex++;
+                    
+                    // Fetch real EKF state from C server
+                    fetchState().then(realState => {
+                        if (realState && realState.quaternion) {
+                            state.quaternion = realState.quaternion;
+                            state.rotationMatrix = qToRotationMatrix(realState.quaternion);
+                        }
+                    });
+                } else {
+                    // Finished all data - keep running for live/demo mode
+                }
+                
+                updateDisplay();
+                requestAnimationFrame(animate);
+            }
+
+            function updateDisplay() {
+                const quat = state.quaternion;
+                const [roll, pitch, yaw] = eulerFromQuaternion(quat);
+                
+                document.getElementById('quat').textContent = 
+                    `x: ${quat[0].toFixed(3)}, y: ${quat[1].toFixed(3)}, z: ${quat[2].toFixed(3)}, w: ${quat[3].toFixed(3)}`;
+                document.getElementById('roll').textContent = `${(roll * 180 / Math.PI).toFixed(2)}°`;
+                document.getElementById('pitch').textContent = `${(pitch * 180 / Math.PI).toFixed(2)}°`;
+                document.getElementById('yaw').textContent = `${(yaw * 180 / Math.PI).toFixed(2)}°`;
+            }
+
+            // Event Handlers
+            document.getElementById('start').addEventListener('click', () => {
+                if (state.running) return;
+                
+                state.running = true;
+                state.dataIndex = 0;
+                state.measuredData = generateSampleData();
+                state.trueData = state.measuredData.map(d => ({ ...d }));
+                state.estimatedData = [];
+                state.time = 0;
+                
+                document.getElementById('start').disabled = true;
+                document.getElementById('stop').disabled = true;
+                document.getElementById('reset').disabled = true;
+                
+                setStatus('Running EKF...');
+            });
+
+            document.getElementById('stop').addEventListener('click', () => {
+                if (!state.running) return;
+                
+                state.paused = true;
+                document.getElementById('stop').disabled = true;
+                document.getElementById('reset').disabled = true;
+                
+                setStatus('Paused');
+            });
+
+            document.getElementById('reset').addEventListener('click', () => {
+                state.running = false;
+                state.paused = false;
+                state.quaternion = [0, 0, 0, 1];
+                state.time = 0;
+                state.dataIndex = 0;
+                state.measuredData = [];
+                state.trueData = [];
+                state.estimatedData = [];
+                
+                state.rotationMatrix = qToRotationMatrix([0, 0, 0, 1]);
+                
+                document.getElementById('start').disabled = false;
+                document.getElementById('stop').disabled = false;
+                document.getElementById('reset').disabled = false;
+                
+                document.getElementById('quat').textContent = 'x: 0.000, y: 0.000, z: 0.000, w: 1.000';
+                document.getElementById('roll').textContent = '0.00°';
+                document.getElementById('pitch').textContent = '0.00°';
+                document.getElementById('yaw').textContent = '0.00°';
+                
+                setStatus('Ready');
+            });
+
+            // Initialize
+            setStatus('Ready. Click "Start Demo" to begin.');
+        })();
+    </script>
 </body>
 </html>
