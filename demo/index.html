@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinetic EKF Demo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Kinetic EKF Demo</h1>
+            <p>Extended Kalman Filter for IMU Sensor Fusion</p>
+        </header>
+
+        <div class="controls">
+            <button id="btn-sample" class="btn primary">Load Sample Data</button>
+            <button id="btn-live" class="btn">Start Live Demo</button>
+            <button id="btn-stop" class="btn secondary" disabled>Stop Demo</button>
+            <button id="btn-reset" class="btn secondary">Reset</button>
+            <label class="file-input">
+                <input type="file" id="file-upload" accept=".csv" hidden>
+                Upload CSV
+            </label>
+        </div>
+
+        <div class="display">
+            <div class="metrics">
+                <div class="metric">
+                    <div class="label">Quaternion</div>
+                    <div id="quat" class="value">x: 0.000, y: 0.000, z: 0.000, w: 1.000</div>
+                </div>
+                <div class="metric">
+                    <div class="label">Roll</div>
+                    <div id="roll" class="value">0.000°</div>
+                </div>
+                <div class="metric">
+                    <div class="label">Pitch</div>
+                    <div id="pitch" class="value">0.000°</div>
+                </div>
+                <div class="metric">
+                    <div class="label">Yaw</div>
+                    <div id="yaw" class="value">0.000°</div>
+                </div>
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <span class="dot blue"></span> EKF Estimate
+                </div>
+                <div class="legend-item">
+                    <span class="dot green"></span> True Orientation
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="chart" width="800" height="300"></canvas>
+        </div>
+
+        <div class="status" id="status">Ready</div>
+    </div>
+
+    <script src="demo.js"></script>
+</body>
+</html>
