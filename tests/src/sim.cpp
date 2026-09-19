@@ -444,8 +444,8 @@ matrix_t *get_gyro(matrix_t *q1, matrix_t *q2, float dt) {
 }
 
 matrix_t *get_accel(matrix_t *orientation) {
-	// float g_ref_a[] = {0, 0, 1};
-	float g_ref_a[] = {0, 0, -1};
+	float g_ref_a[] = {0, 0, 1};
+	// float g_ref_a[] = {0, 0, -1};
 	matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, 1);
 
 	matrix_t *rot_matrix = quat_to_rot_matrix(orientation);
@@ -462,8 +462,8 @@ matrix_t *get_accel(matrix_t *orientation) {
 }
 
 matrix_t *get_mag(matrix_t *orientation, float mag_dip) {
-	// float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
-	float m_ref_a[] = {0, cos(mag_dip), -sin(mag_dip)};
+	float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
+	// float m_ref_a[] = {0, cos(mag_dip), -sin(mag_dip)};
 	matrix_t *m_ref_m = arr_to_matrix(m_ref_a, 3, 1);
 	m_ref_m = scale_matrix_free(m_ref_m, 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
 
