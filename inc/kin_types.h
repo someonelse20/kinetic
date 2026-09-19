@@ -1,12 +1,11 @@
 #ifndef KIN_TYPES_H
 #define KIN_TYPES_H
 
-#include <sys/types.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdbool.h>
+#include <sys/types.h>
 #include <stdint.h>
 
 typedef struct {
@@ -39,7 +38,7 @@ typedef struct {
 	float mag_dec;
 	float dt;
 
-	bool enu : true;
+	uint8_t enu : true;
 
 	ekf_t ekf;
 
