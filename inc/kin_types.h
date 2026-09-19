@@ -38,7 +38,7 @@ typedef struct {
 	float mag_dec;
 	float dt;
 
-	uint8_t enu : true;
+	bool enu;
 
 	ekf_t ekf;
 
