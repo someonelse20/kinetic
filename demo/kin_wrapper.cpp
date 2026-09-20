@@ -1,9 +1,9 @@
-// #include <pybind11/pybind11.h>
+#include <pybind11/pybind11.h>
 
 #include "kin_imu.h"
 #include "kin_math.h"
 
-// namespace py = pybind11;
+namespace py = pybind11;
 
 int add(int i, int j) {
 	imu_t imu;
@@ -17,7 +17,6 @@ int main() {
 	add(1, 2);
 }
 
-/*
 PYBIND11_MODULE(kin_wrapper, m, py::mod_gil_not_used()) {
 	py::class_<matrix_t>(m, "matrix_t")
 		.def(py::init<>())
@@ -53,4 +52,5 @@ PYBIND11_MODULE(kin_wrapper, m, py::mod_gil_not_used()) {
 	m.def("imu_deinit", &imu_deinit);
 	m.def("imu_update", &imu_update);
 }
+/*
 */
