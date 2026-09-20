@@ -1,14 +1,23 @@
-#include <pybind11/pybind11.h>
+// #include <pybind11/pybind11.h>
 
 #include "kin_imu.h"
-#include "kin_types.h"
+#include "kin_math.h"
 
-namespace py = pybind11;
+// namespace py = pybind11;
 
 int add(int i, int j) {
+	imu_t imu;
+	float a[] = {0, 0, 0};
+	float m[] = {0, 0, 0};
+	imu_init(&imu, a, m);
 	return i + j;
 }
 
+int main() {
+	add(1, 2);
+}
+
+/*
 PYBIND11_MODULE(kin_wrapper, m, py::mod_gil_not_used()) {
 	py::class_<matrix_t>(m, "matrix_t")
 		.def(py::init<>())
@@ -39,5 +48,9 @@ PYBIND11_MODULE(kin_wrapper, m, py::mod_gil_not_used()) {
     m.doc() = "pybind11 kinetic wrapper";
 
     m.def("add", &add, "A function that adds two numbers");
-}
 
+	m.def("imu_init", &imu_init);
+	m.def("imu_deinit", &imu_deinit);
+	m.def("imu_update", &imu_update);
+}
+*/
