@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: kinetic-demo
+Version: 0.1.0
+Summary: Kinetic EKF library Python bindings demo
+Requires-Python: >=3.9
