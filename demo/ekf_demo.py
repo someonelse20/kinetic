@@ -25,6 +25,7 @@ class EKFDemo:
         # Configuration
         self.num_points = 100
         self.step_size = 0.1
+        self.mag_dip = 45.0  # Magnetic dip angle (degrees to radians)
 
     # ==================== Core EKF API (matches kin_wrapper.cpp) ====================
 
@@ -47,17 +48,56 @@ class EKFDemo:
         self.state_initialized = True
         return True
 
+    def _quat_to_rot_matrix(self, roll, pitch, yaw):
+        """Convert Euler angles to rotation matrix."""
+        # AHRS EKF uses quaternion-based rotation
+        # Build rotation matrix from Euler angles (NED convention)
+        cr = np.cos(roll)
+        sr = np.sin(roll)
+        cp = np.cos(pitch)
+        sp = np.sin(pitch)
+        cy = np.cos(yaw)
+        sy = np.sin(yaw)
+
+        R = np.array([
+            [cr * cy - sr * sp * sy, -cr * sy - sr * sp * cy, sr * cp],
+            [sr * cy + cr * sp * sy, -sr * sy + cr * sp * cy, -cr * cp],
+            [-sr * sp * cy - cr * cp * sy, sr * sp * sy - cr * cp * cy, cp * cp]
+        ])
+        return R
+
     def get_accel(self, roll, pitch, yaw):
-        """Compute expected accelerometer reading."""
-        # Placeholder: kinetic::get_accel()
-        # rot_matrix_trans * g_ref where g_ref = [0, 0, 1]
-        return 0.0, 0.0, 0.0
+        """Compute expected accelerometer reading.
+        
+        Matches sim.cpp::get_accel()
+        rot_matrix_trans * g_ref where g_ref = [0, 0, 1]
+        """
+        R = self._quat_to_rot_matrix(roll, pitch, yaw)
+        g_ref = np.array([0.0, 0.0, 1.0])
+        
+        # Apply rotation and transpose (equivalent to inverse for orthogonal matrices)
+        accel = R.T.dot(g_ref)
+        return accel[0], accel[1], accel[2]
 
     def get_mag(self, roll, pitch, yaw, dip_angle):
-        """Compute expected magnetometer reading."""
-        # Placeholder: kinetic::get_mag()
-        # rot_matrix_trans * m_ref where m_ref depends on mag_dip
-        return 0.0, 0.0, 0.0
+        """Compute expected magnetometer reading.
+        
+        Matches sim.cpp::get_mag()
+        rot_matrix_trans * m_ref where m_ref depends on mag_dip
+        m_ref = [cos(dip), 0, sin(dip)] normalized
+        """
+        R = self._quat_to_rot_matrix(roll, pitch, yaw)
+        
+        # m_ref vector from sim.cpp line 464-465
+        m_ref = np.array([np.cos(dip_angle), 0.0, np.sin(dip_angle)])
+        
+        # Normalize (sim.cpp line 468)
+        norm = np.sqrt(np.cos(dip_angle)**2 + np.sin(dip_angle)**2)
+        m_ref = m_ref / norm
+        
+        # Apply rotation and transpose
+        mag = R.T.dot(m_ref)
+        return mag[0], mag[1], mag[2]
 
     # ==================== Test Modes ====================
 
@@ -71,19 +111,30 @@ class EKFDemo:
         true_angles = self._generate_interpolated_orientations()
 
         # Run EKF on interpolated data
-        for i, (roll, pitch, yaw) in enumerate(true_angles):
+        # Use get_gyro() to compute gyro from orientation changes (matches sim.cpp)
+        for i in range(len(true_angles) - 1):
+            roll1, pitch1, yaw1 = true_angles[i]
+            roll2, pitch2, yaw2 = true_angles[i + 1]
             dt = self.step_size
-            # Simulate raw IMU measurements (with small noise for realism)
-            meas = self._simulate_imu_measurement(roll, pitch, yaw)
-            eul = self.imu_update(meas[0], meas[1], meas[2],
-                                 meas[3], meas[4], meas[5], dt)
+            
+            # Compute gyro from orientation change (sim.cpp::get_gyro)
+            gyro_x, gyro_y, gyro_z = self.get_gyro(roll1, pitch1, yaw1, 
+                                                    roll2, pitch2, yaw2, dt)
+            
+            # Compute accel and mag from current orientation
+            accel_x, accel_y, accel_z = self.get_accel(roll2, pitch2, yaw2)
+            mag_x, mag_y, mag_z = self.get_mag(roll2, pitch2, yaw2, self.mag_dip)
+            
+            # Run EKF update
+            eul = self.imu_update(accel_x, accel_y, accel_z,
+                                 mag_x, mag_y, mag_z, dt)
 
             self.euler_data["roll"].append(eul[0])
             self.euler_data["pitch"].append(eul[1])
             self.euler_data["yaw"].append(eul[2])
-            self.true_data["roll"].append(roll)
-            self.true_data["pitch"].append(pitch)
-            self.true_data["yaw"].append(yaw)
+            self.true_data["roll"].append(roll2)
+            self.true_data["pitch"].append(pitch2)
+            self.true_data["yaw"].append(yaw2)
 
         return True
 
@@ -156,6 +207,74 @@ class EKFDemo:
         # For now, return the orientation itself as "measured"
         # In real code, this would be rot_matrix_trans * g_ref/m_ref
         return roll, pitch, yaw, 0.0, 0.0, 0.0
+
+    def get_gyro(self, euler_x1, euler_y1, euler_z1, euler_x2, euler_y2, euler_z2, dt):
+        """Compute gyro rate from two consecutive Euler orientations.
+        
+        Matches sim.cpp::get_gyro()
+        Uses quaternion cross-product formula:
+        gyro = 2 * dQ/dt * Q_inv where dQ = Q2 - Q1
+        
+        Args:
+            euler_x1, euler_y1, euler_z1: First orientation (raw Euler angles)
+            euler_x2, euler_y2, euler_z2: Second orientation (raw Euler angles)
+            dt: Time step between measurements
+        
+        Returns:
+            (gyro_x, gyro_y, gyro_z) in rad/s, scaled by 2/dt
+        """
+        # Convert Euler to quaternions (AHRS EKF convention)
+        q1 = self._euler_to_quat(euler_x1, euler_y1, euler_z1)
+        q2 = self._euler_to_quat(euler_x2, euler_y2, euler_z2)
+        
+        # Compute delta quaternion: dQ = Q2 - Q1 (sim.cpp line 439-441)
+        dQ_x = q2[0] - q1[0]
+        dQ_y = q2[1] - q1[1]
+        dQ_z = q2[2] - q1[2]
+        dQ_w = q2[3] - q1[3]
+        
+        # Quaternion cross-product formula (sim.cpp lines 439-441)
+        # gyro = 2 * dQ/dt * Q_inv
+        # Q_inv = conjugate for unit quaternions
+        gyro_x = 2 * (dQ_w * q1[0] - dQ_x * q1[3] - dQ_y * q1[2] + dQ_z * q1[1])
+        gyro_y = 2 * (dQ_w * q1[1] + dQ_x * q1[2] - dQ_y * q1[3] - dQ_z * q1[0])
+        gyro_z = 2 * (dQ_w * q1[2] - dQ_x * q1[1] + dQ_y * q1[0] - dQ_z * q1[3])
+        
+        # Scale by 2/dt (sim.cpp line 443)
+        gyro_x *= 2.0 / dt
+        gyro_y *= 2.0 / dt
+        gyro_z *= 2.0 / dt
+        
+        return gyro_x, gyro_y, gyro_z
+
+    def _euler_to_quat(self, euler_x, euler_y, euler_z):
+        """Convert raw Euler angles to quaternion.
+        
+        Matches kin_math.c::euler_to_quat() exactly.
+        Uses half-angle trigonometry: u=v=w=angle/2
+        Returns quaternion in kinetic's x y z w order.
+        """
+        # Half-angles (kin_math.c lines 416-418)
+        u = euler_x / 2.0
+        v = euler_y / 2.0
+        w = euler_z / 2.0
+        
+        # cos(u), cos(v), cos(w), sin(u), sin(v), sin(w)
+        cu = np.cos(u)
+        cv = np.cos(v)
+        cw = np.cos(w)
+        su = np.sin(u)
+        sv = np.sin(v)
+        sw = np.sin(w)
+        
+        # kin_math.c lines 420-423
+        qw = cu * cv * cw + su * sv * sw
+        qx = su * cv * cw - cu * sv * sw
+        qy = cu * sv * cw + su * cv * sw
+        qz = cu * cv * sw - su * sv * cw
+        
+        # Return in kinetic's x y z w order
+        return qx, qy, qz, qw
 
     # ==================== Output & Status ====================
 
