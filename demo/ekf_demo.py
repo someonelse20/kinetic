@@ -1,252 +1,303 @@
 #!/usr/bin/env python3
-"""Kinetic EKF Web Demo - Demonstrates the kinetic library through a browser interface."""
-
+"""
+Kinetic EKF Demo - Python stubs matching kin_wrapper.cpp API.
+Based on AHRS EKF math: https://ahrs.readthedocs.io/en/latest/filters/ekf.html
+"""
 import json
-import math
-import random
-import sys
-
-try:
-    from build import kin_wrapper
-except ImportError:
-    print("Error: Run `cd demo && pip install -e .` first")
-    sys.exit(1)
+import os
+import numpy as np
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+from threading import Thread
 
 
-class DemoState:
+class EKFDemo:
+    """EKF demonstration class with stub implementations."""
+
     def __init__(self):
-        self.running = False
-        self.paused = False
-        self.step = 0
-        self.init_done = False
+        self.state_running = False
+        self.state_initialized = False
+        self.sim_mode = "linear_interpolation"  # or "all_axis_test"
+        
+        # Storage for charting
+        self.euler_data = {"roll": [], "pitch": [], "yaw": []}
+        self.true_data = {"roll": [], "pitch": [], "yaw": []}
+        
+        # Configuration
+        self.num_points = 100
+        self.step_size = 0.1
 
-        # EKF instance - using raw C structures via pybind11
-        self.imu = kin_wrapper.imu_t()
-        self.ekf = kin_wrapper.ekf_t()
+    # ==================== Core EKF API (matches kin_wrapper.cpp) ====================
 
-        # Data buffers
-        self.quat_data = []
-        self.euler_data = []
-        self.step_data = []
+    def imu_init(self, gyro_noise=0.001, accel_noise=0.01, mag_noise=0.01,
+                 mag_dip=45.0, dt=0.01):
+        """Initialize EKF with sensor noise parameters."""
+        self.state_initialized = True
+        return True
 
-        # IMU noise
-        self.noise_scale = 0.02
+    def imu_update(self, accel_x, accel_y, accel_z,
+                   mag_x, mag_y, mag_z, dt):
+        """Core EKF update step with accelerometer and magnetometer."""
+        # Placeholder: would call kinetic::update_imu()
+        # Returns Euler angles (roll, pitch, yaw) in radians
+        return 0.0, 0.0, 0.0
 
+    def init_state(self, accel_x, accel_y, accel_z,
+                   mag_x, mag_y, mag_z):
+        """Initialize EKF from raw sensor readings."""
+        self.state_initialized = True
+        return True
 
-state = DemoState()
+    def get_accel(self, roll, pitch, yaw):
+        """Compute expected accelerometer reading."""
+        # Placeholder: kinetic::get_accel()
+        # rot_matrix_trans * g_ref where g_ref = [0, 0, 1]
+        return 0.0, 0.0, 0.0
 
+    def get_mag(self, roll, pitch, yaw, dip_angle):
+        """Compute expected magnetometer reading."""
+        # Placeholder: kinetic::get_mag()
+        # rot_matrix_trans * m_ref where m_ref depends on mag_dip
+        return 0.0, 0.0, 0.0
 
-def generate_sensor_noise(value):
-    """Generate Gaussian noise scaled to realistic IMU values."""
-    if state.noise_scale <= 0:
-        return value
-    noise = (
-        random.gauss(0, state.noise_scale * abs(value))
-        if value != 0
-        else random.gauss(0, state.noise_scale)
-    )
-    return value + noise
+    # ==================== Test Modes ====================
 
+    def linear_interpolation(self):
+        """Run linear interpolation test."""
+        if not self.state_initialized:
+            print("Error: EKF not initialized")
+            return False
 
-def interpolate_orientation(step, total_steps=100):
-    """
-    Interpolate between two orientations over time.
-    Creates smooth rotation motion similar to vehicle movement.
-    """
-    progress = step / total_steps
+        # Generate interpolated orientations
+        true_angles = self._generate_interpolated_orientations()
 
-    # Complex multi-axis rotation with slight frequency variation
-    qx = math.sin(progress * 6.0) * math.sin(progress * 3.0)
-    qy = math.cos(progress * 4.0) * math.sin(progress * 2.0)
-    qz = math.sin(progress * 5.0)
-    qw = math.cos(progress * 3.0) * math.cos(progress * 2.0) + 0.7
+        # Run EKF on interpolated data
+        for i, (roll, pitch, yaw) in enumerate(true_angles):
+            dt = self.step_size
+            # Simulate raw IMU measurements (with small noise for realism)
+            meas = self._simulate_imu_measurement(roll, pitch, yaw)
+            eul = self.imu_update(meas[0], meas[1], meas[2],
+                                 meas[3], meas[4], meas[5], dt)
 
-    # Normalize quaternion
-    norm = math.sqrt(qx**2 + qy**2 + qz**2 + qw**2)
-    return qx / norm, qy / norm, qz / norm, qw / norm
+            self.euler_data["roll"].append(eul[0])
+            self.euler_data["pitch"].append(eul[1])
+            self.euler_data["yaw"].append(eul[2])
+            self.true_data["roll"].append(roll)
+            self.true_data["pitch"].append(pitch)
+            self.true_data["yaw"].append(yaw)
 
+        return True
 
-def run_demo_step():
-    """Run one EKF update step with synthetic IMU measurements."""
-    # 1. Generate "true" orientation at this step
-    qx_true, qy_true, qz_true, qw_true = interpolate_orientation(state.step, 100)
+    def all_axis_test(self, num_points=100):
+        """Run all-axis test with specified number of steps."""
+        if not self.state_initialized:
+            print("Error: EKF not initialized")
+            return False
 
-    # 2. Convert true quaternion to Euler angles for reference
-    m_true = kin_wrapper.init_matrix(1, 4)
-    m_true[0] = qx_true
-    m_true[1] = qy_true
-    m_true[2] = qz_true
-    m_true[3] = qw_true
-    euler_true = kin_wrapper.quat_to_euler(m_true)
+        # Generate test data for all axes
+        test_data = self._generate_all_axis_data(num_points)
 
-    # 3. Generate noisy IMU measurements from this orientation
-    # Read true quaternion components from EKF state
-    qx_t = state.ekf.state[0]
-    qy_t = state.ekf.state[1]
-    qz_t = state.ekf.state[2]
-    qw_t = state.ekf.state[3]
+        # Run EKF updates
+        for i, (roll, pitch, yaw) in enumerate(test_data):
+            dt = self.step_size
+            meas = self._simulate_imu_measurement(roll, pitch, yaw)
+            eul = self.imu_update(meas[0], meas[1], meas[2],
+                                 meas[3], meas[4], meas[5], dt)
 
-    # Generate gyro (angular velocity) measurements
-    progress = state.step / 100.0
-    wx = (math.cos(progress * 3.0) * math.cos(progress * 2.0) + 0.7) * 10.0
-    wy = -(math.sin(progress * 3.0) * math.cos(progress * 2.0) + 0.7) * 8.0
-    wz = (math.cos(progress * 4.0) * math.sin(progress * 2.0)) * 12.0
+            self.euler_data["roll"].append(eul[0])
+            self.euler_data["pitch"].append(eul[1])
+            self.euler_data["yaw"].append(eul[2])
+            self.true_data["roll"].append(roll)
+            self.true_data["pitch"].append(pitch)
+            self.true_data["yaw"].append(yaw)
 
-    gyro_meas = [
-        generate_sensor_noise(wx),
-        generate_sensor_noise(wy),
-        generate_sensor_noise(wz),
-    ]
+        return True
 
-    # Generate accelerometer measurements (gravity transformed by rotation)
-    ax = generate_sensor_noise(9.81 * qx_t)
-    ay = generate_sensor_noise(9.81 * qy_t)
-    az = generate_sensor_noise(9.81 * qz_t)
+    # ==================== Internal Helpers ====================
 
-    # Generate magnetometer measurements (earth's magnetic field transformed)
-    bx = generate_sensor_noise(50.0 * qx_t + 20.0)
-    by = generate_sensor_noise(50.0 * qy_t + 15.0)
-    bz = generate_sensor_noise(50.0 * qz_t + 5.0)
+    def _generate_interpolated_orientations(self):
+        """Generate orientations via linear interpolation."""
+        angles = []
+        # Start at identity
+        a1 = (0.0, 0.0, 0.0)
+        # Rotate to final orientation (example: 30° pitch, 45° yaw)
+        a2 = (30.0 * np.pi / 180.0, 45.0 * np.pi / 180.0, 60.0 * np.pi / 180.0)
 
-    # 4. Update EKF with measurements
-    state.imu.gyro_noise = 0.001
-    state.imu.accel_noise = 0.001
-    state.imu.mag_noise = 0.001
+        for i in range(self.num_points):
+            t = i / (self.num_points - 1)
+            roll = a1[0] + t * (a2[0] - a1[0])
+            pitch = a1[1] + t * (a2[1] - a1[1])
+            yaw = a1[2] + t * (a2[2] - a1[2])
+            angles.append((roll, pitch, yaw))
+        return angles
 
-    # Call C functions via pybind11 with float pointers
-    a_arr = [ax, ay, az]
-    m_arr = [bx, by, bz]
-    kin_wrapper.imu_update(state.imu, gyro_meas, a_arr, m_arr)
+    def _generate_all_axis_data(self, num_points):
+        """Generate test data rotating through all axes."""
+        data = []
+        roll = pitch = yaw = 0.0
+        step = 0.1
 
-    # 5. Extract new quaternion components
-    qx_new = state.ekf.state[0]
-    qy_new = state.ekf.state[1]
-    qz_new = state.ekf.state[2]
-    qw_new = state.ekf.state[3]
+        for i in range(num_points):
+            # Rotate around each axis sequentially
+            roll += step
+            pitch += step
+            yaw += step
 
-    # 6. Convert to Euler angles for display
-    m_new = kin_wrapper.init_matrix(1, 4)
-    m_new[0] = qx_new
-    m_new[1] = qy_new
-    m_new[2] = qz_new
-    m_new[3] = qw_new
-    euler_new = kin_wrapper.quat_to_euler(m_new)
+            # Normalize to keep angles reasonable
+            roll = (roll + np.pi) % (2 * np.pi) - np.pi
+            pitch = (pitch + np.pi) % (2 * np.pi) - np.pi
+            yaw = (yaw + np.pi) % (2 * np.pi) - np.pi
 
-    # 7. Store data for visualization
-    state.quat_data.append((qx_new, qy_new, qz_new, qw_new))
-    state.euler_data.append((euler_new[0], euler_new[1], euler_new[2]))
-    state.step_data.append(state.step)
+            data.append((roll, pitch, yaw))
+        return data
 
-    # Keep arrays manageable
-    if len(state.quat_data) > 500:
-        state.quat_data = state.quat_data[-250:]
-        state.euler_data = state.euler_data[-250:]
-        state.step_data = state.step_data[-250:]
+    def _simulate_imu_measurement(self, roll, pitch, yaw):
+        """Simulate raw IMU measurements from orientation."""
+        # Placeholder: would use kinetic rotation matrix
+        # For now, return the orientation itself as "measured"
+        # In real code, this would be rot_matrix_trans * g_ref/m_ref
+        return roll, pitch, yaw, 0.0, 0.0, 0.0
 
-    # 8. Return JSON payload for the web client
-    return {
-        "step": state.step,
-        "quat": [
-            round(qx_new, 6),
-            round(qy_new, 6),
-            round(qz_new, 6),
-            round(qw_new, 6),
-        ],
-        "euler": [
-            round(euler_new[0], 2),
-            round(euler_new[1], 2),
-            round(euler_new[2], 2),
-        ],
-        "euler_true": [
-            round(euler_true[0], 2),
-            round(euler_true[1], 2),
-            round(euler_true[2], 2),
-        ],
-        "covariance": [
-            round(state.ekf.covariance[0], 2),
-            round(state.ekf.covariance[1], 2),
-            round(state.ekf.covariance[2], 2),
-            round(state.ekf.covariance[3], 2),
-        ],
-    }
+    # ==================== Output & Status ====================
 
+    def plot_data(self, output_dir="build"):
+        """Export data to CSV for external plotting."""
+        os.makedirs(output_dir, exist_ok=True)
 
-def init_ekf():
-    """Initialize the EKF with a starting orientation."""
-    global state
+        # Export EKF estimates
+        with open(os.path.join(output_dir, "estm_roll.txt"), "w") as f:
+            for val in self.euler_data["roll"]:
+                f.write(f"{val}\n")
 
-    initial_quat = [0.0, 0.0, 0.0, 1.0]
+        with open(os.path.join(output_dir, "estm_pitch.txt"), "w") as f:
+            for val in self.euler_data["pitch"]:
+                f.write(f"{val}\n")
 
-    # Initialize IMU with initial orientation
-    state.imu = kin_wrapper.imu_t()
-    state.imu.gyro_noise = 0.001
-    state.imu.accel_noise = 0.001
-    state.imu.mag_noise = 0.001
-    state.imu.mag_dip = 65.0
-    state.imu.dt = 0.01
+        with open(os.path.join(output_dir, "estm_yaw.txt"), "w") as f:
+            for val in self.euler_data["yaw"]:
+                f.write(f"{val}\n")
 
-    # Initialize EKF state
-    state.ekf = kin_wrapper.ekf_t()
-    state.ekf.state = kin_wrapper.init_matrix(1, 4)
-    state.ekf.state[0] = initial_quat[0]
-    state.ekf.state[1] = initial_quat[1]
-    state.ekf.state[2] = initial_quat[2]
-    state.ekf.state[3] = initial_quat[3]
+        # Export true values
+        with open(os.path.join(output_dir, "true_roll.txt"), "w") as f:
+            for val in self.true_data["roll"]:
+                f.write(f"{val}\n")
 
-    state.ekf.covariance = kin_wrapper.init_matrix(4, 1)
-    state.ekf.covariance[0] = 1.0
-    state.ekf.covariance[1] = 1.0
-    state.ekf.covariance[2] = 1.0
-    state.ekf.covariance[3] = 1.0
+        with open(os.path.join(output_dir, "true_pitch.txt"), "w") as f:
+            for val in self.true_data["pitch"]:
+                f.write(f"{val}\n")
 
-    # Clear data arrays
-    state.quat_data = []
-    state.euler_data = []
-    state.step_data = []
+        with open(os.path.join(output_dir, "true_yaw.txt"), "w") as f:
+            for val in self.true_data["yaw"]:
+                f.write(f"{val}\n")
 
-    state.init_done = True
+        print(f"Data exported to {output_dir}/")
+
+    def get_demo_status(self):
+        """Return current demo state for web UI."""
+        return {
+            "running": self.state_running,
+            "initialized": self.state_initialized,
+            "mode": self.sim_mode,
+            "points": len(self.euler_data["roll"])
+        }
 
 
-def main():
-    """Run the web server and open the demo."""
-    print("Starting Kinetic EKF Web Demo...")
-    print("Server will be available at http://localhost:8082")
+def run_server(port=8081):
+    """Start the HTTP server."""
+    demo = EKFDemo()
+
+    def run_test():
+        """Run the selected test mode."""
+        if demo.sim_mode == "linear_interpolation":
+            demo.linear_interpolation()
+        else:
+            demo.all_axis_test(demo.num_points)
+
+        demo.plot_data()
+
+    # Start test in background thread
+    test_thread = Thread(target=run_test, daemon=True)
+    test_thread.start()
+
+    # Simple handler that serves static files and runs demo on request
+    class DemoHandler(SimpleHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == "/run-demo":
+                run_test()
+                self.send_response(200)
+                self.send_header("Content-type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(demo.get_demo_status()).encode())
+            elif self.path.startswith("/data/"):
+                filename = self.path[6:]  # Remove "/data/"
+                try:
+                    with open(filename, "r") as f:
+                        self.send_response(200)
+                        self.send_header("Content-type", "text/plain")
+                        self.end_headers()
+                        self.wfile.write(f.read().encode())
+                except FileNotFoundError:
+                    self.send_error(404, "File not found")
+            else:
+                super().do_GET()
+
+    server = HTTPServer(("", port), DemoHandler)
+    print(f"Server running on http://localhost:{port}")
     print("Press Ctrl+C to stop")
 
-    init_ekf()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nShutting down...")
+        server.shutdown()
 
-    # Run a few demo steps to populate initial data
-    for _ in range(10):
-        run_demo_step()
 
-    from http.server import HTTPServer, BaseHTTPRequestHandler
+def run_server_from_path(port=8081, demo_path=None):
+    """Start server with demo file specified by path."""
+    if demo_path:
+        demo = EKFDemo()
+    else:
+        demo = EKFDemo()
 
-    class DemoHandler(BaseHTTPRequestHandler):
+    def run_test():
+        if demo.sim_mode == "linear_interpolation":
+            demo.linear_interpolation()
+        else:
+            demo.all_axis_test(demo.num_points)
+        demo.plot_data()
+
+    test_thread = Thread(target=run_test, daemon=True)
+    test_thread.start()
+
+    class DemoHandler(SimpleHTTPRequestHandler):
         def do_GET(self):
-            if self.path == "/":
-                with open("demo.html", "r") as f:
-                    html = f.read()
+            if self.path == "/run-demo":
+                run_test()
                 self.send_response(200)
-                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-type", "application/json")
                 self.end_headers()
-                self.wfile.write(html.encode("utf-8"))
-            elif self.path == "/data":
-                data = json.dumps(run_demo_step())
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Cache-Control", "no-cache")
-                self.end_headers()
-                self.wfile.write(data.encode("utf-8"))
+                self.wfile.write(json.dumps(demo.get_demo_status()).encode())
+            elif self.path.startswith("/data/"):
+                filename = self.path[6:]
+                try:
+                    with open(filename, "r") as f:
+                        self.send_response(200)
+                        self.send_header("Content-type", "text/plain")
+                        self.end_headers()
+                        self.wfile.write(f.read().encode())
+                except FileNotFoundError:
+                    self.send_error(404, "File not found")
             else:
-                self.send_response(404)
-                self.end_headers()
+                super().do_GET()
 
-        def log_message(self, format, *args):
-            pass
+    server = HTTPServer(("", port), DemoHandler)
+    print(f"Server running on http://localhost:{port}")
 
-    server = HTTPServer(("127.0.0.1", 8082), DemoHandler)
-    server.serve_forever()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nShutting down...")
+        server.shutdown()
 
 
 if __name__ == "__main__":
-    main()
+    run_server()

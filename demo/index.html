@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinetic EKF Demo</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 20px; }
+        .controls { margin-bottom: 20px; }
+        button { padding: 8px 16px; margin-right: 8px; cursor: pointer; }
+        #chart { width: 800px; height: 400px; border: 1px solid #ccc; }
+        .status { margin-top: 10px; padding: 8px; background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <h1>Kinetic EKF Demo</h1>
+    
+    <div class="controls">
+        <label>
+            <input type="radio" name="mode" value="linear_interpolation" checked>
+            Linear Interpolation
+        </label>
+        <label>
+            <input type="radio" name="mode" value="all_axis_test">
+            All Axis Test
+        </label>
+        
+        <button onclick="runDemo()">Run Demo</button>
+        <button onclick="resetDemo()">Reset</button>
+    </div>
+    
+    <div class="status" id="status">Status: Ready</div>
+    
+    <h2>Euler Angles (Roll/Pitch/Yaw)</h2>
+    <canvas id="chart" width="800" height="400"></canvas>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('chart').getContext('2d');
+        let chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'EKF Roll',
+                    data: [],
+                    borderColor: 'blue'
+                }, {
+                    label: 'EKF Pitch',
+                    data: [],
+                    borderColor: 'green'
+                }, {
+                    label: 'EKF Yaw',
+                    data: [],
+                    borderColor: 'red'
+                }]
+            },
+            options: { scales: { x: { display: false } } }
+        });
+
+        async function runDemo() {
+            document.getElementById('status').textContent = 'Status: Running...';
+            await fetch('/run-demo');
+            updateStatus();
+        }
+
+        async function resetDemo() {
+            chart.data.labels = [];
+            chart.data.datasets[0].data = [];
+            chart.data.datasets[1].data = [];
+            chart.data.datasets[2].data = [];
+            chart.update();
+            updateStatus();
+        }
+
+        async function updateStatus() {
+            fetch('/data/status.json').then(r => r.json()).then(data => {
+                const el = document.getElementById('status');
+                const mode = document.querySelector('input[name="mode"]:checked').value;
+                el.textContent = `Status: ${data.mode === mode ? 'Running' : 'Stopped'} | Points: ${data.points} | Initialized: ${data.initialized}`;
+            }).catch(() => {
+                document.getElementById('status').textContent = 'Status: Idle';
+            });
+        }
+
+        // Update status every 500ms
+        setInterval(updateStatus, 500);
+    </script>
+</body>
+</html>
