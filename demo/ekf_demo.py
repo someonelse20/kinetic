@@ -8,6 +8,7 @@ import os
 import numpy as np
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from threading import Thread
+from build import kin_wrapper as kin
 
 
 class EKFDemo:
