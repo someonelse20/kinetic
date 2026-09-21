@@ -18,9 +18,6 @@ using namespace std;
 
 float *rand_rot(int range);
 
-static matrix_t *get_gyro(matrix_t *, matrix_t *, float);
-static matrix_t *get_accel(matrix_t *);
-static matrix_t *get_mag(matrix_t *, float);
 static float get_error(matrix_t *true_q, matrix_t *estm_q);
 
 sim_t::sim_t(imu_t *imu) {

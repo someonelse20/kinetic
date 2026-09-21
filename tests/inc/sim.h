@@ -51,4 +51,8 @@ class sim_t {
 
 };
 
+matrix_t *get_gyro(matrix_t *, matrix_t *, float);
+matrix_t *get_accel(matrix_t *);
+matrix_t *get_mag(matrix_t *, float);
+
 #endif
