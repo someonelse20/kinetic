@@ -7,10 +7,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 set(KINETIC_PATH ..)
 include_directories(${KINETIC_PATH}/inc)
+include_directories(${KINETIC_PATH}/tests/inc)
 
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
 
-pybind11_add_module(kin_wrapper MODULE kin_wrapper.cpp ${KINETIC_PATH}/src/kin_error.c ${KINETIC_PATH}/src/kin_math.c ${KINETIC_PATH}/src/kin_ekf.c ${KINETIC_PATH}/src/kin_imu.c)
+pybind11_add_module(kin_wrapper MODULE kin_wrapper.cpp ${KINETIC_PATH}/src/kin_error.c ${KINETIC_PATH}/src/kin_math.c ${KINETIC_PATH}/src/kin_ekf.c ${KINETIC_PATH}/src/kin_imu.c ${KINETIC_PATH}/tests/src/sim.cpp ${KINETIC_PATH}/tests/src/plot.cpp)
 install(TARGETS kin_wrapper DESTINATION .)
 
