@@ -509,6 +509,47 @@ matrix_t *rot_matrix_to_quat(const matrix_t *matrix) { // this function is from 
 	return ret;
 }
 
+matrix_t *euler_to_rot_matrix(const matrix_t *matrix) {
+	if (!is_vector(matrix)) error_handler(MATRIX_DIMENTION_ERROR);
+
+	matrix_t *ret;
+
+	// Try reversing from X Y Z to Z Y X if not working.
+	float x = matrix->data[X];
+	float y = matrix->data[Y];
+	float z = matrix->data[Z];
+
+	// printf("%f, %f, %f", x, y, z);
+
+	float Rx_arr[] = {
+		1.f, 0.f,     0.f,
+		0.f, cos(x), -sin(x),
+		0.f, sin(x),  cos(x),
+	};
+	float Ry_arr[] = {
+		cos(y),  0.f, sin(y),
+		0.f,     1.f, 0.f,
+		-sin(y), 0.f, cos(y),
+	};
+	float Rz_arr[] = {
+		cos(z), -sin(z), 0.f,
+		sin(z),  cos(z), 0.f,
+		0.f,     0.f,    1.f,
+	};
+
+	matrix_t *Rx = arr_to_matrix(Rx_arr, 3, 3);
+	matrix_t *Ry = arr_to_matrix(Ry_arr, 3, 3);
+	matrix_t *Rz = arr_to_matrix(Rz_arr, 3, 3);
+
+	ret = mul_matrix_alloc(Rz, Ry);
+	ret = mul_matrix_free(ret, Rx);
+
+	free_matrix(Rx);
+	free_matrix(Ry);
+	free_matrix(Rz);
+	return ret;
+}
+
 bool is_quat(const matrix_t *matrix) {
 	if (matrix->rows == 4 && matrix->cols == 1) {
 		return true;

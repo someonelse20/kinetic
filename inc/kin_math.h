@@ -69,6 +69,7 @@ matrix_t *quat_to_euler(matrix_t *matrix);
 matrix_t *euler_to_quat(const matrix_t *matrix);
 matrix_t *quat_to_rot_matrix(const matrix_t *matrix);
 matrix_t *rot_matrix_to_quat(const matrix_t *matrix);
+matrix_t *euler_to_rot_matrix(const matrix_t *matrix);
 
 bool is_quat(const matrix_t *matrix);
 bool is_vector(const matrix_t *matrix);
