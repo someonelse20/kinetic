@@ -161,20 +161,20 @@
             
             // Roll chart
             Plotly.newPlot('rollChart', [
-                {x: x, y: ekfData.map(d => d[0]), mode: 'lines', name: 'EKF', line: {color: '#00d4ff'}},
-                {x: x, y: trueData.map(d => d[0]), mode: 'lines', name: 'True', line: {color: '#ff6b6b', type: 'dashed'}}
+                {x: x, y: ekfData.map(d => d[0]), mode: 'lines', name: 'EKF', line: {color: '#00d4ff', shape: 'solid'}},
+                {x: x, y: trueData.map(d => d[0]), mode: 'lines', name: 'True', line: {color: '#ff6b6b', dash: 'dot'}}
             ], {margin: {t: 30, b: 30, l: 40, r: 20}, showlegend: true, hovermode: 'x unified', xaxis: {title: 'Step'}, yaxis: {title: 'Roll (rad)'}});
             
             // Pitch chart
             Plotly.newPlot('pitchChart', [
-                {x: x, y: ekfData.map(d => d[1]), mode: 'lines', name: 'EKF', line: {color: '#4ecdc4'}},
-                {x: x, y: trueData.map(d => d[1]), mode: 'lines', name: 'True', line: {color: '#ffe66d', type: 'dashed'}}
+                {x: x, y: ekfData.map(d => d[1]), mode: 'lines', name: 'EKF', line: {color: '#4ecdc4', shape: 'solid'}},
+                {x: x, y: trueData.map(d => d[1]), mode: 'lines', name: 'True', line: {color: '#ffe66d', dash: 'dot'}}
             ], {margin: {t: 30, b: 30, l: 40, r: 20}, showlegend: true, hovermode: 'x unified', xaxis: {title: 'Step'}, yaxis: {title: 'Pitch (rad)'}});
             
             // Yaw chart
             Plotly.newPlot('yawChart', [
-                {x: x, y: ekfData.map(d => d[2]), mode: 'lines', name: 'EKF', line: {color: '#a855f7'}},
-                {x: x, y: trueData.map(d => d[2]), mode: 'lines', name: 'True', line: {color: '#ff9f43', type: 'dashed'}}
+                {x: x, y: ekfData.map(d => d[2]), mode: 'lines', name: 'EKF', line: {color: '#a855f7', shape: 'solid'}},
+                {x: x, y: trueData.map(d => d[2]), mode: 'lines', name: 'True', line: {color: '#ff9f43', dash: 'dot'}}
             ], {margin: {t: 30, b: 30, l: 40, r: 20}, showlegend: true, hovermode: 'x unified', xaxis: {title: 'Step'}, yaxis: {title: 'Yaw (rad)'}});
         }
 
