@@ -179,10 +179,9 @@
         }
 
         function clearCharts() {
-            Plotly.Plotly.DeselectData([document.getElementById('rollChart'), document.getElementById('pitchChart'), document.getElementById('yawChart')]);
-            Plotly.Plots.destroyPlot('rollChart');
-            Plotly.Plots.destroyPlot('pitchChart');
-            Plotly.Plots.destroyPlot('yawChart');
+            Plotly.purge('rollChart');
+            Plotly.purge('pitchChart');
+            Plotly.purge('yawChart');
         }
     </script>
 </body>
