@@ -109,16 +109,16 @@
         <div id="error" class="error"></div>
         
         <div class="chart-container">
-            <div class="chart-title">📊 EKF vs True Euler Angles (Roll/Pitch/Yaw)</div>
-            <div id="eulerChart"></div>
-            <div class="legend">
-                <div class="legend-item"><div class="legend-color" style="background: #00d4ff;"></div> EKF Roll</div>
-                <div class="legend-item"><div class="legend-color" style="background: #ff6b6b;"></div> True Roll</div>
-                <div class="legend-item"><div class="legend-color" style="background: #4ecdc4;"></div> EKF Pitch</div>
-                <div class="legend-item"><div class="legend-color" style="background: #ffe66d;"></div> True Pitch</div>
-                <div class="legend-item"><div class="legend-color" style="background: #a855f7;"></div> EKF Yaw</div>
-                <div class="legend-item"><div class="legend-color" style="background: #ff9f43;"></div> True Yaw</div>
-            </div>
+            <div class="chart-title">📊 Roll Angle (X-axis)</div>
+            <div id="rollChart"></div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">📊 Pitch Angle (Y-axis)</div>
+            <div id="pitchChart"></div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">📊 Yaw Angle (Z-axis)</div>
+            <div id="yawChart"></div>
         </div>
     </div>
 
@@ -159,57 +159,23 @@
         function plotCharts() {
             const x = Array.from({length: ekfData.length}, (_, i) => i);
             
-            const trace1 = {
-                x: x,
-                y: ekfData.map(d => d[0]),
-                mode: 'lines',
-                name: 'EKF Roll',
-                line: {color: '#00d4ff'}
-            };
-            const trace2 = {
-                x: x,
-                y: trueData.map(d => d[0]),
-                mode: 'lines',
-                name: 'True Roll',
-                line: {color: '#ff6b6b'}
-            };
-            const trace3 = {
-                x: x,
-                y: ekfData.map(d => d[1]),
-                mode: 'lines',
-                name: 'EKF Pitch',
-                line: {color: '#4ecdc4'}
-            };
-            const trace4 = {
-                x: x,
-                y: trueData.map(d => d[1]),
-                mode: 'lines',
-                name: 'True Pitch',
-                line: {color: '#ffe66d'}
-            };
-            const trace5 = {
-                x: x,
-                y: ekfData.map(d => d[2]),
-                mode: 'lines',
-                name: 'EKF Yaw',
-                line: {color: '#a855f7'}
-            };
-            const trace6 = {
-                x: x,
-                y: trueData.map(d => d[2]),
-                mode: 'lines',
-                name: 'True Yaw',
-                line: {color: '#ff9f43'}
-            };
-
-            Plotly.newPlot('eulerChart', [trace1, trace2, trace3, trace4, trace5, trace6], {
-                margin: {t: 40, b: 40, l: 40, r: 20},
-                legend: {orientation: 'h', x: 0.5, y: 1.05},
-                showlegend: true,
-                hovermode: 'x unified',
-                xaxis: {title: 'Step'},
-                yaxis: {title: 'Radians'}
-            });
+            // Roll chart
+            Plotly.newPlot('rollChart', [
+                {x: x, y: ekfData.map(d => d[0]), mode: 'lines', name: 'EKF', line: {color: '#00d4ff'}},
+                {x: x, y: trueData.map(d => d[0]), mode: 'lines', name: 'True', line: {color: '#ff6b6b'}}
+            ], {margin: {t: 30, b: 30, l: 40, r: 20}, showlegend: true, hovermode: 'x unified', xaxis: {title: 'Step'}, yaxis: {title: 'Roll (rad)'}});
+            
+            // Pitch chart
+            Plotly.newPlot('pitchChart', [
+                {x: x, y: ekfData.map(d => d[1]), mode: 'lines', name: 'EKF', line: {color: '#4ecdc4'}},
+                {x: x, y: trueData.map(d => d[1]), mode: 'lines', name: 'True', line: {color: '#ffe66d'}}
+            ], {margin: {t: 30, b: 30, l: 40, r: 20}, showlegend: true, hovermode: 'x unified', xaxis: {title: 'Step'}, yaxis: {title: 'Pitch (rad)'}});
+            
+            // Yaw chart
+            Plotly.newPlot('yawChart', [
+                {x: x, y: ekfData.map(d => d[2]), mode: 'lines', name: 'EKF', line: {color: '#a855f7'}},
+                {x: x, y: trueData.map(d => d[2]), mode: 'lines', name: 'True', line: {color: '#ff9f43'}}
+            ], {margin: {t: 30, b: 30, l: 40, r: 20}, showlegend: true, hovermode: 'x unified', xaxis: {title: 'Step'}, yaxis: {title: 'Yaw (rad)'}});
         }
 
         function clearCharts() {
