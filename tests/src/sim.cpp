@@ -150,8 +150,8 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 	/*
 	print_matrix(start_accel);
 	cout << endl;
-	print_matrix(start_mag);
 	*/
+	print_matrix(start_mag);
 
 	for (int i = 0; i < num_of_algs; i++) {
 		ahrs_algs[i]->imu->dt = timestep;

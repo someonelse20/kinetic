@@ -75,13 +75,18 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 		 */
 		// TODO: there is something here that makes a little error when compensating for tilt, got about ~5 deg error.
 		// Replacing with euler_to_rot_matrix function might fix this.
+		/*
 		matrix_t *state_quat = euler_to_quat(state_euler);
 		matrix_t *rot_matrix = quat_to_rot_matrix(state_quat);
 		matrix_t *mag_comp = mul_matrix_alloc(rot_matrix, mag_m);
+		*/
+		matrix_t *mag_comp = copy_matrix(mag_m);
 		state_euler->data[Z] = atan2(mag_comp->data[Y], mag_comp->data[Z]);
 
+		/*
 		free_matrix(state_quat);
 		free_matrix(rot_matrix);
+		*/
 		free_matrix(mag_comp);
 	} else {
 		state_euler->data[X] = atan2(accel_m->data[Y], accel_m->data[Z]);
