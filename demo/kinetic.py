@@ -69,9 +69,9 @@ class EKFDemo:
         self.imu.dt = timestep
 
         step_counts = [0, np.pi / 2, np.pi]
-        euler_orientation = [0, 0, 0]
+        euler_orientation = []
         for i in range(3):
-            euler_orientation[i] = math.sin(step_counts[i])
+            euler_orientation.append(math.sin(step_counts[i]))
 
         quat = kin.euler_to_quat(arr_to_matrix(euler_orientation, 3, 1))
         prev_quat = kin.init_matrix(4, 1)
@@ -79,7 +79,7 @@ class EKFDemo:
         accel_m = kin.get_accel(quat)
         mag_m = kin.get_mag(quat, self.imu.mag_dip)
 
-        kin.imu_init(
+        kin_quat = kin.imu_init(
             self.imu,
             accel_m.getItem(0),
             accel_m.getItem(1),
@@ -88,6 +88,15 @@ class EKFDemo:
             mag_m.getItem(1),
             mag_m.getItem(2),
         )
+
+        kin_euler = matrix_to_arr(kin.quat_to_euler(kin_quat))
+        true_euler = matrix_to_arr(kin.quat_to_euler(quat))
+
+        self.euler_data.append(kin_euler)
+        self.true_data.append(true_euler)
+
+        print(self.imu.enu)
+        print(kin_euler)
 
         # Run EKF updates
         for step in range(num_points):

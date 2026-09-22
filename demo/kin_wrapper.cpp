@@ -69,7 +69,7 @@ PYBIND11_MODULE(kin_wrapper, m, py::mod_gil_not_used()) {
 			float gyro[] = {gx, gy, gz};
 			float accel[] = {ax, ay, az};
 			float mag[] = {mx, my, mz};
-			return py::cast((matrix_t*)imu_init(imu, accel, mag));
+			return py::cast((matrix_t*)imu_update(imu, gyro, accel, mag));
 			});
 
 
