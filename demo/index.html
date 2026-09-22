@@ -179,10 +179,10 @@
         }
 
         function clearCharts() {
-            ekfData = [];
-            trueData = [];
-            Plotly.Plotly.DeselectData([document.getElementById('eulerChart')]);
-            document.getElementById('eulerChart').innerHTML = '';
+            Plotly.Plotly.DeselectData([document.getElementById('rollChart'), document.getElementById('pitchChart'), document.getElementById('yawChart')]);
+            Plotly.Plots.destroyPlot('rollChart');
+            Plotly.Plots.destroyPlot('pitchChart');
+            Plotly.Plots.destroyPlot('yawChart');
         }
     </script>
 </body>
