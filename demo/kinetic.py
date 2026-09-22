@@ -122,45 +122,7 @@ class EKFDemo:
             self.euler_data.append(kin_euler)
             self.true_data.append(true_euler)
 
-        return True
-
-    # ==================== Internal Helpers ====================
-
-    def _generate_interpolated_orientations(self):
-        """Generate orientations via linear interpolation."""
-        angles = []
-        # Start at identity
-        a1 = (0.0, 0.0, 0.0)
-        # Rotate to final orientation (example: 30° pitch, 45° yaw)
-        a2 = (30.0 * np.pi / 180.0, 45.0 * np.pi / 180.0, 60.0 * np.pi / 180.0)
-
-        for i in range(self.num_points):
-            t = i / (self.num_points - 1)
-            roll = a1[0] + t * (a2[0] - a1[0])
-            pitch = a1[1] + t * (a2[1] - a1[1])
-            yaw = a1[2] + t * (a2[2] - a1[2])
-            angles.append((roll, pitch, yaw))
-        return angles
-
-    def _generate_all_axis_data(self, num_points):
-        """Generate test data rotating through all axes."""
-        data = []
-        roll = pitch = yaw = 0.0
-        step = 0.1
-
-        for i in range(num_points):
-            # Rotate around each axis sequentially
-            roll += step
-            pitch += step
-            yaw += step
-
-            # Normalize to keep angles reasonable
-            roll = (roll + np.pi) % (2 * np.pi) - np.pi
-            pitch = (pitch + np.pi) % (2 * np.pi) - np.pi
-            yaw = (yaw + np.pi) % (2 * np.pi) - np.pi
-
-            data.append((roll, pitch, yaw))
-        return data
+        return self.euler_data, self.true_data
 
 
 def arr_to_matrix(arr, rows, cols):
