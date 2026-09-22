@@ -6,12 +6,19 @@ C/C++ sensor fusion library implementing EKF (extended Kalman filter) for IMU da
 
 ```bash
 mkdir -p build && cd build && cmake ..
-cd .. && ./build/tests      # Run linear interpolation test
-cd .. && ./build/matrix     # Run matrix operations test
-cd .. && ./build/dataset    # Run dataset test
+cd .. && ./build/tests      # Linear interpolation test
+cd .. && ./build/matrix     # Matrix operations test
+cd .. && ./build/dataset    # Dataset test
 ```
 
-Build artifacts go to `build/`; omit from version control.
+Artifacts live in `build/`; exclude from VCS.
+
+## Python Demo API
+
+`demo/kinetic.py` exposes `EKFDemo` via pybind11 wrapping:
+- `all_axis_test(n=100)`: Runs EKF simulation, returns (ekf_data, true_data) as two lists of [roll, pitch, yaw]
+- `linear_interpolation()`: Interpolates between orientations for deterministic test data
+- Used by the web demo at `demo/index.html` served via `demo/server.py`
 
 ## Architecture
 
