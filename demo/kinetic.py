@@ -95,9 +95,6 @@ class EKFDemo:
         self.euler_data.append(kin_euler)
         self.true_data.append(true_euler)
 
-        print(self.imu.enu)
-        print(kin_euler)
-
         # Run EKF updates
         for step in range(num_points):
             for i in range(3):
@@ -151,7 +148,3 @@ def matrix_to_arr(mat):
 if __name__ == "__main__":
     test_demo = EKFDemo()
     test_demo.all_axis_test()
-
-    for point in test_demo.euler_data:
-        pass
-        # print(point)
