@@ -15,7 +15,12 @@ class DemoHandler(SimpleHTTPRequestHandler):
     """Custom handler that intercepts /api/simulate requests."""
     
     def do_GET(self):
-        if self.path == '/api/simulate':
+        # Strip leading /demo if present for file serving
+        path = self.path
+        if path.startswith('/demo'):
+            path = path[5:]
+        
+        if path == '/api/simulate':
             self._run_simulation()
         else:
             super().do_GET()
@@ -44,12 +49,17 @@ class DemoHandler(SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(error_response).encode())
 
 
-def run_server(port=8081):
+def run_server(port=8081, root=None):
     """Start the demo server."""
+    # Default to demo directory for file serving
+    if root is None:
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
     server_address = ('', port)
     httpd = HTTPServer(server_address, DemoHandler)
     print(f"🧭 Kinetic EKF Demo Server running on http://localhost:{port}")
-    print("   📊 Open this URL to view the interactive demo")
+    print(f"   📊 Serve files from: {root}")
+    print(f"   📊 Open http://localhost:{port}/index.html to view the demo")
     httpd.serve_forever()
 
 

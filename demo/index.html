@@ -135,7 +135,7 @@
             errorDiv.style.display = 'none';
             
             try {
-                const response = await fetch('/api/simulate');
+                const response = await fetch('/demo/api/simulate');
                 if (!response.ok) throw new Error('Simulation failed');
                 
                 const result = await response.json();
