@@ -140,18 +140,11 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 	orientation_euler->data[X] = sin(x_count);
 	orientation_euler->data[Y] = sin(y_count);
 	orientation_euler->data[Z] = sin(z_count);
-	// orientation_euler->data[Z] = 0.f;
 
 	orientation = euler_to_quat(orientation_euler);
 
 	matrix_t *start_accel = get_accel(orientation);
 	matrix_t *start_mag = get_mag(orientation, imu->mag_dip);
-
-	/*
-	print_matrix(start_accel);
-	cout << endl;
-	*/
-	print_matrix(start_mag);
 
 	for (int i = 0; i < num_of_algs; i++) {
 		ahrs_algs[i]->imu->dt = timestep;
@@ -169,8 +162,6 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 		cout << "=========================" << endl;
 		print_matrix(quat_to_euler(ahrs_algs[i]->imu->ekf.state));
 		cout << endl;
-		/*
-		*/
 	}
 
 	int count = 0;
@@ -182,7 +173,6 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 		orientation_euler->data[X] = sin(x_count);
 		orientation_euler->data[Y] = sin(y_count);
 		orientation_euler->data[Z] = sin(z_count);
-		// orientation_euler->data[Z] = 0.f;
 
 		matrix_t *prev_orientation = copy_matrix(orientation);
 		orientation = euler_to_quat(orientation_euler);
@@ -226,14 +216,10 @@ void sim_t::all_axis_test(int steps, plot_t *Plot) {
 	}
 
 	error_report(steps);
-	/*
-	*/
 
 	if (Plot != NULL) {
 		Plot->plot("3 Axis Test");
 	}
-
-	// free_matrix(orientation_euler);
 }
 
 void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float duration, float timestep, plot_t *Plot) {
@@ -296,11 +282,6 @@ void sim_t::linear_interpolation(matrix_t *start_rot, matrix_t *end_rot, float d
 		if (Plot != NULL) {
 			Plot->add_point(quat_to_euler(orientation), "true");
 		}
-
-		/*
-		   int sleep_ms = timestep * 1000; // TODO Add flag for under millisecond timestep and accuracy.
-		   std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
-		 */
 
 		count++;
 	}
@@ -387,17 +368,7 @@ void sim_t::print() {
 	cout << "============================================" << endl;
 
 	print_matrix(quat_to_euler(imu->ekf.state));
-	// print_matrix(imu->ekf.state);
 	cout << endl;
-
-	/*
-	   cout << "============================================" << endl;
-	   cout << "Kinetic covariance" << endl;
-	   cout << "============================================" << endl;
-
-	   print_matrix(imu->ekf.covariance);
-	   cout << endl;
-	 */
 }
 
 void sim_t::add_ahrs(matrix_t *(*imu_init)(imu_t *imu, float *accel, float *mag), matrix_t *(*imu_update)(imu_t *imu, float *gyro, float *accel, float *mag), std::string name) {
@@ -441,6 +412,7 @@ matrix_t *get_gyro(matrix_t *q1, matrix_t *q2, float dt) {
 }
 
 matrix_t *get_accel(matrix_t *orientation) {
+	// Uncomment code to calculate for NED instead of ENU
 	float g_ref_a[] = {0, 0, 1};
 	// float g_ref_a[] = {0, 0, -1};
 	matrix_t *g_ref_m = arr_to_matrix(g_ref_a, 3, 1);
@@ -459,6 +431,7 @@ matrix_t *get_accel(matrix_t *orientation) {
 }
 
 matrix_t *get_mag(matrix_t *orientation, float mag_dip) {
+	// Uncomment code to calculate for NED instead of ENU
 	float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
 	// float m_ref_a[] = {0, cos(mag_dip), -sin(mag_dip)};
 	matrix_t *m_ref_m = arr_to_matrix(m_ref_a, 3, 1);
@@ -469,15 +442,6 @@ matrix_t *get_mag(matrix_t *orientation, float mag_dip) {
 
 	free_matrix(m_ref_m);
 	return ret;
-	/*
-	 */
-
-	/*
-	   float m_ref_a[] = {cos(mag_dip), 0, sin(mag_dip)};
-	   matrix_t *m_ref_m = scale_matrix(arr_to_matrix(m_ref_a, 3, 1), 1 / (sqrt(pow(cos(mag_dip), 2) + pow(sin(mag_dip), 2))));
-
-	   return mul_matrix(trans_matrix(quat_to_rot_matrix(orientation)), m_ref_m);
-	 */
 }
 
 static float get_error(matrix_t *true_q, matrix_t *estm_q) {
@@ -499,8 +463,4 @@ static float get_error(matrix_t *true_q, matrix_t *estm_q) {
 	free_matrix(inv);
 	free_matrix(error_q);
 	return angle;
-
-	// Scale from [0 pi/2] to [0 1].
-	// return angle / (M_PI);
 }
-

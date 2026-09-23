@@ -62,10 +62,7 @@ void plot_t::plot(string title) {
 		gp_input = "'" + name + "_x_data.txt'" + type_buf[i].linetype + " with lines title '" + name + "', ";
 		fprintf(gp, gp_input.c_str());
 	}
-	/*
-	string end_name = type_buf[num_of_types - 1].name;
-	gp_input = "'" + end_name + "_x_data.txt'" + type_buf[num_of_types - 1].linetype + " with lines title '" + end_name + "'\n";
-	*/
+
 	gp_input = "\n";
 	fprintf(gp, gp_input.c_str());
 
@@ -78,30 +75,21 @@ void plot_t::plot(string title) {
 		gp_input = "'" + name + "_y_data.txt'" + type_buf[i].linetype + " with lines title '" + name + "', ";
 		fprintf(gp, gp_input.c_str());
 	}
-	/*
-	end_name = type_buf[num_of_types - 1].name;
-	gp_input = "'" + end_name + "_y_data.txt'" + type_buf[num_of_types - 1].linetype + " with lines title '" + end_name + "'\n";
-	*/
+
 	gp_input = "\n";
 	fprintf(gp, gp_input.c_str());
 
 	begin_name = type_buf[0].name;
 	gp_input = "plot '" + begin_name + "_z_data.txt'" + type_buf[0].linetype + " with lines title '" + begin_name + "', ";
 	fprintf(gp, gp_input.c_str());
-	// cout << gp_input;
 	for (int i = 1; i <= num_of_types - 1; i++) {
 		string name = type_buf[i].name;
 
 		gp_input = "'" + name + "_z_data.txt'" + type_buf[i].linetype + " with lines title '" + name + "', ";
 		fprintf(gp, gp_input.c_str());
-		// cout << gp_input;
 	}
-	/*
-	end_name = type_buf[num_of_types - 1].name;
-	gp_input = "'" + end_name + "_z_data.txt'" + type_buf[num_of_types - 1].linetype + " with lines title '" + end_name + "'\n";
-	*/
+
 	gp_input = "\n";
-	// cout << endl;
 	fprintf(gp, gp_input.c_str());
 
 	fflush(gp);
