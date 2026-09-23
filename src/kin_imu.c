@@ -24,9 +24,6 @@ static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref,
 static matrix_t *stack_matrix(const matrix_t *a, const matrix_t *b);
 
 matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
-	// float *accel_cpy = copy_arr(accel, 3);
-	// float *mag_cpy = copy_arr(mag, 3);
-
 	// Calculate orientation purly based of the accelerometer and magnetometer to start with.
 
 	matrix_t *accel_m = arr_to_matrix(accel, 3, 1);
@@ -112,8 +109,6 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 
 	imu->m_ref = scale_matrix_alloc(m_ref_m, 1 / (sqrt(pow(cos(imu->mag_dip), 2) + pow(sin(imu->mag_dip), 2))));
 
-	// print_matrix(imu->m_ref);
-
 	// Use static noise for now.
 
 	imu->proc_noise = init_matrix(3, 3);
@@ -145,11 +140,6 @@ matrix_t *imu_init(imu_t *imu, float *accel, float *mag) {
 	free_matrix(mag_m);
 	free_matrix(state_euler);
 	free_matrix(m_ref_m);
-	/*
-	   free_matrix(west);
-	   free_matrix(north);
-	   free_matrix(frame);
-	 */
 
 	return imu->ekf.state;
 }
@@ -213,19 +203,8 @@ uint8_t calibrate_gyro_accel(matrix_t *value, matrix_t *alignment, matrix_t *sen
 
 	matrix_t *bias_sub = sub_matrix_alloc(value, bias);
 
-	/*
-	   print_matrix(sensitivity_inv);
-	   printf("\n");
-	 */
-
 	ret = mul_matrix_alloc(alignment, sensitivity_inv);
 	ret = mul_matrix_free(ret, bias_sub);
-
-	/*
-	   ret = sub_matrix_alloc(value, bias);
-	   ret = mul_matrix_free(ret, sensitivity_inv);
-	   ret = mul_matrix_free(ret, alignment);
-	 */
 
 	move_matrix(ret, value);
 
@@ -354,9 +333,6 @@ static matrix_t *observe_model_jacobian(matrix_t *state_pred, matrix_t *g_ref, m
 	free_matrix(accel_model);
 	free_matrix(mag_model);
 	return scale_matrix_free(stack, 2);
-	/*
-	 */
-	// return init_matrix(6, 4);
 }
 
 static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref, matrix_t *real, float scalar) {
@@ -378,8 +354,6 @@ static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref,
 	real_half = sub_matrix_free(real_half, ref_x_real_t);
 
 	matrix_t *model_left = add_matrix_free(skew_matrix, real_half);
-	/*
-	 */
 
 	/* Build matrix with structure:
 	 * ctr_vtr = u
@@ -400,8 +374,6 @@ static matrix_t *observe_model_jacobian_helper(matrix_t *ctr_vtr, matrix_t *ref,
 		}
 	}
 
-	/*
-	 */
 	free_matrix(ref_scale_p_ctr);
 	free_matrix(real_trans);
 	free_matrix(ref_x_real_t);

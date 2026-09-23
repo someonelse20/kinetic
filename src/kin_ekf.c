@@ -3,17 +3,6 @@
 
 #include <stdio.h>
 
-/*
-static matrix_t cov_pred;
-static matrix_t state_pred_jacob_trans;
-static matrix_t obsv_model_jacob_trans;
-static matrix_t meas_pred_cov;
-static matrix_t meas_pred_cov_inv;
-static matrix_t kalman_gain;
-static matrix_t meas_residual;
-static matrix_t kalman_x_obsv;
-*/
-
 uint8_t ekf_init(ekf_t *ekf, matrix_t *state, matrix_t *covariance) {
 	// NOTE: Copying may not be necessary for most uses but will cause errors if args are freed.
 	ekf->state = copy_matrix(state);
@@ -60,8 +49,6 @@ uint8_t ekf_update(ekf_t *ekf, matrix_t *meas, matrix_t *state_pred, matrix_t *s
 	matrix_t *meas_pred_cov_inv = inv_matrix(meas_pred_cov);
 	kalman_gain = mul_matrix_alloc(cov_pred, obsv_model_jacob_trans);
 	kalman_gain = mul_matrix_free(kalman_gain, meas_pred_cov_inv);
-	/*
-	*/
 
 	/* ============================ State Update =========================== */
 	matrix_t *meas_residual; // V_k = Z_k - h(^X-k) (not H_k) :: Again a seperate variable to make computation simpler.
@@ -71,8 +58,6 @@ uint8_t ekf_update(ekf_t *ekf, matrix_t *meas, matrix_t *state_pred, matrix_t *s
 
 	// add_matrix(state_pred, kalman_x_resid, ekf->state); // X_k = ^X_k + K_k * (Z_k - h(^X-k)) (not H_k)
 	add_matrix(state_pred, kalman_x_resid, ekf->state); // X_k = ^X_k + K_k * (Z_k - h(^X-k)) (not H_k)
-	/*
-	*/
 
 	/* ========================= Covariance Update ========================= */
 
@@ -96,8 +81,6 @@ uint8_t ekf_update(ekf_t *ekf, matrix_t *meas, matrix_t *state_pred, matrix_t *s
 	free_matrix(meas_residual);
 	free_matrix(kalman_x_resid);
 	free_matrix(kalman_x_obsv);
-	/*
-	*/
 
 	return 0;
 }

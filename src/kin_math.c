@@ -375,8 +375,6 @@ uint8_t normalize_matrix(matrix_t *matrix) {
 	matrix_t *matrix_cpy = copy_matrix(matrix);
 	scale_matrix(matrix_cpy, 1 / norm, matrix);
 	free_matrix(matrix_cpy);
-	/*
-	 */
 
 	return 0;
 }
@@ -427,15 +425,7 @@ matrix_t *euler_to_quat(const matrix_t *matrix) {
 
 matrix_t *quat_to_euler(matrix_t *matrix) {
 	matrix_t *ret = init_matrix(3, 1);
-	// matrix_t *normed = normalize_matrix(matrix);
-	matrix_t *normed = matrix;
-
-	/* Not sure if this is left over code.
-	   float w2 = pow(normed->data[W], 2);
-	   float x2 = pow(normed->data[X], 2);
-	   float y2 = pow(normed->data[Y], 2);
-	   float z2 = pow(normed->data[Z], 2);
-	 */
+	matrix_t *normed = normalize_matrix_alloc(matrix);
 
 	ret->data[X] = atan2(
 		2 * (normed->data[W] * normed->data[X] + normed->data[Y] * normed->data[Z]),
@@ -450,6 +440,8 @@ matrix_t *quat_to_euler(matrix_t *matrix) {
 	for (int i = 0; i < 3; i++) {
 		ret->data[i] = rad_to_deg(ret->data[i]);
 	}
+
+	free_matrix(normed);
 
 	return ret;
 }
