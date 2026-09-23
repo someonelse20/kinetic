@@ -24,18 +24,7 @@
 */
 var NAVTREE =
 [
-  [ "Kinetic", "index.html", [
-    [ "kinetic", "md_AGENTS.html", [
-      [ "Build", "md_AGENTS.html#autotoc_md1", null ],
-      [ "Python Demo API", "md_AGENTS.html#autotoc_md2", null ],
-      [ "Architecture", "md_AGENTS.html#autotoc_md3", null ],
-      [ "Testing", "md_AGENTS.html#autotoc_md4", null ],
-      [ "Key Implementation Details", "md_AGENTS.html#autotoc_md5", null ],
-      [ "Platform Notes", "md_AGENTS.html#autotoc_md6", null ],
-      [ "Calibration", "md_AGENTS.html#autotoc_md7", null ]
-    ] ],
-    [ "kinetic", "md_README.html", null ]
-  ] ]
+  [ "Kinetic", "index.html", ]
 ];
 
 var NAVTREEINDEX =
