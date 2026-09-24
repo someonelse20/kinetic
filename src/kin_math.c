@@ -103,7 +103,7 @@ void print_arr(const float *arr, uint8_t size) {
 }
 
 uint8_t move_matrix(const matrix_t *src, matrix_t *dest) {
-	if (src->rows != dest->rows || src->cols != dest->cols) error_handler(MATRIX_DIMENTION_ERROR);
+	if (src->rows != dest->rows || src->cols != dest->cols) error_handler(MATRIX_DIMENSION_ERROR);
 
 	for (int i = 0; i < src->rows * src->cols; i++) {
 		dest->data[i] = src->data[i];
@@ -123,7 +123,7 @@ uint8_t trans_matrix(const matrix_t *matrix, matrix_t *ret) {
 }
 
 uint8_t add_matrix(const matrix_t *a, const matrix_t *b, matrix_t *ret) {
-	if (a->rows != b->rows || a->cols != b->cols) error_handler(MATRIX_DIMENTION_ERROR);
+	if (a->rows != b->rows || a->cols != b->cols) error_handler(MATRIX_DIMENSION_ERROR);
 
 	for (uint8_t i = 0; i < a->rows * a->cols; i++) {
 		ret->data[i] = a->data[i] + b->data[i];
@@ -133,7 +133,7 @@ uint8_t add_matrix(const matrix_t *a, const matrix_t *b, matrix_t *ret) {
 }
 
 uint8_t sub_matrix(const matrix_t *a, const matrix_t *b, matrix_t *ret) {
-	if (a->rows != b->rows || a->cols != b->cols) error_handler(MATRIX_DIMENTION_ERROR);
+	if (a->rows != b->rows || a->cols != b->cols) error_handler(MATRIX_DIMENSION_ERROR);
 
 	for (uint8_t i = 0; i < a->rows * a->cols; i++) {
 		ret->data[i] = a->data[i] - b->data[i];
@@ -143,7 +143,7 @@ uint8_t sub_matrix(const matrix_t *a, const matrix_t *b, matrix_t *ret) {
 }
 
 uint8_t mul_matrix(const matrix_t *a, const matrix_t *b, matrix_t *ret) {
-	if (a->cols != b->rows) error_handler(MATRIX_DIMENTION_ERROR);
+	if (a->cols != b->rows) error_handler(MATRIX_DIMENSION_ERROR);
 
 	for (uint8_t i = 0; i < a->rows; i++) {
 		for (uint8_t j = 0; j < b->cols; j++) {
@@ -226,7 +226,7 @@ matrix_t *scale_matrix_free(matrix_t *matrix, float scalar) {
 }
 
 float matrix_det(const matrix_t *matrix) { // This function is ai generated with some modification.
-	if (matrix->rows != matrix->cols) error_handler(MATRIX_DIMENTION_ERROR);
+	if (matrix->rows != matrix->cols) error_handler(MATRIX_DIMENSION_ERROR);
 
 	uint8_t size = matrix->rows;
 
@@ -267,8 +267,8 @@ float matrix_norm(const matrix_t *matrix) {
 }
 
 float matrix_minor(const matrix_t *matrix, uint8_t row, uint8_t col) {
-	if (matrix->cols != matrix->rows) error_handler(MATRIX_DIMENTION_ERROR);
-	if (matrix->rows < 2) error_handler(MATRIX_DIMENTION_ERROR);
+	if (matrix->cols != matrix->rows) error_handler(MATRIX_DIMENSION_ERROR);
+	if (matrix->rows < 2) error_handler(MATRIX_DIMENSION_ERROR);
 	uint8_t size = matrix->rows;
 
 	uint8_t index = 0;
@@ -293,7 +293,7 @@ matrix_t *inv_quat(const matrix_t *matrix) {
 	// Computation of a unit quaternion (normal of 1) is much easier.
 	// q^-1 = q^8 / ||q||^2
 
-	if (!is_quat(matrix)) error_handler(MATRIX_DIMENTION_ERROR);
+	if (!is_quat(matrix)) error_handler(MATRIX_DIMENSION_ERROR);
 
 	matrix_t *ret;
 
@@ -314,8 +314,8 @@ matrix_t *inv_quat(const matrix_t *matrix) {
 }
 
 matrix_t *inv_matrix(const matrix_t *matrix) {
-	if (matrix->cols != matrix->rows) error_handler(MATRIX_DIMENTION_ERROR);
-	if (matrix->cols < 2) error_handler(MATRIX_DIMENTION_ERROR);
+	if (matrix->cols != matrix->rows) error_handler(MATRIX_DIMENSION_ERROR);
+	if (matrix->cols < 2) error_handler(MATRIX_DIMENSION_ERROR);
 
 	float det = matrix_det(matrix);
 	// Technically if the detrement is 0 the math is saying there isn't an inverse.
@@ -333,8 +333,8 @@ matrix_t *inv_matrix(const matrix_t *matrix) {
 }
 
 matrix_t *ajt_matrix(const matrix_t *matrix) {
-	if (matrix->cols != matrix->rows) error_handler(MATRIX_DIMENTION_ERROR);
-	if (matrix->cols < 2) error_handler(MATRIX_DIMENTION_ERROR);
+	if (matrix->cols != matrix->rows) error_handler(MATRIX_DIMENSION_ERROR);
+	if (matrix->cols < 2) error_handler(MATRIX_DIMENSION_ERROR);
 
 	matrix_t *ajt = init_matrix(matrix->rows, matrix->cols);
 	uint8_t size = matrix->rows;
@@ -388,7 +388,7 @@ matrix_t *normalize_matrix_alloc(const matrix_t *matrix) {
 matrix_t *skew_symm_matrix(const matrix_t *matrix) {
 	if (!is_vector(matrix)) {
 		printf("For now skew_symm_matrix only works for 3x1 vectors.");
-		error_handler(MATRIX_DIMENTION_ERROR);
+		error_handler(MATRIX_DIMENSION_ERROR);
 	}
 
 	matrix_t *ret = init_matrix(3, 3);
@@ -447,7 +447,7 @@ matrix_t *quat_to_euler(matrix_t *matrix) {
 }
 
 matrix_t *quat_to_rot_matrix(const matrix_t *matrix) { // NOTE: There seems to be multiple ways to do this
-	if (matrix->rows != 4 || matrix->cols != 1) error_handler(MATRIX_DIMENTION_ERROR);
+	if (matrix->rows != 4 || matrix->cols != 1) error_handler(MATRIX_DIMENSION_ERROR);
 	matrix_t *result = init_matrix(3, 3);
 	float *data = matrix->data;
 
@@ -467,7 +467,7 @@ matrix_t *quat_to_rot_matrix(const matrix_t *matrix) { // NOTE: There seems to b
 }
 
 matrix_t *rot_matrix_to_quat(const matrix_t *matrix) { // this function is from https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
-	if (matrix->rows != 3 || matrix->cols != 3) error_handler(MATRIX_DIMENTION_ERROR);
+	if (matrix->rows != 3 || matrix->cols != 3) error_handler(MATRIX_DIMENSION_ERROR);
 	matrix_t *ret = init_matrix(4, 1);
 
 	float tr = matrix->data[0] + matrix->data[4] + matrix->data[8];
@@ -502,7 +502,7 @@ matrix_t *rot_matrix_to_quat(const matrix_t *matrix) { // this function is from 
 }
 
 matrix_t *euler_to_rot_matrix(const matrix_t *matrix) {
-	if (!is_vector(matrix)) error_handler(MATRIX_DIMENTION_ERROR);
+	if (!is_vector(matrix)) error_handler(MATRIX_DIMENSION_ERROR);
 
 	matrix_t *ret;
 
@@ -562,8 +562,8 @@ bool is_vector(const matrix_t *matrix) {
 
 float dot_prod(const matrix_t *a, const matrix_t *b) {
 	// Must have 1 column and same amount of rows.
-	if (a->cols != 1 || b->cols != 1) error_handler(MATRIX_DIMENTION_ERROR);
-	if (a->rows != b->rows) error_handler(MATRIX_DIMENTION_ERROR);
+	if (a->cols != 1 || b->cols != 1) error_handler(MATRIX_DIMENSION_ERROR);
+	if (a->rows != b->rows) error_handler(MATRIX_DIMENSION_ERROR);
 
 	float ret = 0;
 	for (int i = 0; i < 3; i++) {
@@ -573,7 +573,7 @@ float dot_prod(const matrix_t *a, const matrix_t *b) {
 }
 
 matrix_t *quat_prod(const matrix_t *a, const matrix_t *b) {
-	if (!is_quat(a) || !is_quat(b)) error_handler(MATRIX_DIMENTION_ERROR);
+	if (!is_quat(a) || !is_quat(b)) error_handler(MATRIX_DIMENSION_ERROR);
 
 	matrix_t *ret = init_matrix(4, 1);
 
@@ -586,7 +586,7 @@ matrix_t *quat_prod(const matrix_t *a, const matrix_t *b) {
 }
 
 matrix_t *cross_prod(const matrix_t *a, const matrix_t *b) {
-	if (!is_vector(a) || !is_vector(b)) error_handler(MATRIX_DIMENTION_ERROR);
+	if (!is_vector(a) || !is_vector(b)) error_handler(MATRIX_DIMENSION_ERROR);
 
 	matrix_t *ret = init_matrix(3, 1);
 
@@ -598,7 +598,7 @@ matrix_t *cross_prod(const matrix_t *a, const matrix_t *b) {
 }
 
 matrix_t *quat_conjugate(const matrix_t *matrix) {
-	if (!is_quat(matrix)) error_handler(MATRIX_DIMENTION_ERROR);
+	if (!is_quat(matrix)) error_handler(MATRIX_DIMENSION_ERROR);
 
 	matrix_t *ret = init_matrix(4, 1);
 	ret->data[X] = -matrix->data[X];
@@ -610,7 +610,7 @@ matrix_t *quat_conjugate(const matrix_t *matrix) {
 }
 
 uint8_t *enu_to_ned(matrix_t *v_enu) {
-	if (!is_vector(v_enu)) error_handler(MATRIX_DIMENTION_ERROR);
+	if (!is_vector(v_enu)) error_handler(MATRIX_DIMENSION_ERROR);
 
 	matrix_t *v_ned = init_matrix(3, 1);
 	v_ned->data[X] = -v_enu->data[Y];
@@ -624,7 +624,7 @@ uint8_t *enu_to_ned(matrix_t *v_enu) {
 }
 
 uint8_t *ned_to_enu(matrix_t *v_ned) {
-	if (!is_vector(v_ned)) error_handler(MATRIX_DIMENTION_ERROR);
+	if (!is_vector(v_ned)) error_handler(MATRIX_DIMENSION_ERROR);
 
 	matrix_t *v_enu = init_matrix(3, 1);
 	v_enu->data[X] = -v_ned->data[Y];
