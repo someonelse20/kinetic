@@ -112,20 +112,20 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('kin__ekf_8h_so
   <div class="headertitle"><div class="title">kin_ekf.h</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#ifndef KIN_EKF_H</span></div>
+<a href="kin__ekf_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#ifndef KIN_EKF_H</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define KIN_EKF_H</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#ifdef __cplusplus</span></div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#endif</span></div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;kin_types.h&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;<a class="code" href="kin__types_8h.html">kin_types.h</a>&quot;</span></div>
 <div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span></div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>uint8_t ekf_init(<a class="code hl_struct" href="structekf__t.html">ekf_t</a> *ekf, <a class="code hl_struct" href="structmatrix__t.html">matrix_t</a> *state, <a class="code hl_struct" href="structmatrix__t.html">matrix_t</a> *variance);</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno"><a class="line" href="kin__ekf_8h.html#af6d36366f53fcbaca382f2a8b58c6a26">   22</a></span>uint8_t <a class="code hl_function" href="kin__ekf_8h.html#af6d36366f53fcbaca382f2a8b58c6a26">ekf_init</a>(<a class="code hl_struct" href="structekf__t.html">ekf_t</a> *ekf, <a class="code hl_struct" href="structmatrix__t.html">matrix_t</a> *state, <a class="code hl_struct" href="structmatrix__t.html">matrix_t</a> *variance);</div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span></div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>uint8_t ekf_deinit(<a class="code hl_struct" href="structekf__t.html">ekf_t</a> *ekf);</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno"><a class="line" href="kin__ekf_8h.html#ab33cdce9bfa67f83837bf27a34e7a1ee">   33</a></span>uint8_t <a class="code hl_function" href="kin__ekf_8h.html#ab33cdce9bfa67f83837bf27a34e7a1ee">ekf_deinit</a>(<a class="code hl_struct" href="structekf__t.html">ekf_t</a> *ekf);</div>
 <div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span></div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>uint8_t ekf_update(<a class="code hl_struct" href="structekf__t.html">ekf_t</a> *ekf, <a class="code hl_struct" href="structmatrix__t.html">matrix_t</a> *meas, <a class="code hl_struct" href="structmatrix__t.html">matrix_t</a> *state_pred, <a class="code hl_struct" href="structmatrix__t.html">matrix_t</a> *state_pred_jacob,</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno"><a class="line" href="kin__ekf_8h.html#ac2a049727d22292f45a15540ad0b612e">   57</a></span>uint8_t <a class="code hl_function" href="kin__ekf_8h.html#ac2a049727d22292f45a15540ad0b612e">ekf_update</a>(<a class="code hl_struct" href="structekf__t.html">ekf_t</a> *ekf, <a class="code hl_struct" href="structmatrix__t.html">matrix_t</a> *meas, <a class="code hl_struct" href="structmatrix__t.html">matrix_t</a> *state_pred, <a class="code hl_struct" href="structmatrix__t.html">matrix_t</a> *state_pred_jacob,</div>
 <div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>                   <a class="code hl_struct" href="structmatrix__t.html">matrix_t</a> *obsv_model, <a class="code hl_struct" href="structmatrix__t.html">matrix_t</a> *obsv_model_jacob, <a class="code hl_struct" href="structmatrix__t.html">matrix_t</a> *proc_noise, <a class="code hl_struct" href="structmatrix__t.html">matrix_t</a> *meas_noise);</div>
 <div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="preprocessor">#ifdef __cplusplus</span></div>
@@ -133,6 +133,10 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('kin__ekf_8h_so
 <div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="preprocessor">#endif</span></div>
 <div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
 <div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="akin__ekf_8h_html_ab33cdce9bfa67f83837bf27a34e7a1ee"><div class="ttname"><a href="kin__ekf_8h.html#ab33cdce9bfa67f83837bf27a34e7a1ee">ekf_deinit</a></div><div class="ttdeci">uint8_t ekf_deinit(ekf_t *ekf)</div><div class="ttdoc">Deinitialize the EKF and free allocated resources.</div></div>
+<div class="ttc" id="akin__ekf_8h_html_ac2a049727d22292f45a15540ad0b612e"><div class="ttname"><a href="kin__ekf_8h.html#ac2a049727d22292f45a15540ad0b612e">ekf_update</a></div><div class="ttdeci">uint8_t ekf_update(ekf_t *ekf, matrix_t *meas, matrix_t *state_pred, matrix_t *state_pred_jacob, matrix_t *obsv_model, matrix_t *obsv_model_jacob, matrix_t *proc_noise, matrix_t *meas_noise)</div><div class="ttdoc">Perform the EKF update step using prediction + measurement correction.</div></div>
+<div class="ttc" id="akin__ekf_8h_html_af6d36366f53fcbaca382f2a8b58c6a26"><div class="ttname"><a href="kin__ekf_8h.html#af6d36366f53fcbaca382f2a8b58c6a26">ekf_init</a></div><div class="ttdeci">uint8_t ekf_init(ekf_t *ekf, matrix_t *state, matrix_t *variance)</div><div class="ttdoc">Initialize the EKF state and covariance matrix.</div></div>
+<div class="ttc" id="akin__types_8h_html"><div class="ttname"><a href="kin__types_8h.html">kin_types.h</a></div></div>
 <div class="ttc" id="astructekf__t_html"><div class="ttname"><a href="structekf__t.html">ekf_t</a></div><div class="ttdoc">Extended Kalman Filter state structure.</div><div class="ttdef"><b>Definition</b> kin_types.h:41</div></div>
 <div class="ttc" id="astructmatrix__t_html"><div class="ttname"><a href="structmatrix__t.html">matrix_t</a></div><div class="ttdoc">Matrix structure for linear algebra operations.</div><div class="ttdef"><b>Definition</b> kin_types.h:30</div></div>
 </div><!-- fragment --></div><!-- contents -->
@@ -141,7 +145,7 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('kin__ekf_8h_so
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><b>inc</b></li><li class="navelem"><b>kin_ekf.h</b></li>
+    <li class="navelem"><a href="dir_bfccd401955b95cf8c75461437045ac0.html">inc</a></li><li class="navelem"><a href="kin__ekf_8h.html">kin_ekf.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.18.0 </li>
   </ul>
 </div>

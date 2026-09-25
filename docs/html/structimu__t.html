@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', codefold.init);
   </div>
 </div>
 <script type="text/javascript">
-document.addEventListener('DOMContentLoaded',() => { initNavTree('structimu__t.html','','structimu__t-members'); });
+document.addEventListener('DOMContentLoaded',() => { initNavTree('structimu__t.html','',''); });
 </script>
 <div id="container">
 <div id="doc-content">
@@ -119,40 +119,52 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('structimu__t.h
 <p><code>#include &lt;<a class="el" href="kin__types_8h_source.html">kin_types.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
+Data Fields</h2></td></tr>
 <tr class="memitem:ad1f4420aedf2d41e0b5ee721415485d9" id="r_ad1f4420aedf2d41e0b5ee721415485d9"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#ad1f4420aedf2d41e0b5ee721415485d9">gyro_noise</a></td></tr>
-<tr class="memdesc:ad1f4420aedf2d41e0b5ee721415485d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gyroscope noise variance.  <br /></td></tr>
-<tr class="memitem:a37a078fb6345e6141cdab42b50909ca0" id="r_a37a078fb6345e6141cdab42b50909ca0"><td class="memItemLeft"><a id="a37a078fb6345e6141cdab42b50909ca0" name="a37a078fb6345e6141cdab42b50909ca0"></a>
-float&#160;</td><td class="memItemRight"><b>accel_noise</b></td></tr>
-<tr class="memdesc:a37a078fb6345e6141cdab42b50909ca0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Accelerometer noise variance. <br /></td></tr>
-<tr class="memitem:aeb90aab4166266f63817cf9d2d8dd99d" id="r_aeb90aab4166266f63817cf9d2d8dd99d"><td class="memItemLeft"><a id="aeb90aab4166266f63817cf9d2d8dd99d" name="aeb90aab4166266f63817cf9d2d8dd99d"></a>
-float&#160;</td><td class="memItemRight"><b>mag_noise</b></td></tr>
-<tr class="memdesc:aeb90aab4166266f63817cf9d2d8dd99d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Magnetometer noise variance. <br /></td></tr>
+<tr class="memdesc:ad1f4420aedf2d41e0b5ee721415485d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sensor noise parameters (used for covariance matrices).  <br /></td></tr>
+<tr class="memitem:a37a078fb6345e6141cdab42b50909ca0" id="r_a37a078fb6345e6141cdab42b50909ca0"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a37a078fb6345e6141cdab42b50909ca0">accel_noise</a></td></tr>
+<tr class="memdesc:a37a078fb6345e6141cdab42b50909ca0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Accelerometer noise variance.  <br /></td></tr>
+<tr class="memitem:aeb90aab4166266f63817cf9d2d8dd99d" id="r_aeb90aab4166266f63817cf9d2d8dd99d"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#aeb90aab4166266f63817cf9d2d8dd99d">mag_noise</a></td></tr>
+<tr class="memdesc:aeb90aab4166266f63817cf9d2d8dd99d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Magnetometer noise variance.  <br /></td></tr>
 <tr class="memitem:a68622e6854564c97fc7633a7d62c0280" id="r_a68622e6854564c97fc7633a7d62c0280"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a68622e6854564c97fc7633a7d62c0280">mag_dip</a></td></tr>
-<tr class="memdesc:a68622e6854564c97fc7633a7d62c0280"><td class="mdescLeft">&#160;</td><td class="mdescRight">Magnetic dip angle (for reference frame computation).  <br /></td></tr>
-<tr class="memitem:ad6dbba152a928043081da8952d476100" id="r_ad6dbba152a928043081da8952d476100"><td class="memItemLeft"><a id="ad6dbba152a928043081da8952d476100" name="ad6dbba152a928043081da8952d476100"></a>
-float&#160;</td><td class="memItemRight"><b>mag_dec</b></td></tr>
-<tr class="memdesc:ad6dbba152a928043081da8952d476100"><td class="mdescLeft">&#160;</td><td class="mdescRight">Magnetic declination (unused, retained for future use). <br /></td></tr>
+<tr class="memdesc:a68622e6854564c97fc7633a7d62c0280"><td class="mdescLeft">&#160;</td><td class="mdescRight">Magnetic field configuration.  <br /></td></tr>
+<tr class="memitem:ad6dbba152a928043081da8952d476100" id="r_ad6dbba152a928043081da8952d476100"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#ad6dbba152a928043081da8952d476100">mag_dec</a></td></tr>
+<tr class="memdesc:ad6dbba152a928043081da8952d476100"><td class="mdescLeft">&#160;</td><td class="mdescRight">Magnetic declination (unused, retained for future use).  <br /></td></tr>
 <tr class="memitem:a8ffa6ec64c78033084faa5e98d1be6bc" id="r_a8ffa6ec64c78033084faa5e98d1be6bc"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a8ffa6ec64c78033084faa5e98d1be6bc">dt</a></td></tr>
-<tr class="memdesc:a8ffa6ec64c78033084faa5e98d1be6bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Time step for EKF integration.  <br /></td></tr>
+<tr class="memdesc:a8ffa6ec64c78033084faa5e98d1be6bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">System timing.  <br /></td></tr>
 <tr class="memitem:a81a9097c6f1b02bd0b4063d90d78c6d8" id="r_a81a9097c6f1b02bd0b4063d90d78c6d8"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a81a9097c6f1b02bd0b4063d90d78c6d8">enu</a></td></tr>
-<tr class="memdesc:a81a9097c6f1b02bd0b4063d90d78c6d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">true for ENU (East-North-Up), false for NED (North-East-Down)  <br /></td></tr>
+<tr class="memdesc:a81a9097c6f1b02bd0b4063d90d78c6d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Coordinate system configuration.  <br /></td></tr>
 <tr class="memitem:a94c38ac2ab3165192c69631542763f0c" id="r_a94c38ac2ab3165192c69631542763f0c"><td class="memItemLeft"><a class="el" href="structekf__t.html">ekf_t</a>&#160;</td><td class="memItemRight"><a class="el" href="#a94c38ac2ab3165192c69631542763f0c">ekf</a></td></tr>
+<tr class="memdesc:a94c38ac2ab3165192c69631542763f0c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extended Kalman Filter instance.  <br /></td></tr>
 <tr class="memitem:adb5f335ef6bde9c33e20ecbc2dac7320" id="r_adb5f335ef6bde9c33e20ecbc2dac7320"><td class="memItemLeft"><a class="el" href="structmatrix__t.html">matrix_t</a> *&#160;</td><td class="memItemRight"><a class="el" href="#adb5f335ef6bde9c33e20ecbc2dac7320">m_ref</a></td></tr>
-<tr class="memdesc:adb5f335ef6bde9c33e20ecbc2dac7320"><td class="mdescLeft">&#160;</td><td class="mdescRight">Normalized magnetic reference vector.  <br /></td></tr>
-<tr class="memitem:a344feb5f1187e657edef74262e9e2338" id="r_a344feb5f1187e657edef74262e9e2338"><td class="memItemLeft"><a id="a344feb5f1187e657edef74262e9e2338" name="a344feb5f1187e657edef74262e9e2338"></a>
-<a class="el" href="structmatrix__t.html">matrix_t</a> *&#160;</td><td class="memItemRight"><b>g_ref</b></td></tr>
-<tr class="memdesc:a344feb5f1187e657edef74262e9e2338"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gravity reference vector [0, 0, 1] in NED. <br /></td></tr>
+<tr class="memdesc:adb5f335ef6bde9c33e20ecbc2dac7320"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reference frames for measurement models.  <br /></td></tr>
+<tr class="memitem:a344feb5f1187e657edef74262e9e2338" id="r_a344feb5f1187e657edef74262e9e2338"><td class="memItemLeft"><a class="el" href="structmatrix__t.html">matrix_t</a> *&#160;</td><td class="memItemRight"><a class="el" href="#a344feb5f1187e657edef74262e9e2338">g_ref</a></td></tr>
+<tr class="memdesc:a344feb5f1187e657edef74262e9e2338"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gravity reference vector [0, 0, 1] in NED.  <br /></td></tr>
 <tr class="memitem:a5ce8c46b70187e90401cfffdbc324f7c" id="r_a5ce8c46b70187e90401cfffdbc324f7c"><td class="memItemLeft"><a class="el" href="structmatrix__t.html">matrix_t</a> *&#160;</td><td class="memItemRight"><a class="el" href="#a5ce8c46b70187e90401cfffdbc324f7c">proc_noise</a></td></tr>
-<tr class="memdesc:a5ce8c46b70187e90401cfffdbc324f7c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Process noise covariance Q (3x3).  <br /></td></tr>
-<tr class="memitem:a11d80fa1388a3aa00c3dd9a3e0cad2b7" id="r_a11d80fa1388a3aa00c3dd9a3e0cad2b7"><td class="memItemLeft"><a id="a11d80fa1388a3aa00c3dd9a3e0cad2b7" name="a11d80fa1388a3aa00c3dd9a3e0cad2b7"></a>
-<a class="el" href="structmatrix__t.html">matrix_t</a> *&#160;</td><td class="memItemRight"><b>meas_noise</b></td></tr>
-<tr class="memdesc:a11d80fa1388a3aa00c3dd9a3e0cad2b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Measurement noise covariance R (6x6). <br /></td></tr>
+<tr class="memdesc:a5ce8c46b70187e90401cfffdbc324f7c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Noise covariance matrices.  <br /></td></tr>
+<tr class="memitem:a11d80fa1388a3aa00c3dd9a3e0cad2b7" id="r_a11d80fa1388a3aa00c3dd9a3e0cad2b7"><td class="memItemLeft"><a class="el" href="structmatrix__t.html">matrix_t</a> *&#160;</td><td class="memItemRight"><a class="el" href="#a11d80fa1388a3aa00c3dd9a3e0cad2b7">meas_noise</a></td></tr>
+<tr class="memdesc:a11d80fa1388a3aa00c3dd9a3e0cad2b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Measurement noise covariance R (6x6).  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>IMU structure containing EKF and sensor configuration. </p>
 <p>Central structure for IMU state estimation, noise parameters, and reference frames. </p>
-</div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
+</div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Field Documentation</h2>
+<a id="a37a078fb6345e6141cdab42b50909ca0" name="a37a078fb6345e6141cdab42b50909ca0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a37a078fb6345e6141cdab42b50909ca0">&#9670;&#160;</a></span>accel_noise</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float imu_t::accel_noise</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Accelerometer noise variance. </p>
+
+</div>
+</div>
 <a id="a8ffa6ec64c78033084faa5e98d1be6bc" name="a8ffa6ec64c78033084faa5e98d1be6bc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8ffa6ec64c78033084faa5e98d1be6bc">&#9670;&#160;</a></span>dt</h2>
 
@@ -165,8 +177,8 @@ float&#160;</td><td class="memItemRight"><b>mag_dec</b></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Time step for EKF integration. </p>
-<p>System timing </p>
+<p>System timing. </p>
+<p>Time step for EKF integration </p>
 
 </div>
 </div>
@@ -181,7 +193,8 @@ float&#160;</td><td class="memItemRight"><b>mag_dec</b></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Extended Kalman Filter instance </p>
+
+<p>Extended Kalman Filter instance. </p>
 
 </div>
 </div>
@@ -197,8 +210,24 @@ float&#160;</td><td class="memItemRight"><b>mag_dec</b></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Coordinate system configuration. </p>
 <p>true for ENU (East-North-Up), false for NED (North-East-Down) </p>
-<p>Coordinate system configuration </p>
+
+</div>
+</div>
+<a id="a344feb5f1187e657edef74262e9e2338" name="a344feb5f1187e657edef74262e9e2338"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a344feb5f1187e657edef74262e9e2338">&#9670;&#160;</a></span>g_ref</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structmatrix__t.html">matrix_t</a>* imu_t::g_ref</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gravity reference vector [0, 0, 1] in NED. </p>
 
 </div>
 </div>
@@ -214,8 +243,8 @@ float&#160;</td><td class="memItemRight"><b>mag_dec</b></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Gyroscope noise variance. </p>
-<p>Sensor noise parameters (used for covariance matrices) </p>
+<p>Sensor noise parameters (used for covariance matrices). </p>
+<p>Gyroscope noise variance </p>
 
 </div>
 </div>
@@ -231,8 +260,24 @@ float&#160;</td><td class="memItemRight"><b>mag_dec</b></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Normalized magnetic reference vector. </p>
-<p>Reference frames for measurement models </p>
+<p>Reference frames for measurement models. </p>
+<p>Normalized magnetic reference vector </p>
+
+</div>
+</div>
+<a id="ad6dbba152a928043081da8952d476100" name="ad6dbba152a928043081da8952d476100"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad6dbba152a928043081da8952d476100">&#9670;&#160;</a></span>mag_dec</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float imu_t::mag_dec</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Magnetic declination (unused, retained for future use). </p>
 
 </div>
 </div>
@@ -248,8 +293,40 @@ float&#160;</td><td class="memItemRight"><b>mag_dec</b></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Magnetic dip angle (for reference frame computation). </p>
-<p>Magnetic field configuration </p>
+<p>Magnetic field configuration. </p>
+<p>Magnetic dip angle (for reference frame computation) </p>
+
+</div>
+</div>
+<a id="aeb90aab4166266f63817cf9d2d8dd99d" name="aeb90aab4166266f63817cf9d2d8dd99d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeb90aab4166266f63817cf9d2d8dd99d">&#9670;&#160;</a></span>mag_noise</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float imu_t::mag_noise</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Magnetometer noise variance. </p>
+
+</div>
+</div>
+<a id="a11d80fa1388a3aa00c3dd9a3e0cad2b7" name="a11d80fa1388a3aa00c3dd9a3e0cad2b7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a11d80fa1388a3aa00c3dd9a3e0cad2b7">&#9670;&#160;</a></span>meas_noise</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structmatrix__t.html">matrix_t</a>* imu_t::meas_noise</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Measurement noise covariance R (6x6). </p>
 
 </div>
 </div>
@@ -265,8 +342,8 @@ float&#160;</td><td class="memItemRight"><b>mag_dec</b></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Process noise covariance Q (3x3). </p>
-<p>Noise covariance matrices </p>
+<p>Noise covariance matrices. </p>
+<p>Process noise covariance Q (3x3) </p>
 
 </div>
 </div>

@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', codefold.init);
   </div>
 </div>
 <script type="text/javascript">
-document.addEventListener('DOMContentLoaded',() => { initNavTree('structekf__t.html','','structekf__t-members'); });
+document.addEventListener('DOMContentLoaded',() => { initNavTree('structekf__t.html','',''); });
 </script>
 <div id="container">
 <div id="doc-content">
@@ -119,18 +119,49 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('structekf__t.h
 <p><code>#include &lt;<a class="el" href="kin__types_8h_source.html">kin_types.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:a6347e0291ac91303cca9abd4bb8d23a3" id="r_a6347e0291ac91303cca9abd4bb8d23a3"><td class="memItemLeft"><a id="a6347e0291ac91303cca9abd4bb8d23a3" name="a6347e0291ac91303cca9abd4bb8d23a3"></a>
-<a class="el" href="structmatrix__t.html">matrix_t</a> *&#160;</td><td class="memItemRight"><b>state</b></td></tr>
-<tr class="memdesc:a6347e0291ac91303cca9abd4bb8d23a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">State vector X (typically 4x1 for quaternion). <br /></td></tr>
-<tr class="memitem:ac3b21d4a5c9c79671635664ec1a9097d" id="r_ac3b21d4a5c9c79671635664ec1a9097d"><td class="memItemLeft"><a id="ac3b21d4a5c9c79671635664ec1a9097d" name="ac3b21d4a5c9c79671635664ec1a9097d"></a>
-<a class="el" href="structmatrix__t.html">matrix_t</a> *&#160;</td><td class="memItemRight"><b>covariance</b></td></tr>
-<tr class="memdesc:ac3b21d4a5c9c79671635664ec1a9097d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Covariance matrix P. <br /></td></tr>
+Data Fields</h2></td></tr>
+<tr class="memitem:a6347e0291ac91303cca9abd4bb8d23a3" id="r_a6347e0291ac91303cca9abd4bb8d23a3"><td class="memItemLeft"><a class="el" href="structmatrix__t.html">matrix_t</a> *&#160;</td><td class="memItemRight"><a class="el" href="#a6347e0291ac91303cca9abd4bb8d23a3">state</a></td></tr>
+<tr class="memdesc:a6347e0291ac91303cca9abd4bb8d23a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">State vector X (typically 4x1 for quaternion).  <br /></td></tr>
+<tr class="memitem:ac3b21d4a5c9c79671635664ec1a9097d" id="r_ac3b21d4a5c9c79671635664ec1a9097d"><td class="memItemLeft"><a class="el" href="structmatrix__t.html">matrix_t</a> *&#160;</td><td class="memItemRight"><a class="el" href="#ac3b21d4a5c9c79671635664ec1a9097d">covariance</a></td></tr>
+<tr class="memdesc:ac3b21d4a5c9c79671635664ec1a9097d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Covariance matrix P.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Extended Kalman Filter state structure. </p>
 <p>Holds the EKF state vector and covariance matrix. </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
+</div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Field Documentation</h2>
+<a id="ac3b21d4a5c9c79671635664ec1a9097d" name="ac3b21d4a5c9c79671635664ec1a9097d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac3b21d4a5c9c79671635664ec1a9097d">&#9670;&#160;</a></span>covariance</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structmatrix__t.html">matrix_t</a>* ekf_t::covariance</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Covariance matrix P. </p>
+
+</div>
+</div>
+<a id="a6347e0291ac91303cca9abd4bb8d23a3" name="a6347e0291ac91303cca9abd4bb8d23a3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6347e0291ac91303cca9abd4bb8d23a3">&#9670;&#160;</a></span>state</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structmatrix__t.html">matrix_t</a>* ekf_t::state</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>State vector X (typically 4x1 for quaternion). </p>
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
 <li>inc/<a class="el" href="kin__types_8h_source.html">kin_types.h</a></li>
 </ul>
 </div><!-- contents -->

@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', codefold.init);
   </div>
 </div>
 <script type="text/javascript">
-document.addEventListener('DOMContentLoaded',() => { initNavTree('structmatrix__t.html','','structmatrix__t-members'); });
+document.addEventListener('DOMContentLoaded',() => { initNavTree('structmatrix__t.html','',''); });
 </script>
 <div id="container">
 <div id="doc-content">
@@ -119,21 +119,67 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('structmatrix__
 <p><code>#include &lt;<a class="el" href="kin__types_8h_source.html">kin_types.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:ab5191311233e58196be2d3d38885db19" id="r_ab5191311233e58196be2d3d38885db19"><td class="memItemLeft"><a id="ab5191311233e58196be2d3d38885db19" name="ab5191311233e58196be2d3d38885db19"></a>
-uint8_t&#160;</td><td class="memItemRight"><b>rows</b></td></tr>
-<tr class="memdesc:ab5191311233e58196be2d3d38885db19"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of rows in the matrix. <br /></td></tr>
-<tr class="memitem:a15a64c8a6709df06e3f9413149a08c8d" id="r_a15a64c8a6709df06e3f9413149a08c8d"><td class="memItemLeft"><a id="a15a64c8a6709df06e3f9413149a08c8d" name="a15a64c8a6709df06e3f9413149a08c8d"></a>
-uint8_t&#160;</td><td class="memItemRight"><b>cols</b></td></tr>
-<tr class="memdesc:a15a64c8a6709df06e3f9413149a08c8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of columns in the matrix. <br /></td></tr>
-<tr class="memitem:aa4a283e68196be2dfdab2b0ed6d4a7e9" id="r_aa4a283e68196be2dfdab2b0ed6d4a7e9"><td class="memItemLeft"><a id="aa4a283e68196be2dfdab2b0ed6d4a7e9" name="aa4a283e68196be2dfdab2b0ed6d4a7e9"></a>
-float *&#160;</td><td class="memItemRight"><b>data</b></td></tr>
-<tr class="memdesc:aa4a283e68196be2dfdab2b0ed6d4a7e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to contiguous array of size rows * cols. <br /></td></tr>
+Data Fields</h2></td></tr>
+<tr class="memitem:ab5191311233e58196be2d3d38885db19" id="r_ab5191311233e58196be2d3d38885db19"><td class="memItemLeft">uint8_t&#160;</td><td class="memItemRight"><a class="el" href="#ab5191311233e58196be2d3d38885db19">rows</a></td></tr>
+<tr class="memdesc:ab5191311233e58196be2d3d38885db19"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of rows in the matrix.  <br /></td></tr>
+<tr class="memitem:a15a64c8a6709df06e3f9413149a08c8d" id="r_a15a64c8a6709df06e3f9413149a08c8d"><td class="memItemLeft">uint8_t&#160;</td><td class="memItemRight"><a class="el" href="#a15a64c8a6709df06e3f9413149a08c8d">cols</a></td></tr>
+<tr class="memdesc:a15a64c8a6709df06e3f9413149a08c8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of columns in the matrix.  <br /></td></tr>
+<tr class="memitem:aa4a283e68196be2dfdab2b0ed6d4a7e9" id="r_aa4a283e68196be2dfdab2b0ed6d4a7e9"><td class="memItemLeft">float *&#160;</td><td class="memItemRight"><a class="el" href="#aa4a283e68196be2dfdab2b0ed6d4a7e9">data</a></td></tr>
+<tr class="memdesc:aa4a283e68196be2dfdab2b0ed6d4a7e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to contiguous array of size rows * cols.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Matrix structure for linear algebra operations. </p>
 <p>Stores a 2D matrix of float values in row-major order. </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
+</div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Field Documentation</h2>
+<a id="a15a64c8a6709df06e3f9413149a08c8d" name="a15a64c8a6709df06e3f9413149a08c8d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a15a64c8a6709df06e3f9413149a08c8d">&#9670;&#160;</a></span>cols</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t matrix_t::cols</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Number of columns in the matrix. </p>
+
+</div>
+</div>
+<a id="aa4a283e68196be2dfdab2b0ed6d4a7e9" name="aa4a283e68196be2dfdab2b0ed6d4a7e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa4a283e68196be2dfdab2b0ed6d4a7e9">&#9670;&#160;</a></span>data</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float* matrix_t::data</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Pointer to contiguous array of size rows * cols. </p>
+
+</div>
+</div>
+<a id="ab5191311233e58196be2d3d38885db19" name="ab5191311233e58196be2d3d38885db19"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab5191311233e58196be2d3d38885db19">&#9670;&#160;</a></span>rows</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t matrix_t::rows</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Number of rows in the matrix. </p>
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
 <li>inc/<a class="el" href="kin__types_8h_source.html">kin_types.h</a></li>
 </ul>
 </div><!-- contents -->
