@@ -139,7 +139,7 @@ FILE_PATTERNS          = *.c \
                          *.cpp \
 						 *.h \
 						 *.py \
-RECURSIVE              = NO
+RECURSIVE              = YES
 EXCLUDE                = *.md \
                          *.html \
 						 *.css \
