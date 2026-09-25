@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['x_0',['X',['../kin__types_8h.html#a207fd5507206d307cd63f95374fcd00d',1,'kin_types.h']]]
+  ['w_0',['W',['../kin__types_8h.html#a649b8f01fd6c0f47ff3cbddaeba63bfb',1,'kin_types.h']]]
 ];

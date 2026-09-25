@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.18.0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Kinetic: Main Page</title>
+<title>Kinetic: Kinetic Documentation</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="codefolding.js"></script>
 <script type="text/javascript" src="clipboard.js"></script>
@@ -108,10 +108,56 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 </div>
 </div>
 
-<div class="header">
-  <div class="headertitle"><div class="title">Kinetic Documentation</div></div>
+<div><div class="header">
+  <div class="headertitle"><div class="title">Kinetic Documentation </div></div>
 </div><!--header-->
 <div class="contents">
+<div class="textblock"><p>Kinetic is a C/C++ sensor fusion library implementing an Extended Kalman Filter (EKF) for IMU data. It uses CMake as its build system and includes tools for calibration and testing.</p>
+<h1 class="doxsection"><a class="anchor" id="quickstart"></a>
+Quick Start</h1>
+<p>The primary API is exposed through <a class="el" href="kin__imu_8h.html" title="Kinetic IMU Sensor Fusion Library.">kin_imu.h</a>:</p>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;<a class="code" href="kin__imu_8h.html">kin_imu.h</a>&quot;</span></div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// Initialize IMU</span></div>
+<div class="line"><a class="code hl_struct" href="structimu__t.html">imu_t</a> imu;</div>
+<div class="line"><span class="keywordtype">float</span> accel[3] = {0, 0, 9.81};</div>
+<div class="line"><span class="keywordtype">float</span> mag[3] = {0, 0, 0};</div>
+<div class="line"><a class="code hl_function" href="kin__imu_8h.html#a169990284a9b6007b293ebe5a74e9d8e">imu_init</a>(&amp;imu, accel, mag);</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// Update with new measurements</span></div>
+<div class="line"><a class="code hl_function" href="kin__imu_8h.html#a3e61bb112fe1488a358846b4ff284c4a">imu_update</a>(&amp;imu, new_gyro, new_accel, new_mag);</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// Get euler angle output</span></div>
+<div class="line"><a class="code hl_struct" href="structmatrix__t.html">matrix_t</a> *euler = <a class="code hl_function" href="kin__math_8h.html#ac30acb07be7262f30996418bee389cc2">quat_to_euler</a>(imu.<a class="code hl_variable" href="structimu__t.html#a94c38ac2ab3165192c69631542763f0c">ekf</a>.<a class="code hl_variable" href="structekf__t.html#a6347e0291ac91303cca9abd4bb8d23a3">state</a>);</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// Convert output to array</span></div>
+<div class="line"><span class="keywordtype">float</span> *euler_arr = <a class="code hl_function" href="kin__math_8h.html#a9c4c0e716fa81cfcbde398daac610d18">matrix_to_arr</a>(euler);</div>
+<div class="ttc" id="akin__imu_8h_html"><div class="ttname"><a href="kin__imu_8h.html">kin_imu.h</a></div><div class="ttdoc">Kinetic IMU Sensor Fusion Library.</div></div>
+<div class="ttc" id="akin__imu_8h_html_a169990284a9b6007b293ebe5a74e9d8e"><div class="ttname"><a href="kin__imu_8h.html#a169990284a9b6007b293ebe5a74e9d8e">imu_init</a></div><div class="ttdeci">matrix_t * imu_init(imu_t *imu, float *accel, float *mag)</div><div class="ttdoc">Initialize IMU EKF from accelerometer and magnetometer readings.</div></div>
+<div class="ttc" id="akin__imu_8h_html_a3e61bb112fe1488a358846b4ff284c4a"><div class="ttname"><a href="kin__imu_8h.html#a3e61bb112fe1488a358846b4ff284c4a">imu_update</a></div><div class="ttdeci">matrix_t * imu_update(imu_t *imu, float *gyro, float *accel, float *mag)</div><div class="ttdoc">Perform one EKF update step with IMU and sensor measurements.</div></div>
+<div class="ttc" id="akin__math_8h_html_a9c4c0e716fa81cfcbde398daac610d18"><div class="ttname"><a href="kin__math_8h.html#a9c4c0e716fa81cfcbde398daac610d18">matrix_to_arr</a></div><div class="ttdeci">float * matrix_to_arr(matrix_t *matrix)</div><div class="ttdoc">Convert matrix to array of floats.</div></div>
+<div class="ttc" id="akin__math_8h_html_ac30acb07be7262f30996418bee389cc2"><div class="ttname"><a href="kin__math_8h.html#ac30acb07be7262f30996418bee389cc2">quat_to_euler</a></div><div class="ttdeci">matrix_t * quat_to_euler(matrix_t *quat)</div><div class="ttdoc">Convert quaternion to Euler angles (XYZ).</div></div>
+<div class="ttc" id="astructekf__t_html_a6347e0291ac91303cca9abd4bb8d23a3"><div class="ttname"><a href="structekf__t.html#a6347e0291ac91303cca9abd4bb8d23a3">ekf_t::state</a></div><div class="ttdeci">matrix_t * state</div><div class="ttdoc">State vector X (typically 4x1 for quaternion).</div><div class="ttdef"><b>Definition</b> kin_types.h:42</div></div>
+<div class="ttc" id="astructimu__t_html"><div class="ttname"><a href="structimu__t.html">imu_t</a></div><div class="ttdoc">IMU structure containing EKF and sensor configuration.</div><div class="ttdef"><b>Definition</b> kin_types.h:52</div></div>
+<div class="ttc" id="astructimu__t_html_a94c38ac2ab3165192c69631542763f0c"><div class="ttname"><a href="structimu__t.html#a94c38ac2ab3165192c69631542763f0c">imu_t::ekf</a></div><div class="ttdeci">ekf_t ekf</div><div class="ttdoc">Extended Kalman Filter instance.</div><div class="ttdef"><b>Definition</b> kin_types.h:69</div></div>
+<div class="ttc" id="astructmatrix__t_html"><div class="ttname"><a href="structmatrix__t.html">matrix_t</a></div><div class="ttdoc">Matrix structure for linear algebra operations.</div><div class="ttdef"><b>Definition</b> kin_types.h:30</div></div>
+</div><!-- fragment --><h1 class="doxsection"><a class="anchor" id="architecture"></a>
+Architecture</h1>
+<p>The library uses NED (North-East-Down) reference frames with quaternions in x, y, z, w format (little-endian convention). The EKF state includes:</p><ul>
+<li>Quaternion for orientation</li>
+<li>Bias corrections</li>
+<li>Covariance matrix</li>
+</ul>
+<h1 class="doxsection"><a class="anchor" id="files"></a>
+Header Files</h1>
+<ul>
+<li><a class="el" href="kin__imu_8h.html" title="Kinetic IMU Sensor Fusion Library.">kin_imu.h</a> - Primary IMU API (imu_init, imu_update)</li>
+<li><a class="el" href="kin__ekf_8h.html">kin_ekf.h</a> - EKF core functions</li>
+<li><a class="el" href="kin__types_8h.html">kin_types.h</a> - Data structures</li>
+<li><a class="el" href="kin__math_8h.html">kin_math.h</a> - Matrix operations</li>
+<li><a class="el" href="kin__error_8h.html">kin_error.h</a> - Error codes </li>
+</ul>
+</div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->
 </div><!-- doc-content -->

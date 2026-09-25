@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['print_5farr_0',['print_arr',['../kin__math_8h.html#a061117038471121eb9b57e4871b5c340',1,'kin_math.h']]],
-  ['print_5fmatrix_1',['print_matrix',['../kin__math_8h.html#af1373b398ca8c4027ebf417536b44c41',1,'kin_math.h']]],
-  ['proc_5fnoise_2',['proc_noise',['../structimu__t.html#a5ce8c46b70187e90401cfffdbc324f7c',1,'imu_t']]]
+  ['ned_5fto_5fenu_0',['ned_to_enu',['../kin__math_8h.html#a71524f1daf08f378a45b4b9b1d291060',1,'kin_math.h']]],
+  ['normalize_5fmatrix_1',['normalize_matrix',['../kin__math_8h.html#a559792c5a34b8117ace38152ecf53c84',1,'kin_math.h']]],
+  ['normalize_5fmatrix_5falloc_2',['normalize_matrix_alloc',['../kin__math_8h.html#a51cfd288f3494ee868df1febb3d85f03',1,'kin_math.h']]]
 ];

@@ -1,19 +1,9 @@
 var searchData=
 [
-  ['m_5fref_0',['m_ref',['../structimu__t.html#adb5f335ef6bde9c33e20ecbc2dac7320',1,'imu_t']]],
-  ['mag_5fdec_1',['mag_dec',['../structimu__t.html#ad6dbba152a928043081da8952d476100',1,'imu_t']]],
-  ['mag_5fdip_2',['mag_dip',['../structimu__t.html#a68622e6854564c97fc7633a7d62c0280',1,'imu_t']]],
-  ['mag_5fnoise_3',['mag_noise',['../structimu__t.html#aeb90aab4166266f63817cf9d2d8dd99d',1,'imu_t']]],
-  ['matrix_5fdet_4',['matrix_det',['../kin__math_8h.html#a649813eedc75f7beb6479f657a3b112f',1,'kin_math.h']]],
-  ['matrix_5fdimension_5ferror_5',['MATRIX_DIMENSION_ERROR',['../kin__error_8h.html#a273daa97d16cbb039b39c7dcbdfd09fc',1,'kin_error.h']]],
-  ['matrix_5finv_5ferror_6',['MATRIX_INV_ERROR',['../kin__error_8h.html#a4198603054fafc1ff5369f8b3c364397',1,'kin_error.h']]],
-  ['matrix_5fminor_7',['matrix_minor',['../kin__math_8h.html#aa20b4d105ffcd5ffae05d7d5a34fc675',1,'kin_math.h']]],
-  ['matrix_5fnorm_8',['matrix_norm',['../kin__math_8h.html#a1b96bc80ac9bcb938b73160a206d8ed9',1,'kin_math.h']]],
-  ['matrix_5ft_9',['matrix_t',['../structmatrix__t.html',1,'']]],
-  ['matrix_5fto_5farr_10',['matrix_to_arr',['../kin__math_8h.html#a9c4c0e716fa81cfcbde398daac610d18',1,'kin_math.h']]],
-  ['meas_5fnoise_11',['meas_noise',['../structimu__t.html#a11d80fa1388a3aa00c3dd9a3e0cad2b7',1,'imu_t']]],
-  ['move_5fmatrix_12',['move_matrix',['../kin__math_8h.html#a0b2125d222efbc0509ffe24e42b83645',1,'kin_math.h']]],
-  ['mul_5fmatrix_13',['mul_matrix',['../kin__math_8h.html#a5bb88572de60461c2bdd18c64e8d9e61',1,'kin_math.h']]],
-  ['mul_5fmatrix_5falloc_14',['mul_matrix_alloc',['../kin__math_8h.html#ad8c3d35aaa756e3b672ffa75e88e208a',1,'kin_math.h']]],
-  ['mul_5fmatrix_5ffree_15',['mul_matrix_free',['../kin__math_8h.html#a5d685c24640a787549955a3feb48e157',1,'kin_math.h']]]
+  ['kin_5fekf_2eh_0',['kin_ekf.h',['../kin__ekf_8h.html',1,'']]],
+  ['kin_5ferror_2eh_1',['kin_error.h',['../kin__error_8h.html',1,'']]],
+  ['kin_5fimu_2eh_2',['kin_imu.h',['../kin__imu_8h.html',1,'']]],
+  ['kin_5fmath_2eh_3',['kin_math.h',['../kin__math_8h.html',1,'']]],
+  ['kin_5ftypes_2eh_4',['kin_types.h',['../kin__types_8h.html',1,'']]],
+  ['kinetic_20documentation_5',['Kinetic Documentation',['../index.html',1,'']]]
 ];

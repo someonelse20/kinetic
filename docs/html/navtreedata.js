@@ -25,6 +25,7 @@
 var NAVTREE =
 [
   [ "Kinetic", "index.html", [
+    [ "Kinetic Documentation", "index.html", "index" ],
     [ "Data Structures", "annotated.html", [
       [ "Data Structures", "annotated.html", "annotated_dup" ],
       [ "Data Structure Index", "classes.html", null ],

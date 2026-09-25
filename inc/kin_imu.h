@@ -1,6 +1,59 @@
 #ifndef KIN_IMU_H
 #define KIN_IMU_H
 
+/** @file
+ * @brief Kinetic IMU Sensor Fusion Library
+ * 
+ * This library provides an Extended Kalman Filter (EKF) implementation for
+ * IMU data processing. It fuses accelerometer, gyroscope, and magnetometer
+ * measurements to estimate orientation (roll, pitch, yaw).
+ * 
+ * @mainpage Kinetic Documentation
+ * 
+ * Kinetic is a C/C++ sensor fusion library implementing an Extended Kalman
+ * Filter (EKF) for IMU data. It uses CMake as its build system and includes
+ * tools for calibration and testing.
+ * 
+ * @section quickstart Quick Start
+ * 
+ * The primary API is exposed through kin_imu.h:
+ * 
+ * @code
+ * #include "kin_imu.h"
+ * 
+ * // Initialize IMU
+ * imu_t imu;
+ * float accel[3] = {0, 0, 9.81};
+ * float mag[3] = {0, 0, 0};
+ * imu_init(&imu, accel, mag);
+ * 
+ * // Update with new measurements
+ * imu_update(&imu, new_gyro, new_accel, new_mag);
+ * 
+ * // Get euler angle output
+ * matrix_t *euler = quat_to_euler(imu.ekf.state);
+ *
+ * // Convert output to array
+ * float *euler_arr = matrix_to_arr(euler);
+ * @endcode
+ * 
+ * @section architecture Architecture
+ * 
+ * The library uses NED (North-East-Down) reference frames with quaternions
+ * in x, y, z, w format (little-endian convention). The EKF state includes:
+ * - Quaternion for orientation
+ * - Bias corrections
+ * - Covariance matrix
+ * 
+ * @section files Header Files
+ * 
+ * - kin_imu.h - Primary IMU API (imu_init, imu_update)
+ * - kin_ekf.h - EKF core functions
+ * - kin_types.h - Data structures
+ * - kin_math.h - Matrix operations
+ * - kin_error.h - Error codes
+ */
+
 #include "kin_types.h"
 
 #ifdef __cplusplus

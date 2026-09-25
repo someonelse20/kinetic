@@ -112,6 +112,9 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('kin__imu_8h.ht
   <div class="headertitle"><div class="title">kin_imu.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Kinetic IMU Sensor Fusion Library.  
+<a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="kin__types_8h_source.html">kin_types.h</a>&quot;</code><br />
 </div>
 <p><a href="kin__imu_8h_source.html">Go to the source code of this file.</a></p>
@@ -129,7 +132,10 @@ Functions</h2></td></tr>
 <tr class="memitem:a51f9c50833abe44820a845debe29a00d" id="r_a51f9c50833abe44820a845debe29a00d"><td class="memItemLeft">uint8_t&#160;</td><td class="memItemRight"><a class="el" href="#a51f9c50833abe44820a845debe29a00d">calibrate_mag</a> (<a class="el" href="structmatrix__t.html">matrix_t</a> *value, <a class="el" href="structmatrix__t.html">matrix_t</a> *soft_iorn, <a class="el" href="structmatrix__t.html">matrix_t</a> *hard_iorn)</td></tr>
 <tr class="memdesc:a51f9c50833abe44820a845debe29a00d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calibrate magnetometer using soft and hard iron compensation.  <br /></td></tr>
 </table>
-<a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Kinetic IMU Sensor Fusion Library. </p>
+<p>This library provides an Extended Kalman Filter (EKF) implementation for IMU data processing. It fuses accelerometer, gyroscope, and magnetometer measurements to estimate orientation (roll, pitch, yaw). </p>
+</div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
 <a id="a87a9e38bdcebd78c57a568e50f918274" name="a87a9e38bdcebd78c57a568e50f918274"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a87a9e38bdcebd78c57a568e50f918274">&#9670;&#160;</a></span>calibrate_gyro_accel()</h2>
 
