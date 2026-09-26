@@ -5,6 +5,7 @@
 #include "sim.h"
 
 #include <iostream>
+#include <cmath>
 
 using namespace std;
 
@@ -15,57 +16,57 @@ int main() {
 	imu.enu = true;
 	imu.mag_dip = 0.000001;
 	/*
-	imu.gyro_noise = 0.3;
-	imu.accel_noise = 0.5;
-	imu.mag_noise = 0.8;
-	*/
+	   imu.gyro_noise = 0.3;
+	   imu.accel_noise = 0.5;
+	   imu.mag_noise = 0.8;
+	 */
 	imu.gyro_noise = 0.f;
 	imu.accel_noise = 0.f;
 	imu.mag_noise = 0.f;
 	/*
-	*/
+	 */
 	/*
-	imu.gyro_noise = 1.0 * (180 / M_PI);
-	imu.accel_noise = 0.f;
-	imu.mag_noise = 0.f;
-	*/
+	   imu.gyro_noise = 1.0 * (180 / M_PI);
+	   imu.accel_noise = 0.f;
+	   imu.mag_noise = 0.f;
+	 */
 
 	sim_t sim(&imu);
 
-	matrix_t *start_rot = init_matrix(4, 1);
-	start_rot->data[X] = 0.0;
-	start_rot->data[Y] = 0.0;
-	start_rot->data[Z] = 0.0;
-	start_rot->data[W] = 1.0;
-
-	matrix_t *end_rot = init_matrix(4, 1);
-	/* deg: 45, 45, 0
-	end_rot->data[X] = 0.3535534;
-	end_rot->data[Y] = 0.3535534;
-	end_rot->data[Z] = 0.1464466;
-	end_rot->data[W] = 0.8535534;
-	 */
-	/* deg: 45, 0, 0 */
-	end_rot->data[X] = 0.7071068;
-	end_rot->data[Y] = 0.0;
-	end_rot->data[Z] = 0.0;
-	end_rot->data[W] = 0.7071068;
 	/*
+	matrix_t *start_rot = init_matrix(4, 1);
+	   start_rot->data[X] = 0.0;
+	   start_rot->data[Y] = 0.0;
+	   start_rot->data[Z] = 0.0;
+	   start_rot->data[W] = 1.0;
 	 */
+
+	/*
+	matrix_t *end_rot = init_matrix(4, 1);
+	   end_rot->data[X] = 0.7071068;
+	   end_rot->data[Y] = 0.0;
+	   end_rot->data[Z] = 0.0;
+	   end_rot->data[W] = 0.7071068;
+	 */
+
+	float start_rot_arr[] = {0, 20, 0};
+	float end_rot_arr[] = {45, 89, 45};
+	matrix_t *start_rot = euler_to_quat(scale_matrix_alloc(arr_to_matrix(start_rot_arr, 3, 1), M_PI / 180));
+	matrix_t *end_rot = euler_to_quat(scale_matrix_alloc(arr_to_matrix(end_rot_arr, 3, 1), M_PI / 180));
 
 	plot_t Plot;
 
 	sim.add_ahrs(imu_init, imu_update, "EKF");
 	/*
-	sim.add_ahrs(gyro_imu_init, gyro_imu_update, "gyro-only");
-	sim.add_ahrs(comp_imu_init, comp_imu_update, "comp-filter");
-	*/
+	   sim.add_ahrs(gyro_imu_init, gyro_imu_update, "gyro-only");
+	   sim.add_ahrs(comp_imu_init, comp_imu_update, "comp-filter");
+	 */
 
 	// sim.one_axis_test(100);
 	// sim.one_axis_test(100, &Plot);
 	// sim.all_axis_test(100);
-	sim.all_axis_test(100, &Plot);
+	// sim.all_axis_test(100, &Plot);
 	// sim.linear_interpolation(start_rot, end_rot, 1, 0.001);
-	// sim.linear_interpolation(start_rot, end_rot, 1, 0.01, &Plot);
+	sim.linear_interpolation(start_rot, end_rot, 1, 0.01, &Plot);
 }
 
