@@ -24,9 +24,15 @@ class EKFDemo:
 
     # ==================== Test Modes ====================
 
-    def linear_interpolation(self, start_rot, end_rot, duration, timestep):
-        """Run interpolation test with start and end rotations"""
-        """Start_rot and end_rot are python array euler angles in degrees"""
+    def linear_interpolation(self, start_rot=(0, 0, 0), end_rot=(45, 45, 45), duration=10, timestep=0.1):
+        """Run interpolation test with start and end rotations
+
+        Args:
+            start_rot: Starting Euler angles in degrees (default (0, 0, 0))
+            end_rot: Ending Euler angles in degrees (default (45, 45, 45))
+            duration: Total duration in seconds (default 10)
+            timestep: Simulation timestep in seconds (default 0.1)
+        """
 
         self.imu.dt = timestep
 

@@ -103,6 +103,7 @@
         
         <div class="controls">
             <button class="btn-primary" onclick="runSimulation()">▶️ Run All-Axis Test</button>
+            <button class="btn-secondary" onclick="runLinearInterpolation()">📐 Linear Interpolation</button>
             <button class="btn-secondary" onclick="clearCharts()">🔄 Clear</button>
         </div>
         
@@ -125,6 +126,36 @@
     <script>
         let ekfData = [];
         let trueData = [];
+
+        async function runLinearInterpolation() {
+            const btn = document.querySelector('.btn-secondary');
+            const errorDiv = document.getElementById('error');
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ Running...';
+            errorDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/demo/api/linear');
+                if (!response.ok) throw new Error('Simulation failed');
+                
+                const result = await response.json();
+                
+                if (result.error) throw new Error(result.error);
+                
+                ekfData = result.ekf;
+                trueData = result.true;
+                
+                plotCharts();
+                
+            } catch (err) {
+                errorDiv.textContent = 'Error: ' + err.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📐 Linear Interpolation';
+            }
+        }
 
         async function runSimulation() {
             const btn = document.querySelector('.btn-primary');
@@ -184,5 +215,7 @@
             Plotly.purge('yawChart');
         }
     </script>
+
+    <script src="server.js"></script>
 </body>
 </html>

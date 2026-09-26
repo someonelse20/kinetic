@@ -23,6 +23,8 @@ class DemoHandler(SimpleHTTPRequestHandler):
 
         if path == "/api/simulate":
             self._run_simulation()
+        elif path == "/api/linear":
+            self._run_linear_interpolation()
         else:
             super().do_GET()
 
@@ -31,6 +33,26 @@ class DemoHandler(SimpleHTTPRequestHandler):
         try:
             demo = EKFDemo()
             ekf_data, true_data = demo.all_axis_test(100)
+
+            response = {"ekf": ekf_data, "true": true_data}
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode())
+
+        except Exception as e:
+            error_response = {"error": str(e)}
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(error_response).encode())
+
+    def _run_linear_interpolation(self):
+        """Run the linear interpolation simulation and return results."""
+        try:
+            demo = EKFDemo()
+            ekf_data, true_data = demo.linear_interpolation()
 
             response = {"ekf": ekf_data, "true": true_data}
 
