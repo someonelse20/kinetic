@@ -54,6 +54,45 @@
         .btn-secondary:hover:not(:disabled) {
             background: #3d3d5c;
         }
+        .inputs-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding: 12px 18px;
+            background: #16213e;
+            border-radius: 8px;
+            border: 1px solid #0f3460;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .input-group label {
+            font-size: 12px;
+            color: #00d4ff;
+            font-weight: 500;
+        }
+        .input-group input {
+            width: 65px;
+            padding: 6px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background: #0d1121;
+            color: #fff;
+            text-align: center;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        .input-unit {
+            font-size: 10px;
+            color: #888;
+        }
         button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
@@ -103,8 +142,41 @@
         
         <div class="controls">
             <button class="btn-primary" onclick="runSimulation()">▶️ Run All-Axis Test</button>
-            <button class="btn-secondary" onclick="runLinearInterpolation()">📐 Linear Interpolation</button>
+            <button class="btn-secondary" id="linearInterpolationBtn" onclick="runLinearInterpolation()">📐 Linear Interpolation</button>
             <button class="btn-secondary" onclick="clearCharts()">🔄 Clear</button>
+        </div>
+
+        <div class="inputs-container">
+            <div class="input-group">
+                <label>Start Roll:</label>
+                <input type="number" id="startRoll" value="0" step="1" min="-180" max="180">
+                <span class="input-unit">°</span>
+            </div>
+            <div class="input-group">
+                <label>Start Pitch:</label>
+                <input type="number" id="startPitch" value="0" step="1" min="-180" max="180">
+                <span class="input-unit">°</span>
+            </div>
+            <div class="input-group">
+                <label>Start Yaw:</label>
+                <input type="number" id="startYaw" value="0" step="1" min="-180" max="180">
+                <span class="input-unit">°</span>
+            </div>
+            <div class="input-group">
+                <label>End Roll:</label>
+                <input type="number" id="endRoll" value="45" step="1" min="-180" max="180">
+                <span class="input-unit">°</span>
+            </div>
+            <div class="input-group">
+                <label>End Pitch:</label>
+                <input type="number" id="endPitch" value="45" step="1" min="-180" max="180">
+                <span class="input-unit">°</span>
+            </div>
+            <div class="input-group">
+                <label>End Yaw:</label>
+                <input type="number" id="endYaw" value="45" step="1" min="-180" max="180">
+                <span class="input-unit">°</span>
+            </div>
         </div>
         
         <div id="error" class="error"></div>
@@ -128,7 +200,17 @@
         let trueData = [];
 
         async function runLinearInterpolation() {
-            const btn = document.querySelector('.btn-secondary');
+            const btn = document.querySelector('#linearInterpolationBtn');
+            const startRot = [
+                parseFloat(document.getElementById('startRoll').value),
+                parseFloat(document.getElementById('startPitch').value),
+                parseFloat(document.getElementById('startYaw').value)
+            ];
+            const endRot = [
+                parseFloat(document.getElementById('endRoll').value),
+                parseFloat(document.getElementById('endPitch').value),
+                parseFloat(document.getElementById('endYaw').value)
+            ];
             const errorDiv = document.getElementById('error');
             
             btn.disabled = true;
@@ -136,7 +218,14 @@
             errorDiv.style.display = 'none';
             
             try {
-                const response = await fetch('/demo/api/linear');
+                // Debug logging
+                console.log('runLinearInterpolation called');
+                console.log('startRot:', startRot);
+                console.log('endRot:', endRot);
+                const response = await fetch('/demo/api/linear', {
+                    method: 'GET'
+                });
+                if (!response.ok) throw new Error('Simulation failed');
                 if (!response.ok) throw new Error('Simulation failed');
                 
                 const result = await response.json();
@@ -156,6 +245,21 @@
                 btn.textContent = '📐 Linear Interpolation';
             }
         }
+
+        // Update runLinearInterpolation to use selected rotation values
+        window.runLinearInterpolationConfig = function() {
+            const startRot = [
+                parseFloat(document.getElementById('startRoll').value),
+                parseFloat(document.getElementById('startPitch').value),
+                parseFloat(document.getElementById('startYaw').value)
+            ];
+            const endRot = [
+                parseFloat(document.getElementById('endRoll').value),
+                parseFloat(document.getElementById('endPitch').value),
+                parseFloat(document.getElementById('endYaw').value)
+            ];
+            return { startRot, endRot };
+        };
 
         async function runSimulation() {
             const btn = document.querySelector('.btn-primary');
@@ -215,7 +319,5 @@
             Plotly.purge('yawChart');
         }
     </script>
-
-    <script src="server.js"></script>
 </body>
 </html>
