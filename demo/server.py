@@ -115,6 +115,21 @@ class DemoHandler(SimpleHTTPRequestHandler):
 
             print("[DEBUG] Generated %d data points" % len(ekf_data))
 
+            # Sanitize data: replace NaN/Infinity with 0 to prevent JSON errors
+            def sanitize(val):
+                if isinstance(val, (int, float)):
+                    if val != val or abs(val) == float('inf'):
+                        return 0.0
+                    return val
+                elif isinstance(val, list):
+                    return [sanitize(v) for v in val]
+                elif isinstance(val, dict):
+                    return {k: sanitize(v) for k, v in val.items()}
+                return val
+
+            ekf_data = [sanitize(point) for point in ekf_data]
+            true_data = [sanitize(point) for point in true_data]
+
             response = {"ekf": ekf_data, "true": true_data}
 
             self.send_response(200)
