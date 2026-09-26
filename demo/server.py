@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Simple HTTP server for Kinetic EKF demo."""
+
 import sys
 import os
 import json
@@ -13,38 +14,35 @@ from demo.kinetic import EKFDemo
 
 class DemoHandler(SimpleHTTPRequestHandler):
     """Custom handler that intercepts /api/simulate requests."""
-    
+
     def do_GET(self):
         # Strip leading /demo if present for file serving
         path = self.path
-        if path.startswith('/demo'):
+        if path.startswith("/demo"):
             path = path[5:]
-        
-        if path == '/api/simulate':
+
+        if path == "/api/simulate":
             self._run_simulation()
         else:
             super().do_GET()
-    
+
     def _run_simulation(self):
         """Run the all_axis_test simulation and return results."""
         try:
             demo = EKFDemo()
             ekf_data, true_data = demo.all_axis_test(100)
-            
-            response = {
-                'ekf': ekf_data,
-                'true': true_data
-            }
-            
+
+            response = {"ekf": ekf_data, "true": true_data}
+
             self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
+            self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps(response).encode())
-            
+
         except Exception as e:
-            error_response = {'error': str(e)}
+            error_response = {"error": str(e)}
             self.send_response(500)
-            self.send_header('Content-Type', 'application/json')
+            self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps(error_response).encode())
 
@@ -54,8 +52,8 @@ def run_server(port=8081, root=None):
     # Default to demo directory for file serving
     if root is None:
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    
-    server_address = ('', port)
+
+    server_address = ("", port)
     httpd = HTTPServer(server_address, DemoHandler)
     print(f"🧭 Kinetic EKF Demo Server running on http://localhost:{port}")
     print(f"   📊 Serve files from: {root}")
@@ -63,5 +61,5 @@ def run_server(port=8081, root=None):
     httpd.serve_forever()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run_server()

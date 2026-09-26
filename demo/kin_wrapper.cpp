@@ -84,6 +84,10 @@ PYBIND11_MODULE(kin_wrapper, m, py::mod_gil_not_used()) {
         return py::cast(init_matrix(rows, cols));
     });
     m.def("free_matrix", &free_matrix);
+    m.def("fill_matrix", &fill_matrix);
+    m.def("add_matrix_alloc", &add_matrix_alloc);
+    m.def("sub_matrix_alloc", &sub_matrix_alloc);
+    m.def("scale_matrix_alloc", &scale_matrix_alloc);
 
     // Quaternion utilities
     m.def("quat_to_euler", [](const matrix_t& m) {

@@ -24,43 +24,83 @@ class EKFDemo:
 
     # ==================== Test Modes ====================
 
-    """
-    def linear_interpolation(self):
-        if not self.state_initialized:
-            print("Error: EKF not initialized")
-            return False
+    def linear_interpolation(self, start_rot, end_rot, duration, timestep):
+        """Run interpolation test with start and end rotations"""
+        """Start_rot and end_rot are python array euler angles in degrees"""
 
-        # Generate interpolated orientations
-        true_angles = self._generate_interpolated_orientations()
+        self.imu.dt = timestep
 
-        # Run EKF on interpolated data
-        # Use get_gyro() to compute gyro from orientation changes (matches sim.cpp)
-        for i in range(len(true_angles) - 1):
-            roll1, pitch1, yaw1 = true_angles[i]
-            roll2, pitch2, yaw2 = true_angles[i + 1]
-            dt = self.step_size
+        start_rot_rad = []
+        end_rot_rad = []
+        for i in range(3):
+            start_rot_rad.append(start_rot[i] * np.pi / 180)
+            end_rot_rad.append(end_rot[i] * np.pi / 180)
 
-            # Compute gyro from orientation change (sim.cpp::get_gyro)
-            gyro_x, gyro_y, gyro_z = self.get_gyro(
-                roll1, pitch1, yaw1, roll2, pitch2, yaw2, dt
+        start_rot_quat = kin.euler_to_quat(arr_to_matrix(start_rot_rad, 3, 1))
+        end_rot_quat = kin.euler_to_quat(arr_to_matrix(end_rot_rad, 3, 1))
+
+        quat = kin.fill_matrix(4, 1, 0)
+        prev_quat = kin.init_matrix(4, 1)
+
+        accel_m = kin.get_accel(start_rot_quat)
+        mag_m = kin.get_mag(start_rot_quat, self.imu.mag_dip)
+
+        kin_quat = kin.imu_init(
+            self.imu,
+            accel_m.getItem(0),
+            accel_m.getItem(1),
+            accel_m.getItem(2),
+            mag_m.getItem(0),
+            mag_m.getItem(1),
+            mag_m.getItem(2),
+        )
+
+        kin_euler = matrix_to_arr(kin.quat_to_euler(kin_quat))
+        true_euler = matrix_to_arr(kin.quat_to_euler(start_rot_quat))
+
+        self.euler_data.append(kin_euler)
+        self.true_data.append(true_euler)
+
+        # Run EKF updates
+        time = 0
+        while time < duration:
+            norm_time = time / duration
+
+            for i in range(4):
+                prev_quat.setItem(i, quat.getItem(i))
+
+            quat = kin.add_matrix_alloc(
+                start_rot_quat,
+                kin.scale_matrix_alloc(
+                    kin.sub_matrix_alloc(end_rot_quat, start_rot_quat), norm_time
+                ),
             )
 
-            # Compute accel and mag from current orientation
-            accel_x, accel_y, accel_z = self.get_accel(roll2, pitch2, yaw2)
-            mag_x, mag_y, mag_z = self.get_mag(roll2, pitch2, yaw2, self.mag_dip)
+            gyro_m = kin.get_gyro(prev_quat, quat, timestep)
+            accel_m = kin.get_accel(quat)
+            mag_m = kin.get_mag(quat, self.imu.mag_dip)
 
-            # Run EKF update
-            eul = self.imu_update(accel_x, accel_y, accel_z, mag_x, mag_y, mag_z, dt)
+            kin_quat = kin.imu_update(
+                self.imu,
+                gyro_m.getItem(0),
+                gyro_m.getItem(1),
+                gyro_m.getItem(2),
+                accel_m.getItem(0),
+                accel_m.getItem(1),
+                accel_m.getItem(2),
+                mag_m.getItem(0),
+                mag_m.getItem(1),
+                mag_m.getItem(2),
+            )
+            kin_euler = matrix_to_arr(kin.quat_to_euler(kin_quat))
+            true_euler = matrix_to_arr(kin.quat_to_euler(quat))
 
-            self.euler_data["roll"].append(eul[0])
-            self.euler_data["pitch"].append(eul[1])
-            self.euler_data["yaw"].append(eul[2])
-            self.true_data["roll"].append(roll2)
-            self.true_data["pitch"].append(pitch2)
-            self.true_data["yaw"].append(yaw2)
+            self.euler_data.append(kin_euler)
+            self.true_data.append(true_euler)
 
-        return True
-    """
+            time += timestep
+
+        return self.euler_data, self.true_data
 
     def all_axis_test(self, num_points=100):
         """Run all-axis test with specified number of steps."""
@@ -148,3 +188,8 @@ def matrix_to_arr(mat):
 if __name__ == "__main__":
     test_demo = EKFDemo()
     test_demo.all_axis_test()
+
+    start_rot = [0, 0, 0]
+    end_rot = [45, 45, 45]
+
+    test_demo.linear_interpolation(start_rot, end_rot, 10, 0.1)
