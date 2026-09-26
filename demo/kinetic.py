@@ -24,7 +24,9 @@ class EKFDemo:
 
     # ==================== Test Modes ====================
 
-    def linear_interpolation(self, start_rot=(0, 0, 0), end_rot=(45, 45, 45), duration=10, timestep=0.1):
+    def linear_interpolation(
+        self, start_rot=(0, 0, 0), end_rot=(45, 45, 45), duration=10, timestep=0.1
+    ):
         """Run interpolation test with start and end rotations
 
         Args:
@@ -69,7 +71,7 @@ class EKFDemo:
 
         # Run EKF updates
         time = 0
-        while time < duration:
+        while time < duration - timestep:
             norm_time = time / duration
 
             for i in range(4):
@@ -195,7 +197,10 @@ if __name__ == "__main__":
     test_demo = EKFDemo()
     test_demo.all_axis_test()
 
-    start_rot = [0, 0, 0]
-    end_rot = [45, 45, 45]
+    start_rot = [0, 20, 0]
+    end_rot = [45, 90, 45]
 
-    test_demo.linear_interpolation(start_rot, end_rot, 10, 0.1)
+    euler, true = test_demo.linear_interpolation(start_rot, end_rot, 10, 0.1)
+
+    for item in true:
+        print(item)
