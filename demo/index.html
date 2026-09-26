@@ -222,7 +222,16 @@
                 console.log('runLinearInterpolation called');
                 console.log('startRot:', startRot);
                 console.log('endRot:', endRot);
-                const response = await fetch('/demo/api/linear', {
+                
+                // Build query string with URL-encoded JSON arrays
+                const params = new URLSearchParams();
+                params.append('startRot', JSON.stringify(startRot));
+                params.append('endRot', JSON.stringify(endRot));
+                const queryString = params.toString();
+                
+                console.log('Query string:', queryString);
+                
+                const response = await fetch('/demo/api/linear?' + queryString, {
                     method: 'GET'
                 });
                 if (!response.ok) throw new Error('Simulation failed');
