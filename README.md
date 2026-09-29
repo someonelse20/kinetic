@@ -49,3 +49,6 @@ Kinetic uses quaternions in x, y, z, w format (little-endian convention).
 - kin_types.h - Data structures
 - kin_math.h - Matrix operations
 - kin_error.h - Error codes
+
+## AI Use Disclosure
+AI assistance was used to help make this project but the core library files (kin_imu.c, kin_ekf.c, and kin_math.c) and most of the test files are almost entirely human written. AI was used mostly to help with debugging and writing nonessential scripts. Demo/ and calibrate/ are heavily AI written and will receive updates and fixes in the future. All AI code has been tested and human reviewed.
