@@ -6,5 +6,5 @@ This project uses cmake to compile.
 
 ```bash
 mkdir build && cd build
+cmake .. && make
 ```
-
