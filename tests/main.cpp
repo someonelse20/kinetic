@@ -33,26 +33,27 @@ int main() {
 
 	sim_t sim(&imu);
 
-	/*
 	matrix_t *start_rot = init_matrix(4, 1);
-	   start_rot->data[X] = 0.0;
-	   start_rot->data[Y] = 0.0;
-	   start_rot->data[Z] = 0.0;
-	   start_rot->data[W] = 1.0;
+	start_rot->data[X] = 0.0;
+	start_rot->data[Y] = 0.0;
+	start_rot->data[Z] = 0.0;
+	start_rot->data[W] = 1.0;
+
+	// deg: 45, 0, 0
+	matrix_t *end_rot = init_matrix(4, 1);
+	end_rot->data[X] = 0.7071068;
+	end_rot->data[Y] = 0.0;
+	end_rot->data[Z] = 0.0;
+	end_rot->data[W] = 0.7071068;
+	/*
 	 */
 
 	/*
-	matrix_t *end_rot = init_matrix(4, 1);
-	   end_rot->data[X] = 0.7071068;
-	   end_rot->data[Y] = 0.0;
-	   end_rot->data[Z] = 0.0;
-	   end_rot->data[W] = 0.7071068;
+	   float start_rot_arr[] = {0, 20, 0};
+	   float end_rot_arr[] = {45, 89, 45};
+	   matrix_t *start_rot = euler_to_quat(scale_matrix_alloc(arr_to_matrix(start_rot_arr, 3, 1), M_PI / 180));
+	   matrix_t *end_rot = euler_to_quat(scale_matrix_alloc(arr_to_matrix(end_rot_arr, 3, 1), M_PI / 180));
 	 */
-
-	float start_rot_arr[] = {0, 20, 0};
-	float end_rot_arr[] = {45, 89, 45};
-	matrix_t *start_rot = euler_to_quat(scale_matrix_alloc(arr_to_matrix(start_rot_arr, 3, 1), M_PI / 180));
-	matrix_t *end_rot = euler_to_quat(scale_matrix_alloc(arr_to_matrix(end_rot_arr, 3, 1), M_PI / 180));
 
 	plot_t Plot;
 
