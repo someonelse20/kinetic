@@ -22,6 +22,8 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
 /**
  * @brief Matrix structure for linear algebra operations.
  *
